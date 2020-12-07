@@ -36,6 +36,7 @@ documents_df = pd.DataFrame()
 for col in collections:
     documents_df = process_dir(documents_df, col)
 
-con = duckdb.connect(database=':memory:', read_only=False)
+con = duckdb.connect(database='db/trec04_05.db', read_only=False)
 con.register('documents', documents_df)
+con.close()
 
