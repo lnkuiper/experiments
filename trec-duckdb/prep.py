@@ -1,5 +1,6 @@
 import duckdb
 import os
+import multiprocessing
 import pandas as pd
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
@@ -14,9 +15,9 @@ t5_fbis_dir = 'TREC_VOL_5/fbis/xml/'
 t5_latimes_dir = 'TREC_VOL_5/latimes/xml/'
 collections = [t4_cr_e_dir, t4_cr_h_dir, t4_fr94_dir, t4_ft_dir, t5_fbis_dir, t5_latimes_dir]
 files = []
-for dname in collections[:2]:
-    for fname in os.listdir(dname):
-        files.append(dname + fname)
+for dname in collections:
+    for fname in os.listdir(base_dir + dname):
+        files.append(base_dir + dname + fname)
 
 def process_file(fpath):
     dict_list = []
