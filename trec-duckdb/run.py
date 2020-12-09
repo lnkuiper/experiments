@@ -23,13 +23,12 @@ t = time_millis()
 con = duckdb.connect(database='db/trec04_05.db', read_only=False)
 print("load", (time_millis() - t))
 
-t = time_millis()
-con.execute("PRAGMA create_fts_index('documents', 'docno', 'documents', 'text', 'action', 'agency', 'summary', 'supplem', 'usbureau', 'usdept', 'signjob', 'footnote', 'table', 'doctitle', 'ti', 'ul', 'h2', 'address', 'headline', 'byline', 'co', 'cn', 'in', 'pe', 'ht', 'h3', 'f', 'h5', 'h4', 'h6', 'fig', 'phrase', 'p', 'graphic', 'subject', 'tablecell', 'correction');")
-print("index", (time_millis() - t))
+con.execute('PRAGMA threads=32')
 
-con.execute('CREATE TABLE results (query INT, q0 VARCHAR, rank INT, score DOUBLE, standard VARCHAR);')
+con.execute('DROP TABLE IF EXISTS results;')
+con.execute('CREATE TABLE results (topic VARCHAR, docno VARCHAR, rank INT);')
 for query in topic_dict:
     t = time_millis()
-    con.execute("INSERT INTO results SELECT '" + query + "' AS topic, 'Q0' AS q0, docno, row_number() OVER (PARTITION BY (SELECT NULL)) AS rank, 0 AS score, 'STANDARD' as standard FROM documents WHERE fts_main_documents.match_bm25(docno, '" + topic_dict[query] + "');")
+    con.execute("INSERT INTO results SELECT '" + query + "' AS topic, docno, row_number() OVER (PARTITION BY (SELECT NULL)) AS rank FROM documents WHERE fts_main_documents.match_bm25(docno, '" + topic_dict[query] + "');")
     print(query, (time_millis() - t))
 

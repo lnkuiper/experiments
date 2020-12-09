@@ -47,7 +47,11 @@ for x in tqdm(pool.imap_unordered(process_file, files), total=len(files)):
 documents_df = pd.DataFrame([x for sublist in list_of_dict_lists for x in sublist])
 
 con = duckdb.connect(database='db/trec04_05.db', read_only=False)
+con.execute('PRAGMA threads=32');
 con.register('documents_df', documents_df)
 con.execute('CREATE TABLE documents AS (SELECT * FROM documents_df);')
+
+con.execute("PRAGMA create_fts_index('documents', 'docno', 'text', 'action', 'agency', 'summary', 'supplem', 'usbureau', 'usdept', 'signjob', 'footnote', 'table', 'doctitle', 'ti', 'ul', 'h2', 'address', 'headline', 'byline', 'co', 'cn', 'in', 'pe', 'ht', 'h3', 'f', 'h5', 'h4', 'h6', 'fig', 'phrase', 'p', 'graphic', 'subject', 'tablecell', 'correction', overwrite=1);")
+
 con.close()
 
