@@ -20,15 +20,22 @@ with open('../../trec/topics', 'r') as f:
         topic_dict[num] = title
 
 t = time_millis()
-con = duckdb.connect(database='db/trec04_05.db', read_only=False)
+con = duckdb.connect(database='db/trec04_05.db', read_only=True)
 print("load", (time_millis() - t))
 
 con.execute('PRAGMA threads=32')
 
-con.execute('DROP TABLE IF EXISTS results;')
-con.execute('CREATE TABLE results (topic VARCHAR, docno VARCHAR, rank INT);')
+results = []
 for query in topic_dict:
+    q_str = topic_dict[query].replace('\'', ' ')
     t = time_millis()
-    con.execute("INSERT INTO results SELECT '" + query + "' AS topic, docno, row_number() OVER (PARTITION BY (SELECT NULL)) AS rank FROM documents WHERE fts_main_documents.match_bm25(docno, '" + topic_dict[query] + "');")
+    con.execute("SELECT docno FROM documents WHERE fts_main_documents.match_bm25(docno, '" + q_str + "');")
     print(query, (time_millis() - t))
+    for i, row in enumerate(con.fetchall()):
+        results.append(query + " Q0 " + row[0] + " " + str(i) + " 0.1 STANDARD")
+con.close()
+
+with open('results', 'w+') as f:
+    for r in results:
+        f.write(r + '\n')
 

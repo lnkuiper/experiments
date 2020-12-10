@@ -2,8 +2,12 @@ import duckdb
 import os
 import multiprocessing
 import pandas as pd
+import time
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
+
+def time_millis():
+    return time.time()*1000.0
 
 base_dir = '../../trec/'
 
@@ -43,6 +47,7 @@ pool = multiprocessing.Pool(int(multiprocessing.cpu_count()/2) + 1)
 list_of_dict_lists = []
 for x in tqdm(pool.imap_unordered(process_file, files), total=len(files)):
     list_of_dict_lists.append(x)
+pool.close()
 
 documents_df = pd.DataFrame([x for sublist in list_of_dict_lists for x in sublist])
 
@@ -51,7 +56,9 @@ con.execute('PRAGMA threads=32');
 con.register('documents_df', documents_df)
 con.execute('CREATE TABLE documents AS (SELECT * FROM documents_df);')
 
+t = time_millis()
 con.execute("PRAGMA create_fts_index('documents', 'docno', 'text', 'action', 'agency', 'summary', 'supplem', 'usbureau', 'usdept', 'signjob', 'footnote', 'table', 'doctitle', 'ti', 'ul', 'h2', 'address', 'headline', 'byline', 'co', 'cn', 'in', 'pe', 'ht', 'h3', 'f', 'h5', 'h4', 'h6', 'fig', 'phrase', 'p', 'graphic', 'subject', 'tablecell', 'correction', overwrite=1);")
+print("index", (time_millis() - t))
 
 con.close()
 
