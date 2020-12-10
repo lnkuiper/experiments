@@ -57,7 +57,7 @@ con.register('documents_df', documents_df)
 con.execute('CREATE TABLE documents AS (SELECT * FROM documents_df);')
 
 t = time_millis()
-con.execute("PRAGMA create_fts_index('documents', 'docno', 'text', 'action', 'agency', 'summary', 'supplem', 'usbureau', 'usdept', 'signjob', 'footnote', 'table', 'doctitle', 'ti', 'ul', 'h2', 'address', 'headline', 'byline', 'co', 'cn', 'in', 'pe', 'ht', 'h3', 'f', 'h5', 'h4', 'h6', 'fig', 'phrase', 'p', 'graphic', 'subject', 'tablecell', 'correction', overwrite=1);")
+con.execute("PRAGMA create_fts_index('documents', 'docno', 'text', overwrite=1);")
 print("index", (time_millis() - t))
 
 con.close()
