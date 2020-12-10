@@ -9,7 +9,8 @@ from bs4 import BeautifulSoup as bs
 def time_millis():
     return time.time()*1000.0
 
-base_dir = '../../trec/'
+#base_dir = '../../trec/'
+base_dir = '/home/laurens/Documents/trec/'
 
 t4_cr_e_dir = 'TREC_VOL_4/cr/efiles/xml/'
 t4_cr_h_dir = 'TREC_VOL_4/cr/hfiles/xml/'
@@ -19,27 +20,21 @@ t5_fbis_dir = 'TREC_VOL_5/fbis/xml/'
 t5_latimes_dir = 'TREC_VOL_5/latimes/xml/'
 collections = [t4_cr_e_dir, t4_cr_h_dir, t4_fr94_dir, t4_ft_dir, t5_fbis_dir, t5_latimes_dir]
 files = []
-for dname in collections:
+for dname in collections[2:]:
     for fname in os.listdir(base_dir + dname):
         files.append(base_dir + dname + fname)
+        break
+    break
 
 def process_file(fpath):
     dict_list = []
     with open(fpath, 'r') as f:
         content = f.read()
         bs_content = bs(content, "html.parser")
-        for doc in bs_content.findChildren('doc', recursive=True):
+        for doc in bs_content.findChildren('doc', recursive=True)[1:]:
             row_dict = {}
             for c in doc.findChildren(recursive=True):
-                if len(c.findChildren(recursive=True)) > 0:
-                    row_dict[c.name] = c.get_text().strip().replace('\n', ' ')
-                    continue
-                if not c.string:
-                    continue
-                if row_dict.get(c.name, False):
-                    row_dict[c.name] += ' ' + c.string.strip().replace('\n', ' ')
-                else:
-                    row_dict[c.name] = c.string.strip().replace('\n', ' ')
+                row_dict[c.name] = ''.join(c.findAll(text=True, recursive=False))
             dict_list.append(row_dict)
     return dict_list
 
@@ -57,7 +52,7 @@ con.register('documents_df', documents_df)
 con.execute('CREATE TABLE documents AS (SELECT * FROM documents_df);')
 
 t = time_millis()
-con.execute("PRAGMA create_fts_index('documents', 'docno', 'text', overwrite=1);")
+con.execute("PRAGMA create_fts_index('documents', 'docno', 'text', 'action', 'agency', 'summary', 'supplem', 'usbureau', 'usdept', 'signjob', 'footnote', 'table', 'doctitle', 'ti', 'ul', 'h2', 'address', 'headline', 'byline', 'co', 'cn', 'in', 'pe', 'ht', 'h3', 'f', 'h5', 'h4', 'h6', 'fig', 'phrase', 'p', 'graphic', 'subject', 'tablecell', 'correction', overwrite=1);")
 print("index", (time_millis() - t))
 
 con.close()
