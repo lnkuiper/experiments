@@ -3,8 +3,8 @@ import duckdb
 import time
 from bs4 import BeautifulSoup as bs
 
-#base_dir = '../../trec/'
-base_dir = '/home/laurens/Documents/trec/'
+base_dir = '../../trec/'
+#base_dir = '/home/laurens/Documents/trec/'
 
 def time_millis():
     return time.time()*1000.0
@@ -33,7 +33,7 @@ results = []
 for query in topic_dict:
     q_str = topic_dict[query].replace('\'', ' ')
     t = time_millis()
-    con.execute("EXECUTE fts_query('" + q_str + "');")
+    con.execute("EXECUTE fts_query('" + q_str + "')")
     print(query, (time_millis() - t))
     for i, row in enumerate(con.fetchall()):
         results.append(query + " Q0 " + row[0] + " " + str(i) + " " + str(row[1]) + " STANDARD")
