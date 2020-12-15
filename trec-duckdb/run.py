@@ -3,6 +3,9 @@ import duckdb
 import time
 from bs4 import BeautifulSoup as bs
 
+#base_dir = '../../trec/'
+base_dir = '/home/laurens/Documents/trec/'
+
 def time_millis():
     return time.time()*1000.0
 
@@ -11,7 +14,7 @@ def after_tag(s, tag):
     return m[0].replace('\n', '').strip()
 
 topic_dict = {}
-with open('../../trec/topics', 'r') as f:
+with open(base_dir + 'topics', 'r') as f:
     bs_content = bs(f.read(), "lxml")
     for top in bs_content.findChildren('top'):
         top_content = top.getText()
