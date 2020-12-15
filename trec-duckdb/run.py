@@ -24,15 +24,16 @@ con = duckdb.connect(database='db/trec04_05.db', read_only=True)
 print("load", (time_millis() - t))
 
 con.execute('PRAGMA threads=32')
+con.execute("PREPARE fts_query AS (WITH scored_docs AS (SELECT *, fts_main_documents.match_bm25(docno, ?) AS score FROM documents) SELECT docno, score FROM scored_docs WHERE score IS NOT NULL ORDER BY score DESC LIMIT 1000)")
 
 results = []
 for query in topic_dict:
     q_str = topic_dict[query].replace('\'', ' ')
     t = time_millis()
-    con.execute("SELECT docno FROM documents WHERE fts_main_documents.match_bm25(docno, '" + q_str + "');")
+    con.execute("EXECUTE fts_query('" + q_str + "');")
     print(query, (time_millis() - t))
     for i, row in enumerate(con.fetchall()):
-        results.append(query + " Q0 " + row[0] + " " + str(i) + " " + str(100/(i + 1)) + " STANDARD")
+        results.append(query + " Q0 " + row[0] + " " + str(i) + " " + str(row[1]) + " STANDARD")
 con.close()
 
 with open('results', 'w+') as f:
