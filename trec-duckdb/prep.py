@@ -32,7 +32,11 @@ def process_file(fpath):
         for doc in bs_content.findChildren('doc', recursive=True):
             row_dict = {}
             for c in doc.findChildren(recursive=True):
-                row_dict[c.name] = ''.join(c.findAll(text=True, recursive=False))
+                t = ''.join(c.findAll(text=True, recursive=False))
+                if c.name in row_dict:
+                    row_dict[c.name] += ' ' + t
+                else:
+                    row_dict[c.name] = t
             dict_list.append(row_dict)
     return dict_list
 
