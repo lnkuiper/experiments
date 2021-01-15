@@ -26,8 +26,10 @@ t = time_millis()
 con = duckdb.connect(database='db/trec04_05.db', read_only=True)
 print("load", (time_millis() - t))
 
-con.execute('PRAGMA threads=32')
+con.execute('PRAGMA threads=1')
 con.execute("PREPARE fts_query AS (WITH scored_docs AS (SELECT *, fts_main_documents.match_bm25(docno, ?, k=0.5, b=0.4) AS score FROM documents) SELECT docno, score FROM scored_docs WHERE score IS NOT NULL ORDER BY score DESC LIMIT 1000)")
+con.execute("EXECUTE fts_query('dummy')")
+con.fetchall()
 
 results = []
 for query in topic_dict:
