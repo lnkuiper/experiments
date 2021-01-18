@@ -9,8 +9,8 @@ from bs4 import BeautifulSoup as bs
 def time_millis():
     return time.time()*1000.0
 
-base_dir = '../../trec/'
-#base_dir = '/home/laurens/Documents/trec/'
+#base_dir = '../../trec/'
+base_dir = '/home/laurens/Documents/trec/'
 
 t4_cr_e_dir = 'TREC_VOL_4/cr/efiles/xml/'
 t4_cr_h_dir = 'TREC_VOL_4/cr/hfiles/xml/'
