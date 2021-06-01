@@ -22,5 +22,5 @@ cat '/home/laurens/git/experiments/sorting/data/tpcds/6_catalog_page.csv' | dock
 cat '/home/laurens/git/experiments/sorting/data/tpcds/8_web_page.csv' | docker run -i --rm --link clickhouse_server:clickhouse-server yandex/clickhouse-client --host clickhouse-server --query="INSERT INTO web_page FORMAT CSV"
 cat '/home/laurens/git/experiments/sorting/data/tpcds/9_household_demographics.csv' | docker run -i --rm --link clickhouse_server:clickhouse-server yandex/clickhouse-client --host clickhouse-server --query="INSERT INTO household_demographics FORMAT CSV"
 cat '/home/laurens/git/experiments/sorting/data/tpcds/11_customer_address.csv' | docker run -i --rm --link clickhouse_server:clickhouse-server yandex/clickhouse-client --host clickhouse-server --query="INSERT INTO customer_address FORMAT CSV"
-cat '/home/laurens/git/experiments/sorting/data/randints.csv' | docker run -i --rm --link clickhouse_server:clickhouse-server yandex/clickhouse-client --host clickhouse-server --query="INSERT INTO test FORMAT CSV"
+cat '/home/laurens/git/experiments/sorting/data/randints.csv' | docker run -i --rm --link clickhouse_server:clickhouse-server yandex/clickhouse-client --host clickhouse-server --query="INSERT INTO randints100 FORMAT CSV"
 
