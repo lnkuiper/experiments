@@ -1,0 +1,27 @@
+-- create tables at 10% intervals
+CREATE TABLE randints10 AS SELECT * FROM randints100 LIMIT 10000000;
+CREATE TABLE randints20 AS SELECT * FROM randints100 LIMIT 20000000;
+CREATE TABLE randints30 AS SELECT * FROM randints100 LIMIT 30000000;
+CREATE TABLE randints40 AS SELECT * FROM randints100 LIMIT 40000000;
+CREATE TABLE randints50 AS SELECT * FROM randints100 LIMIT 50000000;
+CREATE TABLE randints60 AS SELECT * FROM randints100 LIMIT 60000000;
+CREATE TABLE randints70 AS SELECT * FROM randints100 LIMIT 70000000;
+CREATE TABLE randints80 AS SELECT * FROM randints100 LIMIT 80000000;
+CREATE TABLE randints90 AS SELECT * FROM randints100 LIMIT 90000000;
+-- create sorted tables
+CREATE TABLE randints100_asc AS SELECT * FROM randints100 ORDER BY i ASC;
+CREATE TABLE randints100_desc AS SELECT * FROM randints100 ORDER BY i DESC;
+-- sort increasing amounts of data
+SELECT * FROM randints10 ORDER BY i;
+SELECT * FROM randints20 ORDER BY i;
+SELECT * FROM randints30 ORDER BY i;
+SELECT * FROM randints40 ORDER BY i;
+SELECT * FROM randints50 ORDER BY i;
+SELECT * FROM randints60 ORDER BY i;
+SELECT * FROM randints70 ORDER BY i;
+SELECT * FROM randints80 ORDER BY i;
+SELECT * FROM randints90 ORDER BY i;
+SELECT * FROM randints100 ORDER BY i;
+-- sort (inversely) sorted data
+SELECT * FROM randints100_asc ORDER BY i;
+SELECT * FROM randints100_desc ORDER BY i;
