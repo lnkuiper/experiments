@@ -1,0 +1,10 @@
+CREATE TABLE randints10 (i int);
+CREATE TABLE randints20 (i int);
+CREATE TABLE randints30 (i int);
+CREATE TABLE randints40 (i int);
+CREATE TABLE randints50 (i int);
+CREATE TABLE randints60 (i int);
+CREATE TABLE randints70 (i int);
+CREATE TABLE randints80 (i int);
+CREATE TABLE randints90 (i int);
+CREATE TABLE randints100 (i int);

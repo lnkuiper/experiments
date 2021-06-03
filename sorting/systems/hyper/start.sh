@@ -10,6 +10,7 @@ docker run \
     --rm \
     --publish=7484:7484 \
     --volume /home/laurens/git/experiments/sorting/data:/sorting_data \
+    --volume
     --name hyper-container \
     --detach \
     --shm-size=8g \
