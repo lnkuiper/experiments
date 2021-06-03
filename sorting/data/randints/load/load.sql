@@ -1,0 +1,12 @@
+COPY ints100_asc FROM '/sorting_data/randints/100asc.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY ints100_desc FROM '/sorting_data/randints/100desc.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY ints10 FROM '/sorting_data/randints/10.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY ints20 FROM '/sorting_data/randints/20.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY ints30 FROM '/sorting_data/randints/30.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY ints40 FROM '/sorting_data/randints/40.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY ints50 FROM '/sorting_data/randints/50.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY ints60 FROM '/sorting_data/randints/60.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY ints70 FROM '/sorting_data/randints/70.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY ints80 FROM '/sorting_data/randints/80.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY ints90 FROM '/sorting_data/randints/90.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY ints100 FROM '/sorting_data/randints/100.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');

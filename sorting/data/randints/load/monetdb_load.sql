@@ -1,0 +1,12 @@
+COPY INTO ints100_asc FROM '/sorting_data/randints/100asc.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO ints100_desc FROM '/sorting_data/randints/100desc.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO randints10 FROM '/sorting_data/randints/10.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO randints20 FROM '/sorting_data/randints/20.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO randints30 FROM '/sorting_data/randints/30.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO randints40 FROM '/sorting_data/randints/40.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO randints50 FROM '/sorting_data/randints/50.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO randints60 FROM '/sorting_data/randints/60.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO randints70 FROM '/sorting_data/randints/70.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO randints80 FROM '/sorting_data/randints/80.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO randints90 FROM '/sorting_data/randints/90.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO randints100 FROM '/sorting_data/randints/100.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';

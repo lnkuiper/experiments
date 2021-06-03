@@ -1,0 +1,12 @@
+CREATE TABLE ints100_asc (i int) ENGINE = Memory;
+CREATE TABLE ints100_desc (i int) ENGINE = Memory;
+CREATE TABLE ints10 (i int) ENGINE = Memory;
+CREATE TABLE ints20 (i int) ENGINE = Memory;
+CREATE TABLE ints30 (i int) ENGINE = Memory;
+CREATE TABLE ints40 (i int) ENGINE = Memory;
+CREATE TABLE ints50 (i int) ENGINE = Memory;
+CREATE TABLE ints60 (i int) ENGINE = Memory;
+CREATE TABLE ints70 (i int) ENGINE = Memory;
+CREATE TABLE ints80 (i int) ENGINE = Memory;
+CREATE TABLE ints90 (i int) ENGINE = Memory;
+CREATE TABLE ints100 (i int) ENGINE = Memory;

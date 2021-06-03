@@ -1,0 +1,12 @@
+CREATE TABLE ints100_asc (i int);
+CREATE TABLE ints100_desc (i int);
+CREATE TABLE ints10 (i int);
+CREATE TABLE ints20 (i int);
+CREATE TABLE ints30 (i int);
+CREATE TABLE ints40 (i int);
+CREATE TABLE ints50 (i int);
+CREATE TABLE ints60 (i int);
+CREATE TABLE ints70 (i int);
+CREATE TABLE ints80 (i int);
+CREATE TABLE ints90 (i int);
+CREATE TABLE ints100 (i int);
