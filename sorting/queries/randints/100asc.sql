@@ -1,0 +1,1 @@
+CREATE TABLE output AS SELECT * FROM ints100_asc ORDER BY i;

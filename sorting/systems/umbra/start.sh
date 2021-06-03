@@ -9,7 +9,7 @@ cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 docker run \
     --rm \
     --publish=5432:5432 \
-    --volume /home/laurens/git/experiments/sorting/data:/sorting_data \
+    --volume $PATHVAR/data:/sorting_data \
     --name umbra-container \
     --detach \
     umbra-image:latest
