@@ -1,1 +1,0 @@
-CREATE TABLE output AS SELECT * FROM ints10 ORDER BY i;
