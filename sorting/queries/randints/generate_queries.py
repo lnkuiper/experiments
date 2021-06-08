@@ -13,3 +13,8 @@ for i in range(1, 11):
         print(f'CREATE TABLE output AS SELECT * from ints{i * 10} ORDER BY i;', file=f)
     with open(f'clickhouse/{i * 10}.sql', 'w+') as f:
         print(f'CREATE TABLE output ENGINE = Memory AS SELECT * from ints{i * 10} ORDER BY i;', file=f)
+
+for i in range(1, 17):
+    with open(f'duckdb/{i}.sql', 'w+') as f:
+        print(f'PRAGMA threads={i}; CREATE TABLE output AS SELECT * from ints100 ORDER BY i;', file=f)
+

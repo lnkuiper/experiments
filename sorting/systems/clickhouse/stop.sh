@@ -1,2 +1,2 @@
 docker stop clickhouse_server
-sudo rm -rf db
+docker volume prune -f
