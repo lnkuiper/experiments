@@ -3,10 +3,10 @@ from random import shuffle
 full_size = 100000000
 integers = [str(x) for x in range(full_size)]
 
-with open('100asc.csv', 'w+') as f:
+with open('data/100asc.csv', 'w+') as f:
     print('\n'.join(integers), file=f)
 
-with open('100desc.csv', 'w+') as f:
+with open('data/100desc.csv', 'w+') as f:
     print('\n'.join(integers[::-1]), file=f)
 
 shuffle(integers)

@@ -16,13 +16,13 @@ def run(con, query_folder, results_folder):
 
         # time and execute the query
         for i in range(5):
-            before = time.clock()
+            before = time.time()
             subprocess.run(f'echo "{query}" {con}')
-            after = time.clock()
+            after = time.time()
 
             # write time to csv
             with open(results_folder + 'results.csv', 'a+'):
-                print(qname.split('.')[0] + f', {after - before}')
+                print(qname.split('.')[0] + f', {after - before}', file=f)
 
             subprocess.run(f'echo "DROP TABLE output;" {con}')
 

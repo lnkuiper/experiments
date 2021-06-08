@@ -17,13 +17,13 @@ def run(con, query_folder, results_folder):
 
         # time and execute the query
         for i in range(5):
-            before = time.clock()
+            before = time.time()
             con.execute(query)
-            after = time.clock()
+            after = time.time()
 
             # write time to csv
             with open(results_folder + 'results.csv', 'a+'):
-                print(qname.split('.')[0] + f', {after - before}')
+                print(qname.split('.')[0] + f', {after - before}', file=f)
 
             con.execute('DROP TABLE output;')
 
@@ -31,10 +31,7 @@ def run(con, query_folder, results_folder):
         open(results_folder + qname, 'w+')
 
 def main():
-    subprocess.run('./stop.sh', shell=True)
-    subprocess.run('./start.sh', shell=True)
-    subprocess.run('./load_randints.sh', shell=True)
-    con = Client(host = 'clickhouse-server', port = '9000', database='db_name')
+    con = Client(host = 'localhost', port = '9000')
     run(con, '../../queries/randints/clickhouse/', '../../results/clickhouse/randints/')
 
 if __name__ == '__main__':
