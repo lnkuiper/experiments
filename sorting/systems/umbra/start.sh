@@ -1,9 +1,5 @@
 #!/bin/bash
-
-set -eu
-set -o pipefail
-
-cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+. ../../pathvar.sh
 
 # Add --cpuset-cpus=0 to force single-threaded execution
 docker run \
@@ -14,5 +10,14 @@ docker run \
     --detach \
     umbra-image:latest
 
-docker exec -i umbra-container /umbra/bin/sql --createdb test
+docker cp create-role.sql umbra-container:/create-role.sql
+
+docker exec \
+    --interactive umbra-container /umbra/bin/sql \
+    --createdb test \
+    create-role.sql
+
+docker exec \
+    --detach umbra-container \
+    /umbra/bin/server -address 0.0.0.0 test
 

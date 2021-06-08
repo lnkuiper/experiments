@@ -2,15 +2,18 @@ import duckdb
 import os
 import subprocess
 import time
+from tqdm import tqdm
 
 def run(con, query_folder, results_folder):
-	for qname in os.listdir(query_folder):
+	for qname in tqdm(os.listdir(query_folder)):
 		# skip .keep file
 		if not qname.endswith('.sql'):
 			continue
+
 		# skip if already done
 		if (os.path.isfile(results_folder + qname)):
 			continue
+
 		# read the query
 		with open(query_folder + qname, 'r') as f:
 			query = f.read()
@@ -18,12 +21,12 @@ def run(con, query_folder, results_folder):
 		# time and execute the query
 		for i in range(5):
 			before = time.time()
-			con.execute(query)
+			con.execute('PRAGMA threads=8; ' + query)
 			after = time.time()
 
 			# write time to csv
-			with open(results_folder + 'results.csv', 'a+'):
-				print(qname.split('.')[0] + f', {after - before}', file=f)
+			with open(results_folder + 'results.csv', 'a+') as f:
+				print(qname.split('.')[0] + f',{after - before}', file=f)
 
 			con.execute('DROP TABLE output;')
 
@@ -31,10 +34,7 @@ def run(con, query_folder, results_folder):
 		open(results_folder + qname, 'w+')
 
 def main():
-	db_name = 'randints.db';
-	if (!os.path.isfile(db_name)):
-		subprocess.run('./load_randints.sh', shell=True)
-	con = duckdb.connect(db_name)
+	con = duckdb.connect('randints.db')
 	run(con, '../../queries/randints/sql/', '../../results/duckdb/randints/')
 	run(con, '../../queries/randints/duckdb/', '../../results/duckdb/randints_threads/')
 

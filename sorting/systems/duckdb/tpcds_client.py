@@ -25,7 +25,7 @@ def run(con, query_folder, results_folder):
 			after = time.time()
 
 			# write time to csv
-			with open(results_folder + 'results.csv', 'a+'):
+			with open(results_folder + 'results.csv', 'a+') as f:
 				print(qname.split('.')[0] + f',{after - before}', file=f)
 
 			con.execute('DROP TABLE output;')
