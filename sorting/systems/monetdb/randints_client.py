@@ -20,6 +20,11 @@ def run(query_folder, results_folder):
 
         # time and execute the query
         for i in range(5):
+            try:
+                con.execute('DROP TABLE output;')
+            except:
+                print('MonetDB: unable to drop table \'output\'')
+
             subprocess.run('docker exec -i monetdb-container monetdb stop test', shell=True, capture_output=True)
             subprocess.run('docker exec -i --user root monetdb-container /clear_cache.sh', shell=True, capture_output=True)
             subprocess.run('docker exec -i monetdb-container monetdb start test', shell=True, capture_output=True)
@@ -35,7 +40,6 @@ def run(query_folder, results_folder):
             with open(results_folder + 'results.csv', 'a+') as f:
                 print(qname.split('.')[0] + f',{after - before}', file=f)
 
-            con.execute('DROP TABLE output;')
             con.close()
 
         # create empty file to mark query as done

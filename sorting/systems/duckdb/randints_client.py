@@ -20,6 +20,8 @@ def run(con, query_folder, results_folder):
 
 		# time and execute the query
 		for i in range(5):
+			con.execute('DROP TABLE IF EXISTS output;')
+
 			before = time.time()
 			con.execute('PRAGMA threads=8; ' + query)
 			after = time.time()
@@ -27,8 +29,6 @@ def run(con, query_folder, results_folder):
 			# write time to csv
 			with open(results_folder + 'results.csv', 'a+') as f:
 				print(qname.split('.')[0] + f',{after - before}', file=f)
-
-			con.execute('DROP TABLE output;')
 
 		# create empty file to mark query as done
 		open(results_folder + qname, 'w+')
