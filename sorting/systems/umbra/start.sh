@@ -21,3 +21,4 @@ docker exec \
     --detach umbra-container \
     /umbra/bin/server -address 0.0.0.0 test
 
+sleep 10

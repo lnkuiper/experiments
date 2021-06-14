@@ -35,6 +35,8 @@ def run(con, query_folder, results_folder):
 
 def main():
     con = Client(host = 'localhost', port = '9000')
+    con.execute('set max_memory_usage=25000000000;')
+    con.execute('set max_bytes_before_external_sort=20000000000;')
     run(con, '../../queries/randints/clickhouse/', '../../results/clickhouse/randints/')
 
 if __name__ == '__main__':

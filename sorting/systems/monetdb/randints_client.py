@@ -23,7 +23,7 @@ def run(query_folder, results_folder):
             try:
                 con.execute('DROP TABLE output;')
             except:
-                print('MonetDB: unable to drop table \'output\'')
+                None
 
             subprocess.run('docker exec -i monetdb-container monetdb stop test', shell=True, capture_output=True)
             subprocess.run('docker exec -i --user root monetdb-container /clear_cache.sh', shell=True, capture_output=True)

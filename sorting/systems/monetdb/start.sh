@@ -9,4 +9,4 @@ docker cp clear_cache.sh monetdb-container:/clear_cache.sh
 sleep 10
 docker exec -i monetdb-container monetdb create test
 docker exec -i monetdb-container monetdb start test
-
+sleep 10

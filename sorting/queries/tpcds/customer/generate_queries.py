@@ -6,11 +6,11 @@ for i in range(1, len(int_columns) + 1):
     with open(f'sql/int{i}.sql', 'w+') as f:
         print('CREATE TABLE output AS SELECT * FROM customer ORDER BY ' + ', '.join(int_columns[:i]) + ';', file=f)
     with open(f'clickhouse/int{i}.sql', 'w+') as f:
-        print('CREATE TABLE output ENGINE = Memory AS SELECT * FROM customer ORDER BY ' + ', '.join(int_columns[:i]) + ';', file=f)
+        print('CREATE TABLE output ENGINE = File(Native) AS SELECT * FROM customer ORDER BY ' + ', '.join(int_columns[:i]) + ';', file=f)
 
 # increase the amount of sorting columns
 for i in range(1, len(varchar_columns) + 1):
     with open(f'sql/varchar{i}.sql', 'w+') as f:
         print('CREATE TABLE output AS SELECT * FROM customer ORDER BY ' + ', '.join(varchar_columns[:i]) + ';', file=f)
     with open(f'clickhouse/varchar{i}.sql', 'w+') as f:
-        print('CREATE TABLE output ENGINE = Memory AS SELECT * FROM customer ORDER BY ' + ', '.join(varchar_columns[:i]) + ';', file=f)
+        print('CREATE TABLE output ENGINE = File(Native) AS SELECT * FROM customer ORDER BY ' + ', '.join(varchar_columns[:i]) + ';', file=f)

@@ -5,11 +5,11 @@ for i in range(1, len(columns) + 1):
     with open(f'sql/payload{i}.sql', 'w+') as f:
         print('CREATE TABLE output AS SELECT ' + ', '.join(columns[:i]) + ' FROM catalog_sales ORDER BY cs_item_sk, cs_quantity;', file=f)
     with open(f'clickhouse/payload{i}.sql', 'w+') as f:
-        print('CREATE TABLE output ENGINE = Memory AS SELECT ' + ', '.join(columns[:i]) + ' FROM catalog_sales ORDER BY cs_item_sk, cs_quantity;', file=f)1
+        print('CREATE TABLE output ENGINE = File(Native) AS SELECT ' + ', '.join(columns[:i]) + ' FROM catalog_sales ORDER BY cs_item_sk, cs_quantity;', file=f)
 
 # increase the amount of sorting columns
 for i in range(1, len(columns) + 1):
     with open(f'sql/sorting{i}.sql', 'w+') as f:
         print('CREATE TABLE output AS SELECT * FROM catalog_sales ORDER BY ' + ', '.join(columns[:i]) + ';', file=f)
     with open(f'clickhouse/sorting{i}.sql', 'w+') as f:
-        print('CREATE TABLE output ENGINE = Memory AS SELECT * FROM catalog_sales ORDER BY ' + ', '.join(columns[:i]) + ';', file=f)
+        print('CREATE TABLE output ENGINE = File(Native) AS SELECT * FROM catalog_sales ORDER BY ' + ', '.join(columns[:i]) + ';', file=f)
