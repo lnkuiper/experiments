@@ -1,10 +1,15 @@
 import duckdb
+import sys
 
-sfs = [1, 10, 100, 300]
-
-for sf in sfs:
+def dsdgen(sf):
     print(f"DSDGEN SF{sf}");
     con = duckdb.connect(f"tpcds_sf{sf}.db")
     con.execute(f"CALL dsdgen(sf={sf})")
     con.execute(f"EXPORT DATABASE 'sf{sf}/data' (FORMAT CSV, DELIMITER ',')")
+    con.close()
 
+def main():
+    dsdgen(sys.argv[1])
+
+if __name__ == '__main__':
+    main()

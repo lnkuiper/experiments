@@ -35,7 +35,6 @@ for sys in */ ; do
       ./start.sh
       ./load_tpcds.sh
       python3 tpcds_client.py && touch "$FILE"
-      break
     fi
   done
   ./stop.sh
