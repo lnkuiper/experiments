@@ -20,21 +20,19 @@ for sys in */ ; do
   cd $sys
   FILE=${PATHVAR}/results/${sys}/randints.sql
   if ! test -f "$FILE"; then
+    echo "$sys randints"
     ./stop.sh
     ./start.sh
-    ./load_randints.sh
-    echo "$sys randints"
-    python3 randints_client.py && touch "$FILE"
+    ./load_randints.sh && python3 randints_client.py && touch "$FILE"
   fi
   for sf in "${sfs[@]}"; do
-    FILE=${PATHVAR}/results/${sys}/tpcds_sf${SF}.sql
+    FILE=${PATHVAR}/results/${sys}/tpcds_sf${sf}.sql
     if ! test -f "$FILE"; then
       echo "$sys tpcds sf $sf"
       export SF=${sf}
       ./stop.sh
       ./start.sh
-      ./load_tpcds.sh
-      python3 tpcds_client.py && touch "$FILE"
+      ./load_tpcds.sh && python3 tpcds_client.py && touch "$FILE"
     fi
   done
   ./stop.sh
