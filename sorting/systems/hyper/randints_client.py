@@ -33,7 +33,7 @@ def run(con, query_folder, results_folder):
         open(results_folder + qname, 'w+')
 
 def main():
-    con = '| docker exec -i hyper-container psql -U raasveld -p 7484 -h localhost test'
+    con = '| sudo docker exec -i hyper-container psql -U raasveld -p 7484 -h localhost test'
     run(con, '../../queries/randints/sql/', '../../results/hyper/randints/')
 
 if __name__ == '__main__':

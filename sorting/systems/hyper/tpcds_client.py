@@ -34,7 +34,7 @@ def run(con, query_folder, results_folder):
 
 def main():
     sf = os.environ['SF']
-    con = '| docker exec -i hyper-container psql -U raasveld -p 7484 -h localhost test'
+    con = '| sudo docker exec -i hyper-container psql -U raasveld -p 7484 -h localhost test'
     run(con, '../../queries/tpcds/catalog_sales/sql/', f'../../results/hyper/tpcds/sf{sf}/catalog_sales/')
     run(con, '../../queries/tpcds/customer/sql/', f'../../results/hyper/tpcds/sf{sf}/customer/')
 
