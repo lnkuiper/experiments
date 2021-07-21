@@ -3,7 +3,7 @@
 
 sudo docker run \
     --rm \
-    --publish=7484:7484 \
+    --publish=7485:7484 \
     --volume $PATHVAR/data:/sorting_data \
     --name hyper-container \
     --detach \

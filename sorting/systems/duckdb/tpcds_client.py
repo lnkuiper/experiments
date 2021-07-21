@@ -23,7 +23,7 @@ def run(con, query_folder, results_folder):
             con.execute('DROP TABLE IF EXISTS output;')
 
             before = time.time()
-            con.execute('PRAGMA threads=8; ' + query)
+            con.execute("PRAGMA threads=8; PRAGMA memory_limit='80GB'; " + query)
             after = time.time()
 
             # write time to csv

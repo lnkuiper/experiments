@@ -35,9 +35,9 @@ def run(con, query_folder, results_folder):
 
 def main():
     sf = os.environ['SF']
-    con = Client(host = 'localhost', port = '9000')
-    con.execute('set max_memory_usage=25000000000;')
-    con.execute('set max_bytes_before_external_sort=20000000000;')
+    con = Client(host = 'localhost', port = '9001')
+    con.execute('set max_memory_usage=100000000000;')
+    con.execute('set max_bytes_before_external_sort=80000000000;')
     run(con, '../../queries/tpcds/catalog_sales/clickhouse/', f'../../results/clickhouse/tpcds/sf{sf}/catalog_sales/')
     run(con, '../../queries/tpcds/customer/clickhouse/', f'../../results/clickhouse/tpcds/sf{sf}/customer/')
 

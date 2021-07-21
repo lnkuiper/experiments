@@ -25,14 +25,14 @@ def run(query_folder, results_folder):
             except:
                 None
 
-            subprocess.run('sudo docker exec -i monetdb-container monetdb stop test', shell=True, capture_output=True)
+            subprocess.run('sudo docker exec -i monetdb-container monetdb stop test', shell=True)
             time.sleep(3)
-            subprocess.run('sudo docker exec -i --user root monetdb-container /clear_cache.sh', shell=True, capture_output=True)
+            subprocess.run('sudo docker exec -i --user root monetdb-container /clear_cache.sh', shell=True)
             time.sleep(3)
-            subprocess.run('sudo docker exec -i monetdb-container monetdb start test', shell=True, capture_output=True)
+            subprocess.run('sudo docker exec -i monetdb-container monetdb start test', shell=True)
             time.sleep(3)
 
-            connection = pymonetdb.connect(username="monetdb", password="monetdb", hostname="localhost", port=50000, database="test")
+            connection = pymonetdb.connect(username="monetdb", password="monetdb", hostname="localhost", port=50001, database="test")
             con = connection.cursor()
 
             before = time.time()

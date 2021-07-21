@@ -20,7 +20,7 @@ def run(con, query_folder, results_folder):
 
         # time and execute the query
         for i in range(5):
-            subprocess.run(f'echo "DROP TABLE IF EXISTS output;" {con}', shell=True, capture_output=True)
+            con.execute("DROP TABLE IF EXISTS output;")
 
             before = time.time()
             con.execute(query)
