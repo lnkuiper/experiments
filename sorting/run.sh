@@ -5,7 +5,6 @@ cd systems
 sfs=(
   "1"
   "10"
-  "100"
 )
 
 for sys in */ ; do
