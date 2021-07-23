@@ -1,3 +1,4 @@
 *.sql
 randints/gnu/*.sh
-tpcds/*.sh
+tpcds/customer/gnu/*.sh
+tpcds/catalog_sales/gnu/*.sh
