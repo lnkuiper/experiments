@@ -40,7 +40,7 @@ columns = [
 ]
 
 def main():
-	sf = os.environ['SF']
+    sf = os.environ['SF']
     con = duckdb.connect(f'tpcds_sf{sf}.db')
     os.mkdir('db')
     for i in range(len(1, columns + 1)):

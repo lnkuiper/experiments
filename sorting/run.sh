@@ -10,10 +10,7 @@ sfs=(
 
 for sys in */ ; do
   echo "$sys"
-  if [ "$sys" == "umbra/" ]; then
-    continue
-  fi
-  if [ "$sys" == "gnu/" ]; then
+  if [ "$sys" != "gnu/" ]; then
     continue
   fi
   if [ "$sys" == "duckdb/" ]; then
