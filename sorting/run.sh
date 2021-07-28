@@ -16,6 +16,12 @@ for sys in */ ; do
   if [ "$sys" == "gnu/" ]; then
     continue
   fi
+  if [ "$sys" == "duckdb/" ]; then
+    continue
+  fi
+  if [ "$sys" == "clickhouse/" ]; then
+    continue
+  fi
   cd $sys
   FILE=${PATHVAR}/results/${sys}/randints.sql
   if ! test -f "$FILE"; then
