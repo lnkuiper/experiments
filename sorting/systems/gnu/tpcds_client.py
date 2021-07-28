@@ -34,8 +34,8 @@ def run(query_folder, results_folder):
 
 def main():
 	sf = os.environ['SF']
-	run(con, '../../queries/tpcds/catalog_sales/sql/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
-    run(con, '../../queries/tpcds/customer/sql/', f'../../results/duckdb/tpcds/sf{sf}/customer/')
+	run('../../queries/tpcds/catalog_sales/sql/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
+    run('../../queries/tpcds/customer/sql/', f'../../results/duckdb/tpcds/sf{sf}/customer/')
 
 if __name__ == '__main__':
 	main()
