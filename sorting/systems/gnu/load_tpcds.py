@@ -42,9 +42,8 @@ columns = [
 def main():
     sf = os.environ['SF']
     con = duckdb.connect(f'tpcds_sf{sf}.db')
-    os.mkdir('db')
-    for i in range(len(1, columns + 1)):
-    	con.execute("COPY (SELECT " + ", ".join(columns[:i]) + f " FROM catalog_sales) TO 'db/payload{i}.csv' ( DELIMITER ',' );")
+    for i in range(1, len(columns) + 1):
+    	con.execute("COPY (SELECT " + ", ".join(columns[:i]) + f" FROM catalog_sales) TO 'db/payload{i}.csv' ( DELIMITER ',' );")
     subprocess.run(f"rm -rf tpcds_sf{sf}.db*", shell=True)
 
 if __name__ == '__main__':

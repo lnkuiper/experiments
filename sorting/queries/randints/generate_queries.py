@@ -9,7 +9,7 @@ with open('sql/100_desc.sql', 'w+') as f:
     print('CREATE TEMPORARY TABLE output AS SELECT * from ints100_desc ORDER BY i;', file=f, end='')
 with open('clickhouse/100_desc.sql', 'w+') as f:
     print('CREATE TABLE output ENGINE = File(Native) AS SELECT * from ints100_desc ORDER BY i;', file=f, end='')
-with open('gnu/100_asc.sh', 'w+') as f:
+with open('gnu/100_desc.sh', 'w+') as f:
     print('sort -t, -k1,1n ../../data/randints/data/100desc.csv', file=f, end='')
 
 for i in range(1, 11):

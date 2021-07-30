@@ -22,7 +22,7 @@ def run(query_folder, results_folder):
 			subprocess.run("rm -rf /dev/shm/output.csv", shell=True)
 
 			before = time.time()
-			subprocess.run(f"{query} > /dev/shm/output.csv", shell=True);
+			subprocess.run(f"{query} > /dev/shm/output.csv", shell=True)
 			after = time.time()
 
 			# write time to csv

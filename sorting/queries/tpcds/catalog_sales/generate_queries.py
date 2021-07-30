@@ -44,7 +44,7 @@ for i in range(1, len(columns) + 1):
     with open(f'clickhouse/payload{i}.sql', 'w+') as f:
         print('CREATE TABLE output ENGINE = File(Native) AS SELECT ' + ', '.join(columns[:i]) + ' FROM catalog_sales ORDER BY cs_quantity, cs_item_sk;', file=f)
     with open(f'gnu/payload{i}.sh', 'w+') as f:
-        print('sort -t, -k19,19n -k16,16n db/payload{i}.csv', file=f, end='')
+        print(f'sort -t, -k19,19n -k16,16n db/payload{i}.csv', file=f, end='')
 
 # increase the amount of sorting columns
 for i in range(1, len(columns) + 1):

@@ -3,7 +3,7 @@ import subprocess
 import time
 from tqdm import tqdm
 
-def run(query_folder, results_folder):
+def run(query_folder, results_folder, sf):
 	for qname in tqdm(os.listdir(query_folder)):
 		# skip .keep file
 		if not qname.endswith('.sh'):
@@ -15,14 +15,15 @@ def run(query_folder, results_folder):
 
 		# read the query
 		with open(query_folder + qname, 'r') as f:
-			query = f.read()
+			query = f.read().replace('$sf$', sf)
 
 		# time and execute the query
 		for i in range(5):
 			subprocess.run("rm -rf /dev/shm/output.csv", shell=True)
 
 			before = time.time()
-			subprocess.run(f"{query} > /dev/shm/output.csv", shell=True);
+			print(f"{query} > /dev/shm/output.csv")
+			subprocess.run(f"{query} > /dev/shm/output.csv", shell=True)
 			after = time.time()
 
 			# write time to csv
@@ -33,9 +34,9 @@ def run(query_folder, results_folder):
 		open(results_folder + qname, 'w+')
 
 def main():
-	sf = os.environ['SF']
-	run('../../queries/tpcds/catalog_sales/sql/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
-    run('../../queries/tpcds/customer/sql/', f'../../results/duckdb/tpcds/sf{sf}/customer/')
+    sf = os.environ['SF']
+    run('../../queries/tpcds/catalog_sales/gnu/', f'../../results/gnu/tpcds/sf{sf}/catalog_sales/', sf)
+    run('../../queries/tpcds/customer/gnu/', f'../../results/gnu/tpcds/sf{sf}/customer/', sf)
 
 if __name__ == '__main__':
 	main()
