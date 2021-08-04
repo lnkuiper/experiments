@@ -23,7 +23,7 @@ def run(con, query_folder, results_folder):
 			con.execute('DROP TABLE IF EXISTS output;')
 
 			before = time.time()
-			con.execute("PRAGMA threads=8; PRAGMA memory_limit='80GB'; " + query)
+			con.execute(query)
 			after = time.time()
 
 			# write time to csv
@@ -35,6 +35,7 @@ def run(con, query_folder, results_folder):
 
 def main():
 	con = duckdb.connect('randints.db')
+        con.execute("PRAGMA threads=8; PRAGMA memory_limit='70GB'") 
 	run(con, '../../queries/randints/sql/', '../../results/duckdb/randints/')
 	run(con, '../../queries/randints/duckdb/', '../../results/duckdb/randints_threads/')
 

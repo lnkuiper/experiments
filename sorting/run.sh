@@ -6,17 +6,12 @@ sfs=(
   "1"
   "10"
   "100"
+  "300"
 )
 
 for sys in */ ; do
   echo "$sys"
-  if [ "$sys" != "gnu/" ]; then
-    continue
-  fi
-  if [ "$sys" == "duckdb/" ]; then
-    continue
-  fi
-  if [ "$sys" == "clickhouse/" ]; then
+  if [ "$sys" != "clickhouse/" ]; then
     continue
   fi
   cd $sys
