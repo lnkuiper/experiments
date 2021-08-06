@@ -37,6 +37,7 @@ def main():
     con = Client(host = 'localhost', port = '9001')
     con.execute('set max_memory_usage=100000000000;')
     con.execute('set max_bytes_before_external_sort=80000000000;')
+    con.execute('set max_threads=8;')
     run(con, '../../queries/randints/clickhouse/', '../../results/clickhouse/randints/')
 
 if __name__ == '__main__':
