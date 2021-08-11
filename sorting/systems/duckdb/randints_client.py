@@ -35,7 +35,7 @@ def run(con, query_folder, results_folder):
 
 def main():
     con = duckdb.connect('randints.db')
-    con.execute("PRAGMA threads=8; PRAGMA memory_limit='90GB'") 
+    con.execute("PRAGMA threads=8; PRAGMA memory_limit='80GB'") 
     run(con, '../../queries/randints/sql/', '../../results/duckdb/randints/')
     run(con, '../../queries/randints/duckdb/', '../../results/duckdb/randints_threads/')
 
