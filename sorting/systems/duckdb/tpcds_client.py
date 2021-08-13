@@ -4,7 +4,7 @@ import subprocess
 import time
 from tqdm import tqdm
 
-def run(con, query_folder, results_folder):
+def run(sf, query_folder, results_folder):
     for qname in tqdm(os.listdir(query_folder)):
         # skip .keep file
         if not qname.endswith('.sql'):
@@ -20,11 +20,15 @@ def run(con, query_folder, results_folder):
 
         # time and execute the query
         for i in range(5):
-            con.execute('DROP TABLE IF EXISTS output;')
+            con = duckdb.connect(f'tpcds_sf{sf}.db', read_only=True)
+            con.execute("PRAGMA threads=8;")
+            con.execute("PRAGMA memory_limit='80GB';")
 
             before = time.time()
             con.execute(query)
             after = time.time()
+
+            con.close()
 
             # write time to csv
             with open(results_folder + 'results.csv', 'a+') as f:
@@ -35,10 +39,8 @@ def run(con, query_folder, results_folder):
 
 def main():
     sf = os.environ['SF']
-    con = duckdb.connect(f'tpcds_sf{sf}.db')
-    con.execute("PRAGMA threads=8; PRAGMA memory_limit='80GB';")
-    run(con, '../../queries/tpcds/catalog_sales/sql/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
-    run(con, '../../queries/tpcds/customer/sql/', f'../../results/duckdb/tpcds/sf{sf}/customer/')
+    run(sf, '../../queries/tpcds/catalog_sales/sql/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
+    run(sf, '../../queries/tpcds/customer/sql/', f'../../results/duckdb/tpcds/sf{sf}/customer/')
 
 if __name__ == '__main__':
     main()
