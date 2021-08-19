@@ -20,6 +20,6 @@ for i in range(1, 11):
     with open(f'gnu/{i * 10}.sh', 'w+') as f:
         print(f'sort -t, -k1,1n ../../data/randints/data/{1 * 10}.csv', file=f, end='')
 
-for i in range(1, 17):
+for i in range(1, 9):
     with open(f'duckdb/{i}.sql', 'w+') as f:
         print(f'PRAGMA threads={i}; CREATE TEMPORARY TABLE output AS SELECT * from ints100 ORDER BY i;', file=f, end='')
