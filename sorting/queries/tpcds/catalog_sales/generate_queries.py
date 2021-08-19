@@ -43,6 +43,9 @@ for i in range(1, len(columns) + 1):
         print('CREATE TEMPORARY TABLE output AS SELECT ' + ', '.join(columns[:i]) + ' FROM catalog_sales ORDER BY cs_quantity, cs_item_sk;', file=f)
     with open(f'clickhouse/payload{i}.sql', 'w+') as f:
         print('CREATE TABLE output ENGINE = File(Native) AS SELECT ' + ', '.join(columns[:i]) + ' FROM catalog_sales ORDER BY cs_quantity, cs_item_sk;', file=f)
+    with open(f'pandas/payload{i}.sql', 'w+') as f:
+        print(','.join(columns[:i]), file=f)
+        print('cs_quantity,cs_item_sk', file=f)
     with open(f'gnu/payload{i}.sh', 'w+') as f:
         print(f'sort -t, -k19,19n -k16,16n db/payload{i}.csv', file=f, end='')
 
@@ -52,5 +55,8 @@ for i in range(1, 5):
         print('CREATE TEMPORARY TABLE output AS SELECT * FROM catalog_sales ORDER BY ' + ', '.join(columns[:i]) + ';', file=f)
     with open(f'clickhouse/sorting{i}.sql', 'w+') as f:
         print('CREATE TABLE output ENGINE = File(Native) AS SELECT * FROM catalog_sales ORDER BY ' + ', '.join(columns[:i]) + ';', file=f)
+    with open(f'pandas/sorting{i}.sql', 'w+') as f:
+        print(','.join(columns), file=f)
+        print(','.join(columns[:i]), file=f)
     with open(f'gnu/sorting{i}.sh', 'w+') as f:
         print('sort -t, ' + ' '.join([f'-k{col_idx},{col_idx}n' for col_idx in col_idxs[:i]]) + ' ../../data/tpcds/sf$sf$/data/1_catalog_sales.csv', file=f, end='')

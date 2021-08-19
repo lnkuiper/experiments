@@ -5,12 +5,11 @@ cd systems
 sfs=(
   "1"
   "10"
-  "100"
 )
 
 for sys in */ ; do
   echo "$sys"
-  if [ "$sys" != "duckdb/" ]; then
+  if [ "$sys" != "sqlite3/" ]; then
     continue
   fi
   cd $sys

@@ -8,6 +8,7 @@ sudo docker run \
     --name hyper-container \
     --detach \
     --shm-size=8g \
+    --platform linux/amd64 \
     hyper-image:latest
 
 echo "Waiting for the container to start..."

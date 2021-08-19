@@ -1,4 +1,4 @@
-FROM fedora/postgresql
+FROM --platform=linux/amd64 fedora/postgresql
 
 USER 0
 

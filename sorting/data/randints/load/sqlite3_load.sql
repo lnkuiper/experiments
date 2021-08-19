@@ -1,0 +1,12 @@
+.import ../../data/randints/data/100asc.csv ints100_asc
+.import ../../data/randints/data/100desc.csv ints100_desc
+.import ../../data/randints/data/10.csv ints10
+.import ../../data/randints/data/20.csv ints20
+.import ../../data/randints/data/30.csv ints30
+.import ../../data/randints/data/40.csv ints40
+.import ../../data/randints/data/50.csv ints50
+.import ../../data/randints/data/60.csv ints60
+.import ../../data/randints/data/70.csv ints70
+.import ../../data/randints/data/80.csv ints80
+.import ../../data/randints/data/90.csv ints90
+.import ../../data/randints/data/100.csv ints100
