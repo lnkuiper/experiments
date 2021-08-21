@@ -17,8 +17,8 @@ def run(df, sf, query_folder, results_folder):
         # read the query
         with open(query_folder + qname, 'r') as f:
             query = f.readlines()
-            select_cols = query[0].split(',')
-            order_cols = query[1].split(',')
+            select_cols = [c.strip() for c in query[0].split(',')]
+            order_cols = [c.strip() for c in query[1].split(',')]
 
         # pandas cannot order by cols not in the select
         for oc in order_cols:
@@ -42,16 +42,16 @@ def run(df, sf, query_folder, results_folder):
 
 def main():
     sf = os.environ['SF']
-    data_folder = f'../../data/tpcds/sf{sf}/'
+    data_folder = f'../../data/tpcds/sf{sf}/data/'
 
-    with open(data_folder + '/schema/pandas_catalog_sales_schema.sql', 'w') as f:
-        col_names = f.readlines[0].split(',')
-    df = pd.read_csv(f'../../data/tpcds/sf{sf}/data/1_catalog_sales.csv' + csv_name, names=col_names)
+    with open('../../data/tpcds/schema/pandas_catalog_sales_schema.sql', 'r') as f:
+        col_names = [c.strip() for c in f.readlines()[0].split(',')]
+    df = pd.read_csv(data_folder + '1_catalog_sales.csv', names=col_names)
     run(df, sf, '../../queries/tpcds/catalog_sales/pandas/', f'../../results/pandas/tpcds/sf{sf}/catalog_sales/')
 
-    with open(data_folder + '/schema/pandas_customer_schema.sql', 'w') as f:
-        col_names = f.readlines[0].split(',')
-    df = pd.read_csv(f'../../data/tpcds/sf{sf}/data/22_customer.csv' + csv_name, names=col_names)
+    with open('../../data/tpcds/schema/pandas_customer_schema.sql', 'r') as f:
+        col_names = [c.strip() for c in f.readlines()[0].split(',')]
+    df = pd.read_csv(data_folder + '22_customer.csv', names=col_names)
     run(df, sf, '../../queries/tpcds/customer/pandas/', f'../../results/pandas/tpcds/sf{sf}/customer/')
 
 if __name__ == '__main__':

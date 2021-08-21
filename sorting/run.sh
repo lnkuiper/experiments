@@ -10,7 +10,7 @@ sfs=(
 
 for sys in */ ; do
   echo "$sys"
-  if [ "$sys" != "clickhouse/" ]; then
+  if [ "$sys" != "pandas/" ]; then
     continue
   fi
   cd $sys
