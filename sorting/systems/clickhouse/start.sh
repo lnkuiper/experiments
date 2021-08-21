@@ -1,4 +1,4 @@
 #!/bin/bash
-. ../../pathvar.sh
-sudo docker run --rm -d --name clickhouse_server -p 9001:9000 --ulimit nofile=262144:262144 yandex/clickhouse-server
+cd ClickHouse
+nohup ./build/programs/clickhouse-server --config-file ./programs/server/config.xml &
 sleep 10

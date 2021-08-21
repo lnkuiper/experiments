@@ -10,7 +10,7 @@ sfs=(
 
 for sys in */ ; do
   echo "$sys"
-  if [ "$sys" != "sqlite3/" ]; then
+  if [ "$sys" != "clickhouse/" ]; then
     continue
   fi
   cd $sys

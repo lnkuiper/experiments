@@ -1,3 +1,4 @@
 #!/bin/bash
-sudo docker stop clickhouse_server > /dev/null 2>&1
+./clickhouse_client/clickhouse client --port 9001 --multiquery < drop.sql
+killall clickhouse-server
 sleep 10

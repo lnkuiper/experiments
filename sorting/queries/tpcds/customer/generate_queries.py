@@ -52,9 +52,9 @@ for i in range(1, len(varchar_columns) + 1):
 with open('sql/sort_strings.sql', 'w+') as f:
     print('CREATE TEMPORARY TABLE output AS SELECT * FROM customer ORDER BY c_first_name, c_last_name;', file=f)
 with open('clickhouse/sort_strings.sql', 'w+') as f:
-    print('CREATE TEMPORARY TABLE output ENGINE = File(Native) AS SELECT * FROM customer ORDER BY c_first_name, c_last_name;', file=f)
+    print('CREATE TABLE output ENGINE = File(Native) AS SELECT * FROM customer ORDER BY c_first_name, c_last_name;', file=f)
 
 with open('sql/sort_ints.sql', 'w+') as f:
     print('CREATE TEMPORARY TABLE output AS SELECT * FROM customer ORDER BY c_birth_year, c_birth_month, c_birth_day;', file=f)
 with open('clickhouse/sort_ints.sql', 'w+') as f:
-    print('CREATE TEMPORARY TABLE output ENGINE = File(Native) AS SELECT * FROM customer ORDER BY c_birth_year, c_birth_month, c_birth_day;', file=f)
+    print('CREATE TABLE output ENGINE = File(Native) AS SELECT * FROM customer ORDER BY c_birth_year, c_birth_month, c_birth_day;', file=f)
