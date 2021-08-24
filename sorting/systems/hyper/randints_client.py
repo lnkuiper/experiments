@@ -4,11 +4,9 @@ import time
 from tqdm import tqdm
 
 def run(con, query_folder, results_folder):
-    for qname in tqdm(os.listdir(query_folder)):
-        # skip .keep file
-        if not qname.endswith('.sql'):
-            continue
-
+    qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
+    qnames = sorted(qnames, key=lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split('\d+()', s)])
+    for qname in tqdm(qnames):
         # skip if already done
         if (os.path.isfile(results_folder + qname)):
             continue
@@ -19,10 +17,10 @@ def run(con, query_folder, results_folder):
 
         # time and execute the query
         for i in range(5):
-            subprocess.run(f'echo "DROP TABLE IF EXISTS output;" {con}', shell=True)
+            subprocess.run(f'echo "DROP TABLE IF EXISTS output;" {con}', shell=True, capture_output=True)
             
             before = time.time()
-            subprocess.run(f'echo "{query}" {con}', shell=True)
+            subprocess.run(f'echo "{query}" {con}', shell=True, capture_output=True)
             after = time.time()
 
             # write time to csv
@@ -33,7 +31,7 @@ def run(con, query_folder, results_folder):
         open(results_folder + qname, 'w+')
 
 def main():
-    con = '| sudo docker exec -i hyper-container psql -U raasveld -p 7484 -h localhost test'
+    con = '| psql -U raasveld -p 7484 -h localhost mydb'
     run(con, '../../queries/randints/sql/', '../../results/hyper/randints/')
 
 if __name__ == '__main__':

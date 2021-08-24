@@ -1,26 +1,6 @@
 #!/bin/bash
 . ../../pathvar.sh
 
-sudo docker run \
-    --rm \
-    --publish=7485:7484 \
-    --volume $PATHVAR/data:/sorting_data \
-    --name hyper-container \
-    --detach \
-    --shm-size=8g \
-    --platform linux/amd64 \
-    hyper-image:latest
+cd hyper-binaries && ./run.sh > /dev/null 2>&1 & 
+sleep 3
 
-echo "Waiting for the container to start..."
-sleep 10
-echo "Container started"
-
-sudo docker exec \
-    --detach hyper-container \
-    /hyper/hyperd --database /data/mydb --log-dir /hyper/ --config /hyper/config --skip-license --init-user raasveld --no-ssl --listen-connection tab.tcp://localhost:7484,tab.domain:///tmp/LD/domain/.s.PGSQL.7484 --no-password start
-
-echo "Waiting for HyPer to start..."
-sleep 10
-echo "HyPer started"
-
-echo "CREATE DATABASE test;"  | sudo docker exec -i hyper-container psql -U raasveld -p 7484 -h localhost

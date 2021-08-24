@@ -1,5 +1,6 @@
 #!/bin/bash
 . ../../pathvar.sh
 
-sudo docker exec -i hyper-container psql -U raasveld -p 7484 -h localhost test -f /sorting_data/randints/schema/schema.sql
-sudo docker exec -i hyper-container psql -U raasveld -p 7484 -h localhost test -f /sorting_data/randints/load/load.sql
+psql -U raasveld -p 7484 -h localhost mydb -f $PATHVAR/data/randints/schema/schema.sql
+sed 's@PATHVAR@'"$PATHVAR"'@' $PATHVAR/data/randints/load/duckdb_load.sql | psql -U raasveld -p 7484 -h localhost mydb
+

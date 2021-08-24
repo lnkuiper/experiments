@@ -15,11 +15,10 @@ def dsdgen(sf):
     subprocess.run(f"rm -rf tpcds_sf{sf}.db*", shell=True)
 
 def main():
-    for sf in [1, 10, 100]:
-        if "22_customer.csv" in os.listdir(f"sf{sf}/data/") and "1_catalog_sales.csv" in os.listdir(f"sf{sf}/data/"):
+    for sf in [1, 10, 100, 300]:
+        if "22_customer.csv" in os.listdir(f"sf{sf}/data/"):
             continue
         dsdgen(sf)
-        break
 
 if __name__ == '__main__':
     main()

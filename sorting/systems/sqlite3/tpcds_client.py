@@ -5,11 +5,9 @@ import time
 from tqdm import tqdm
 
 def run(sf, query_folder, results_folder):
-    for qname in tqdm(os.listdir(query_folder)):
-        # skip .keep file
-        if not qname.endswith('.sql'):
-            continue
-
+    qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
+    qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
+    for qname in tqdm(qnames):
         # skip if already done
         if (os.path.isfile(results_folder + qname)):
             continue
@@ -37,7 +35,8 @@ def run(sf, query_folder, results_folder):
 
 def main():
     sf = os.environ['SF']
-    run(sf, '../../queries/tpcds/catalog_sales/sql/', f'../../results/sqlite3/tpcds/sf{sf}/catalog_sales/')
+    if int(sf) != 300:
+        run(sf, '../../queries/tpcds/catalog_sales/sql/', f'../../results/sqlite3/tpcds/sf{sf}/catalog_sales/')
     run(sf, '../../queries/tpcds/customer/sql/', f'../../results/sqlite3/tpcds/sf{sf}/customer/')
 
 if __name__ == '__main__':

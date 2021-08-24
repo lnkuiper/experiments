@@ -5,11 +5,9 @@ import time
 from tqdm import tqdm
 
 def run(df, sf, query_folder, results_folder):
-    for qname in tqdm(os.listdir(query_folder)):
-        # skip .keep file
-        if not qname.endswith('.sql'):
-            continue
-
+    qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
+    qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
+    for qname in tqdm(os.listdir(qnames)):
         # skip if already done
         if (os.path.isfile(results_folder + qname)):
             continue
@@ -44,10 +42,11 @@ def main():
     sf = os.environ['SF']
     data_folder = f'../../data/tpcds/sf{sf}/data/'
 
-    with open('../../data/tpcds/schema/pandas_catalog_sales_schema.sql', 'r') as f:
-        col_names = [c.strip() for c in f.readlines()[0].split(',')]
-    df = pd.read_csv(data_folder + '1_catalog_sales.csv', names=col_names)
-    run(df, sf, '../../queries/tpcds/catalog_sales/pandas/', f'../../results/pandas/tpcds/sf{sf}/catalog_sales/')
+    if int(sf) != 300:
+        with open('../../data/tpcds/schema/pandas_catalog_sales_schema.sql', 'r') as f:
+            col_names = [c.strip() for c in f.readlines()[0].split(',')]
+        df = pd.read_csv(data_folder + '1_catalog_sales.csv', names=col_names)
+        run(df, sf, '../../queries/tpcds/catalog_sales/pandas/', f'../../results/pandas/tpcds/sf{sf}/catalog_sales/')
 
     with open('../../data/tpcds/schema/pandas_customer_schema.sql', 'r') as f:
         col_names = [c.strip() for c in f.readlines()[0].split(',')]
