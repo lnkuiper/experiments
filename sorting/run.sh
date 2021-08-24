@@ -6,11 +6,12 @@ sfs=(
   "1"
   "10"
   "100"
+  "300"
 )
 
 for sys in */ ; do
   echo "$sys"
-  if [ "$sys" != "hyper/" ]; then
+  if [ "$sys" != "pandas/" ]; then
     continue
   fi
   cd $sys

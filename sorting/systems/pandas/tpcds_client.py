@@ -7,7 +7,7 @@ from tqdm import tqdm
 def run(df, sf, query_folder, results_folder):
     qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
     qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
-    for qname in tqdm(os.listdir(qnames)):
+    for qname in tqdm(qnames):
         # skip if already done
         if (os.path.isfile(results_folder + qname)):
             continue
