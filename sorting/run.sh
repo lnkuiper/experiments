@@ -11,9 +11,9 @@ sfs=(
 
 for sys in */ ; do
   echo "$sys"
-  if [ "$sys" != "pandas/" ]; then
-    continue
-  fi
+#  if [ "$sys" != "hyper/" ]; then
+#    continue
+#  fi
   cd $sys
   FILE=${PATHVAR}/results/${sys}/randints.sql
   if ! test -f "$FILE"; then

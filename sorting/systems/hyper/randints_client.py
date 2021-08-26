@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 def run(con, query_folder, results_folder):
     qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
-    qnames = sorted(qnames, key=lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split('\d+()', s)])
+    qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
     for qname in tqdm(qnames):
         # skip if already done
         if (os.path.isfile(results_folder + qname)):
@@ -33,6 +33,7 @@ def run(con, query_folder, results_folder):
 def main():
     con = '| psql -U raasveld -p 7484 -h localhost mydb'
     run(con, '../../queries/randints/sql/', '../../results/hyper/randints/')
+    run(con, '../../queries/randints/hyper/', '../../results/hyper/randints_threads/')
 
 if __name__ == '__main__':
     main()
