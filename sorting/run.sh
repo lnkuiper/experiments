@@ -11,7 +11,7 @@ sfs=(
 
 for sys in */ ; do
   echo "$sys"
-#  if [ "$sys" != "hyper/" ]; then
+#  if [ "$sys" != "clickhouse/" ]; then
 #    continue
 #  fi
   cd $sys

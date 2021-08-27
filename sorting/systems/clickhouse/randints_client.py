@@ -4,13 +4,17 @@ import subprocess
 import time
 from tqdm import tqdm
 
-def run(con, query_folder, results_folder):
+def run(con, query_folder, results_folder, threads=False):
     qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
     qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
     for qname in tqdm(qnames):
         # skip if already done
         if (os.path.isfile(results_folder + qname)):
             continue
+
+        if threads:
+            t = int(qname.split('.sql')[0])
+            con.execute(f'set max_threads={t};')
 
         # read the query
         with open(query_folder + qname, 'r') as f:
@@ -37,6 +41,7 @@ def main():
     con.execute('set max_bytes_before_external_sort=10000000000;')
     con.execute('set max_threads=4;')
     run(con, '../../queries/randints/clickhouse/', '../../results/clickhouse/randints/')
+    run(con, '../../queries/randints/clickhouse/threads/', '../../results/clickhouse/randints_threads/', True)
 
 if __name__ == '__main__':
     main()
