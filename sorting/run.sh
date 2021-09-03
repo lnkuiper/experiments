@@ -3,17 +3,14 @@
 
 cd systems
 sfs=(
-  "1"
-  "10"
-  "100"
   "300"
 )
 
 for sys in */ ; do
   echo "$sys"
-#  if [ "$sys" != "clickhouse/" ]; then
-#    continue
-#  fi
+  if [ "$sys" != "duckdb/" ]; then
+    continue
+  fi
   cd $sys
   FILE=${PATHVAR}/results/${sys}/randints.sql
   if ! test -f "$FILE"; then
