@@ -4,7 +4,7 @@ import subprocess
 import time
 from tqdm import tqdm
 
-def run(sf, query_folder, results_folder):
+def run(sf, query_folder, results_folder, external=False):
     qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
     qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
     for qname in tqdm(qnames):
@@ -20,7 +20,9 @@ def run(sf, query_folder, results_folder):
         for i in range(5):
             con = duckdb.connect(f'tpcds_sf{sf}.db', read_only=True)
             con.execute("PRAGMA threads=4;")
-            con.execute("PRAGMA memory_limit='10GB';")
+            con.execute("PRAGMA memory_limit='12GB';")
+            if external:
+                con.execute("PRAGMA force_external;")
 
             before = time.time()
             con.execute(query)
@@ -40,6 +42,7 @@ def main():
     if int(sf) != 300:
         run(sf, '../../queries/tpcds/catalog_sales/sql/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
     run(sf, '../../queries/tpcds/customer/sql/', f'../../results/duckdb/tpcds/sf{sf}/customer/')
+    run(sf, '../../queries/tpcds/customer/sql/', f'../../results/duckdb/tpcds/sf{sf}/customer_external/', true)
 
 if __name__ == '__main__':
     main()
