@@ -355,7 +355,7 @@ string SimulateReOrder(idx_t count, idx_t columns, idx_t col_width) {
 
 void SimulateReOrder(idx_t row_max, idx_t col_max, idx_t col_width, idx_t iterations) {
     cout << "SimulateReOrder" << endl;
-    ofstream results_file("results_reorder.csv", ios::trunc);
+    ofstream results_file("results/reorder.csv", ios::trunc);
     results_file << CreateReOrderCSVHeader() << endl;
     for (idx_t r = 10; r < row_max; r += 2) {
         for (idx_t c = 0; c < col_max; c++) {
@@ -935,7 +935,7 @@ string SimulateComparator(idx_t count, idx_t columns) {
 
 void SimulateComparator(idx_t row_max, idx_t col_max, idx_t iterations) {
     cout << "SimulateComparator" << endl;
-    ofstream results_file("results_comparator.csv", ios::trunc);
+    ofstream results_file("results/comparator.csv", ios::trunc);
     results_file << CreateComparatorCSVHeader() << endl;
     for (idx_t r = 10; r < row_max; r += 2) {
         for (idx_t c = 1; c < col_max + 1; c++) {
@@ -1062,7 +1062,7 @@ string SimulateSort(idx_t count, idx_t columns) {
 
 void SimulateSort(idx_t row_max, idx_t col_max, idx_t iterations) {
     cout << "SimulateSort" << endl;
-    ofstream results_file("results_sort.csv", ios::trunc);
+    ofstream results_file("results/sort.csv", ios::trunc);
     results_file << CreateSortCSVHeader() << endl;
     for (idx_t r = 10; r < row_max; r += 2) {
         for (idx_t c = 1; c < col_max + 1; c++) {
@@ -1233,7 +1233,7 @@ string SimulateMerge(idx_t count, idx_t columns, idx_t col_width) {
 
 void SimulateMerge(idx_t row_max, idx_t col_max, idx_t col_width, idx_t iterations) {
     cout << "SimulateMerge" << endl;
-    ofstream results_file("results_merge.csv", ios::trunc);
+    ofstream results_file("results/merge.csv", ios::trunc);
     results_file << CreateMergeCSVHeader() << endl;
     for (idx_t r = 4; r < row_max; r += 2) {
         for (idx_t c = 0; c < col_max; c++) {
@@ -1251,14 +1251,52 @@ void SimulateMerge(idx_t row_max, idx_t col_max, idx_t col_width, idx_t iteratio
 //===--------------------------------------------------------------------===//
 // Main
 //===--------------------------------------------------------------------===//
-int main() {
+int main(int argc, char *argv[]) {
     // NOTE: for comparator we'd like a lot of key collisions so that the 2nd, 3rd, etc. columns are needed more often
     //  This would allow us to show off the better data locality of the row comparator
     //  However, radix sort is definitely worse on this same data: No such thing as free lunch!
-
-    // VerifyReOrder();
-    // SimulateReOrder(25, 8, 4, 3);
-    // SimulateComparator(25, 8, 3);
-    // SimulateSort(25, 8, 3);
-    SimulateMerge(25, 8, 4, 3);
+    if (argc == 1) {
+        // VerifyReOrder();
+        SimulateReOrder(25, 8, 4, 3);
+        SimulateComparator(25, 8, 3);
+        SimulateSort(25, 8, 3);
+        SimulateMerge(25, 8, 4, 3);
+    } else {
+        assert(argc == 5);
+        auto category = string(argv[2]);
+        assert(category == "col" || category == "row");
+        auto sim = string(argv[1]);
+        assert(sim == "reorder" || sim == "comparator" || sim == "sort" || sim == "merge");
+        int count = 1 << stoi(argv[3]);
+        int columns = stoi(argv[4]);
+        if (sim == "reorder" || sim == "merge") {
+            columns = 1 << columns;
+        }
+        cout << sim << " " << category << " " << count << " " << columns << endl;
+        if (category == "col") {
+            if (sim == "reorder") {
+                auto row_ids = InitRowIDs<idx_t>(count, true);
+                SimulateColumnReOrder((idx_t *)row_ids.get(), count, columns, 4);
+            } else if (sim == "comparator") {
+                SimulateColumnComparator<uint32_t, uint32_t>(count, columns);
+            } else if (sim == "sort") {
+                // category "col" means std::sort here
+                SimulateSort<uint32_t, uint32_t>(count, columns, false);
+            } else if (sim == "merge") {
+                SimulateColumnMerge(count, columns, 4);
+            }
+        } else if (category == "row") {
+            if (sim == "reorder") {
+                auto row_ids = InitRowIDs<idx_t>(count, true);
+                SimulateRowReOrder((idx_t *)row_ids.get(), count, columns, 4);
+            } else if (sim == "comparator") {
+                SimulateRowComparator<uint32_t, uint32_t>(count, columns, true);
+            } else if (sim == "sort") {
+                // category "col" means radix sort here
+                SimulateSort<uint32_t, uint32_t>(count, columns, true);
+            } else if (sim == "merge") {
+                SimulateRowMerge(count, columns, 4);
+            }
+        }
+    }
 }
