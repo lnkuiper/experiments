@@ -53,11 +53,18 @@ def main():
             for category in ['col', 'row']:
                 for count in range(10, 26):
                     for columns in range(1, 9):
+                        if sim == 'reorder' or sim == 'merge':
+                            columns = min(1 << (columns - 1), 96)
                         args = f' {sim} {category} {count} {columns}'
                         for rep in range(5):
-                            trace(args)
-                            counters = get_counters()
-                            append_row_to_file(f, sim, category, count, columns, counters)
+                            while True:
+                                try:
+                                    trace(args)
+                                    counters = get_counters()
+                                    append_row_to_file(f, sim, category, count, columns, counters)
+                                    break
+                                except:
+                                    continue
 
 
 if __name__ == '__main__':

@@ -1269,9 +1269,6 @@ int main(int argc, char *argv[]) {
         assert(sim == "reorder" || sim == "comparator" || sim == "sort" || sim == "merge");
         int count = 1 << stoi(argv[3]);
         int columns = stoi(argv[4]);
-        if (sim == "reorder" || sim == "merge") {
-            columns = 1 << columns;
-        }
         cout << sim << " " << category << " " << count << " " << columns << endl;
         if (category == "col") {
             if (sim == "reorder") {
