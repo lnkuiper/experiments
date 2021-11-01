@@ -995,7 +995,7 @@ void RadixSortLSD(data_ptr_t orig_ptr, const idx_t &count, const idx_t &row_widt
 }
 
 inline void InsertionSort(const data_ptr_t source_ptr, const data_ptr_t target_ptr, const idx_t &count,
-                          const idx_t &row_width, const idx_t &total_comp_width, const idx_t offset) {
+                          const idx_t &row_width, const idx_t &total_comp_width, const idx_t &offset) {
 	if (count > 1) {
 		auto temp_val = unique_ptr<data_t[]>(new data_t[row_width]);
 		const data_ptr_t val = temp_val.get();
@@ -1047,17 +1047,16 @@ void RadixSortMSD(const data_ptr_t source_ptr, const data_ptr_t target_ptr, cons
 		return;
 	}
 	// Recurse
+	idx_t radix_count = locations[0];
 	for (idx_t radix = 0; radix < 256; radix++) {
-		const idx_t radix_count = radix == 0 ? locations[0] : locations[radix] - locations[radix - 1];
 		const idx_t loc = (locations[radix] - radix_count) * row_width;
-		if (radix_count == 0) {
-			continue;
-		} else if (radix_count > 24) {
+		if (radix_count > 24) {
 			RadixSortMSD(target_ptr + loc, source_ptr + loc, radix_count, row_width, comp_width, offset + 1,
 			             locations + 257);
-		} else {
+		} else if (radix_count != 0) {
 			InsertionSort(target_ptr + loc, source_ptr + loc, radix_count, row_width, comp_width, offset + 1);
 		}
+		radix_count = locations[radix + 1] - locations[radix];
 	}
 }
 
