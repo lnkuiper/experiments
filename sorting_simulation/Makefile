@@ -4,3 +4,6 @@ build:
 debug:
 	g++ -std=c++11 -o simulation -g -fno-omit-frame-pointer -fsanitize=address simulation.cpp
 
+format:
+	clang-format -i simulation.cpp
+
