@@ -958,9 +958,6 @@ string CreateSortCSVHeader() {
 }
 
 void RadixSortLSD(data_ptr_t orig_ptr, const idx_t &count, const idx_t &row_width, const idx_t &comp_width) {
-	if (count <= 1) {
-		return;
-	}
 	auto temp_block = unique_ptr<data_t[]>(new data_t[count * row_width]);
 	bool swap = false;
 
@@ -1020,15 +1017,10 @@ inline void InsertionSort(const data_ptr_t source_ptr, const data_ptr_t target_p
 }
 
 void RadixSortMSD(const data_ptr_t source_ptr, const data_ptr_t target_ptr, const idx_t &count, const idx_t &row_width,
-                  const idx_t &comp_width, const idx_t offset) {
-	if (count < 2) {
-		return;
-	}
-	idx_t counts[256];
-	idx_t locations[256];
+                  const idx_t &comp_width, const idx_t offset, idx_t locations[]) {
 	// Init counts to 0
-	memset(counts, 0, sizeof(counts));
-	locations[0] = 0;
+	memset(locations, 0, 257 * sizeof(idx_t));
+	idx_t *counts = locations + 1;
 	// Collect counts
 	data_ptr_t offset_ptr = source_ptr + offset;
 	for (idx_t i = 0; i < count; i++) {
@@ -1036,8 +1028,8 @@ void RadixSortMSD(const data_ptr_t source_ptr, const data_ptr_t target_ptr, cons
 		offset_ptr += row_width;
 	}
 	// Compute locations from counts
-	for (idx_t radix = 0; radix < 255; radix++) {
-		locations[radix + 1] = locations[radix] + counts[radix];
+	for (idx_t radix = 0; radix < 256; radix++) {
+		counts[radix] += locations[radix];
 	}
 	// Re-order the data in temporary array
 	data_ptr_t row_ptr = source_ptr;
@@ -1056,13 +1048,15 @@ void RadixSortMSD(const data_ptr_t source_ptr, const data_ptr_t target_ptr, cons
 	}
 	// Recurse
 	for (idx_t radix = 0; radix < 256; radix++) {
-		const idx_t loc = (locations[radix] - counts[radix]) * row_width;
-		if (counts[radix] == 0) {
+		const idx_t radix_count = radix == 0 ? locations[0] : locations[radix] - locations[radix - 1];
+		const idx_t loc = (locations[radix] - radix_count) * row_width;
+		if (radix_count == 0) {
 			continue;
-		} else if (counts[radix] > 24) {
-			RadixSortMSD(target_ptr + loc, source_ptr + loc, counts[radix], row_width, comp_width, offset + 1);
+		} else if (radix_count > 24) {
+			RadixSortMSD(target_ptr + loc, source_ptr + loc, radix_count, row_width, comp_width, offset + 1,
+			             locations + 257);
 		} else {
-			InsertionSort(target_ptr + loc, source_ptr + loc, counts[radix], row_width, comp_width, offset + 1);
+			InsertionSort(target_ptr + loc, source_ptr + loc, radix_count, row_width, comp_width, offset + 1);
 		}
 	}
 }
@@ -1074,7 +1068,8 @@ void RadixSort(const data_ptr_t source_ptr, const idx_t &count, const idx_t &row
 		RadixSortLSD(source_ptr, count, row_width, comp_width);
 	} else {
 		auto target_block = unique_ptr<data_t[]>(new data_t[count * row_width]);
-		RadixSortMSD(source_ptr, target_block.get(), count, row_width, comp_width, 0);
+		auto preallocated_array = unique_ptr<idx_t[]>(new idx_t[comp_width * 257]);
+		RadixSortMSD(source_ptr, target_block.get(), count, row_width, comp_width, 0, preallocated_array.get());
 	}
 }
 
