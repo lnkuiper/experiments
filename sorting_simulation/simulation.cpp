@@ -957,7 +957,7 @@ string CreateSortCSVHeader() {
 	return "category,count,columns,row_id_width,col_width,total,sort,scatter,gather";
 }
 
-void RadixSort(data_ptr_t orig_ptr, const idx_t &count, const idx_t &row_width, const idx_t &comp_width) {
+void RadixSortLSD(data_ptr_t orig_ptr, const idx_t &count, const idx_t &row_width, const idx_t &comp_width) {
 	if (count <= 1) {
 		return;
 	}
@@ -997,6 +997,130 @@ void RadixSort(data_ptr_t orig_ptr, const idx_t &count, const idx_t &row_width, 
 	}
 }
 
+inline void InsertionSort(const data_ptr_t source_ptr, const data_ptr_t target_ptr, const idx_t &count,
+                          const idx_t &row_width, const idx_t &total_comp_width, const idx_t offset) {
+	if (count > 1) {
+		auto temp_val = unique_ptr<data_t[]>(new data_t[row_width]);
+		const data_ptr_t val = temp_val.get();
+		const auto comp_width = total_comp_width - offset;
+		for (idx_t i = 1; i < count; i++) {
+			memcpy(val, source_ptr + i * row_width, row_width);
+			idx_t j = i;
+			while (j > 0 && memcmp(source_ptr + (j - 1) * row_width + offset, val + offset, comp_width) > 0) {
+				memcpy(source_ptr + j * row_width, source_ptr + (j - 1) * row_width, row_width);
+				j--;
+			}
+			memcpy(source_ptr + j * row_width, val, row_width);
+		}
+	}
+	if (offset % 2 == 1) {
+		// Swap back
+		memcpy(target_ptr, source_ptr, count * row_width);
+	}
+}
+
+void RadixSortMSD(const data_ptr_t source_ptr, const data_ptr_t target_ptr, const idx_t &count, const idx_t &row_width,
+                  const idx_t &comp_width, const idx_t offset) {
+	if (count < 2) {
+		return;
+	}
+	idx_t counts[256];
+	idx_t locations[256];
+	// Init counts to 0
+	memset(counts, 0, sizeof(counts));
+	locations[0] = 0;
+	// Collect counts
+	data_ptr_t offset_ptr = source_ptr + offset;
+	for (idx_t i = 0; i < count; i++) {
+		counts[*offset_ptr]++;
+		offset_ptr += row_width;
+	}
+	// Compute locations from counts
+	for (idx_t radix = 0; radix < 255; radix++) {
+		locations[radix + 1] = locations[radix] + counts[radix];
+	}
+	// Re-order the data in temporary array
+	data_ptr_t row_ptr = source_ptr;
+	for (idx_t i = 0; i < count; i++) {
+		const idx_t &radix_offset = locations[*(row_ptr + offset)]++;
+		memcpy(target_ptr + radix_offset * row_width, row_ptr, row_width);
+		row_ptr += row_width;
+	}
+	// Check if done
+	if (offset == comp_width - 1) {
+		if (offset % 2 == 0) {
+			// Swap back to source_ptr
+			memcpy(source_ptr, target_ptr, count * row_width);
+		}
+		return;
+	}
+	// Recurse
+	for (idx_t radix = 0; radix < 256; radix++) {
+		const idx_t loc = (locations[radix] - counts[radix]) * row_width;
+		if (counts[radix] == 0) {
+			continue;
+		} else if (counts[radix] > 24) {
+			RadixSortMSD(target_ptr + loc, source_ptr + loc, counts[radix], row_width, comp_width, offset + 1);
+		} else {
+			InsertionSort(target_ptr + loc, source_ptr + loc, counts[radix], row_width, comp_width, offset + 1);
+		}
+	}
+}
+
+void RadixSort(const data_ptr_t source_ptr, const idx_t &count, const idx_t &row_width, const idx_t &comp_width) {
+	if (count <= 24) {
+		InsertionSort(source_ptr, nullptr, count, row_width, comp_width, 0);
+	} else if (comp_width <= 4) {
+		RadixSortLSD(source_ptr, count, row_width, comp_width);
+	} else {
+		auto target_block = unique_ptr<data_t[]>(new data_t[count * row_width]);
+		RadixSortMSD(source_ptr, target_block.get(), count, row_width, comp_width, 0);
+	}
+}
+
+void AssertSorted(data_ptr_t ptr, const idx_t &count, const idx_t &row_width, const idx_t &comp_width) {
+	for (idx_t i = 0; i < count - 1; i++) {
+		assert(memcmp(ptr, ptr + row_width, comp_width) <= 0);
+		ptr += row_width;
+	}
+}
+
+void VerifySort() {
+	idx_t count = 5;
+	idx_t columns = 5;
+
+	// Initialize source data
+	auto row_ids = InitRowIDs<uint32_t>(count, false);
+	auto source = AllocateColumns(count, columns, sizeof(uint32_t));
+	FillColumns<uint32_t>(source, count, true);
+	source.push_back(move(row_ids));
+	cout << "--- BEFORE --- " << endl;
+	PrintColumns<uint32_t, uint32_t>(source, count, columns);
+
+	idx_t row_width = 0;
+	vector<idx_t> col_widths;
+	vector<bool> radix;
+	for (idx_t i = 0; i < columns; i++) {
+		row_width += sizeof(uint32_t);
+		col_widths.push_back(sizeof(uint32_t));
+		radix.push_back(true);
+	}
+	row_width += sizeof(uint32_t);
+	col_widths.push_back(sizeof(uint32_t));
+	radix.push_back(false);
+
+	cout << "--- SCATTERED --- " << endl;
+	auto row_data = Scatter<uint32_t>(move(source), count, row_width, col_widths, radix);
+	auto scatter_timestamp = CurrentTime();
+	PrintRows<uint32_t, uint32_t>(row_data.get(), count, col_widths, true);
+
+	RadixSort(row_data.get(), count, row_width, row_width - sizeof(uint32_t));
+	cout << "--- SORTED --- " << endl;
+	PrintRows<uint32_t, uint32_t>(row_data.get(), count, col_widths, true);
+
+	AssertSorted(row_data.get(), count, row_width, row_width - sizeof(uint32_t));
+}
+
 template <class ROWID, class T>
 string SimulateSort(const idx_t &count, const idx_t &columns, bool radix_sort) {
 	// This must hold for for alignment
@@ -1007,7 +1131,6 @@ string SimulateSort(const idx_t &count, const idx_t &columns, bool radix_sort) {
 	auto source = AllocateColumns(count, columns, sizeof(T));
 	FillColumns<T>(source, count, false);
 	source.push_back(move(row_ids));
-	// PrintColumns<ROWID, T>(source, count, columns);
 
 	auto before_timestamp = CurrentTime();
 	idx_t row_width = 0;
@@ -1024,7 +1147,6 @@ string SimulateSort(const idx_t &count, const idx_t &columns, bool radix_sort) {
 
 	auto row_data = Scatter<T>(move(source), count, row_width, col_widths, radix);
 	auto scatter_timestamp = CurrentTime();
-	// PrintRows<ROWID, T>(row_data.get(), count, col_widths, true);
 
 	if (radix_sort) {
 		RadixSort(row_data.get(), count, row_width, row_width - sizeof(ROWID));
@@ -1032,15 +1154,10 @@ string SimulateSort(const idx_t &count, const idx_t &columns, bool radix_sort) {
 		SortRowBranchless<ROWID, T>(row_data.get(), count, columns);
 	}
 	auto sort_timestamp = CurrentTime();
-	// PrintRows<ROWID, T>(row_data.get(), count, col_widths, true);
+	AssertSorted(row_data.get(), count, row_width, row_width - sizeof(ROWID));
 
 	auto target = GatherRowID(move(row_data), count, row_width, sizeof(ROWID), row_width - sizeof(ROWID));
 	auto after_timestamp = CurrentTime();
-
-	// Verification stuff
-	// vector<unique_ptr<data_t[]>> dummy_cols;
-	// dummy_cols.push_back(move(target));
-	// PrintColumns<ROWID, T>(dummy_cols, count, 0);
 
 	// Compute duration of phases
 	auto total_duration = after_timestamp - before_timestamp;
@@ -1259,10 +1376,11 @@ int main(int argc, char *argv[]) {
 	//  However, radix sort is definitely worse on this same data: No such thing as free lunch!
 	if (argc == 1) {
 		// VerifyReOrder();
-		SimulateReOrder(25, 8, 4, 3);
-		SimulateComparator(25, 8, 3);
+		// VerifySort();
+		// SimulateReOrder(25, 8, 4, 3);
+		// SimulateComparator(25, 8, 3);
 		SimulateSort(25, 8, 3);
-		SimulateMerge(25, 8, 4, 3);
+		// SimulateMerge(25, 8, 4, 3);
 	} else {
 		assert(argc == 5);
 		auto category = string(argv[2]);
