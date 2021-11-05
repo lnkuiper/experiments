@@ -1,3 +1,5 @@
+#include "pdqsort.h"
+
 #include <algorithm>
 #include <assert.h>
 #include <chrono>
@@ -733,42 +735,42 @@ void SortRowBranchless(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	switch (columns) {
 	case 1: {
 		auto row_data_ptr = (BranchlessRowOrderEntry1<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 2: {
 		auto row_data_ptr = (BranchlessRowOrderEntry2<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 3: {
 		auto row_data_ptr = (BranchlessRowOrderEntry3<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 4: {
 		auto row_data_ptr = (BranchlessRowOrderEntry4<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 5: {
 		auto row_data_ptr = (BranchlessRowOrderEntry5<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 6: {
 		auto row_data_ptr = (BranchlessRowOrderEntry6<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 7: {
 		auto row_data_ptr = (BranchlessRowOrderEntry7<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 8: {
 		auto row_data_ptr = (BranchlessRowOrderEntry8<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	default:
@@ -781,42 +783,42 @@ void SortRowBranched(data_ptr_t row_data, const idx_t &count, const idx_t &colum
 	switch (columns) {
 	case 1: {
 		auto row_data_ptr = (BranchedRowOrderEntry1<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 2: {
 		auto row_data_ptr = (BranchedRowOrderEntry2<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 3: {
 		auto row_data_ptr = (BranchedRowOrderEntry3<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 4: {
 		auto row_data_ptr = (BranchedRowOrderEntry4<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 5: {
 		auto row_data_ptr = (BranchedRowOrderEntry5<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 6: {
 		auto row_data_ptr = (BranchedRowOrderEntry6<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 7: {
 		auto row_data_ptr = (BranchedRowOrderEntry7<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 8: {
 		auto row_data_ptr = (BranchedRowOrderEntry8<ROWID, T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		pdqsort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	default:
@@ -831,13 +833,14 @@ void SortColumn(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_t[]>> &
 	for (const auto &col : columns) {
 		typed_columns.push_back((T *)col.get());
 	}
-	if (columns.size() == 0) {
+	if (typed_columns.size() == 1) {
 		const auto &col = typed_columns[0];
-		sort(row_ids, row_ids + count,
-		     [&row_ids, &col](const ROWID &lhs, const ROWID &rhs) -> bool { return col[lhs] < col[rhs]; });
+		pdqsort_branchless(row_ids, row_ids + count, [&row_ids, &col](const ROWID &lhs, const ROWID &rhs) -> bool {
+			return col[lhs] < col[rhs];
+		});
 	} else {
 		const auto &cols = typed_columns;
-		sort(row_ids, row_ids + count, [&row_ids, &cols](const ROWID &lhs, const ROWID &rhs) -> bool {
+		pdqsort(row_ids, row_ids + count, [&row_ids, &cols](const ROWID &lhs, const ROWID &rhs) -> bool {
 			for (const auto &col : cols) {
 				if (col[lhs] != col[rhs]) {
 					return col[lhs] < col[rhs];
@@ -976,8 +979,13 @@ void RadixSortLSD(data_ptr_t orig_ptr, const idx_t &count, const idx_t &row_widt
 			offset_ptr += row_width;
 		}
 		// Compute offsets from counts
+		idx_t max_count = counts[0];
 		for (idx_t val = 1; val < 256; val++) {
+			max_count = max<idx_t>(max_count, counts[val]);
 			counts[val] = counts[val] + counts[val - 1];
+		}
+		if (max_count == count) {
+			continue;
 		}
 		// Re-order the data in temporary array
 		data_ptr_t row_ptr = source_ptr + (count - 1) * row_width;
@@ -994,8 +1002,10 @@ void RadixSortLSD(data_ptr_t orig_ptr, const idx_t &count, const idx_t &row_widt
 	}
 }
 
-inline void InsertionSort(const data_ptr_t source_ptr, const data_ptr_t target_ptr, const idx_t &count,
-                          const idx_t &row_width, const idx_t &total_comp_width, const idx_t &offset) {
+inline void InsertionSort(const data_ptr_t orig_ptr, const data_ptr_t temp_ptr, const idx_t &count,
+                          const idx_t &row_width, const idx_t &total_comp_width, const idx_t &offset, bool swap) {
+	const data_ptr_t source_ptr = swap ? temp_ptr : orig_ptr;
+	const data_ptr_t target_ptr = swap ? orig_ptr : temp_ptr;
 	if (count > 1) {
 		auto temp_val = unique_ptr<data_t[]>(new data_t[row_width]);
 		const data_ptr_t val = temp_val.get();
@@ -1010,14 +1020,15 @@ inline void InsertionSort(const data_ptr_t source_ptr, const data_ptr_t target_p
 			memcpy(source_ptr + j * row_width, val, row_width);
 		}
 	}
-	if (offset % 2 == 1) {
-		// Swap back
+	if (swap) {
 		memcpy(target_ptr, source_ptr, count * row_width);
 	}
 }
 
-void RadixSortMSD(const data_ptr_t source_ptr, const data_ptr_t target_ptr, const idx_t &count, const idx_t &row_width,
-                  const idx_t &comp_width, const idx_t offset, idx_t locations[]) {
+void RadixSortMSD(const data_ptr_t orig_ptr, const data_ptr_t temp_ptr, const idx_t &count, const idx_t &row_width,
+                  const idx_t &comp_width, const idx_t offset, idx_t locations[], bool swap) {
+	const data_ptr_t source_ptr = swap ? temp_ptr : orig_ptr;
+	const data_ptr_t target_ptr = swap ? orig_ptr : temp_ptr;
 	// Init counts to 0
 	memset(locations, 0, 257 * sizeof(idx_t));
 	idx_t *counts = locations + 1;
@@ -1028,22 +1039,30 @@ void RadixSortMSD(const data_ptr_t source_ptr, const data_ptr_t target_ptr, cons
 		offset_ptr += row_width;
 	}
 	// Compute locations from counts
+	idx_t max_count = 0;
 	for (idx_t radix = 0; radix < 256; radix++) {
+		max_count = max<idx_t>(max_count, counts[radix]);
 		counts[radix] += locations[radix];
 	}
-	// Re-order the data in temporary array
-	data_ptr_t row_ptr = source_ptr;
-	for (idx_t i = 0; i < count; i++) {
-		const idx_t &radix_offset = locations[*(row_ptr + offset)]++;
-		memcpy(target_ptr + radix_offset * row_width, row_ptr, row_width);
-		row_ptr += row_width;
+	if (max_count != count) {
+		// Re-order the data in temporary array
+		data_ptr_t row_ptr = source_ptr;
+		for (idx_t i = 0; i < count; i++) {
+			const idx_t &radix_offset = locations[*(row_ptr + offset)]++;
+			memcpy(target_ptr + radix_offset * row_width, row_ptr, row_width);
+			row_ptr += row_width;
+		}
+		swap = !swap;
 	}
 	// Check if done
 	if (offset == comp_width - 1) {
-		if (offset % 2 == 0) {
-			// Swap back to source_ptr
-			memcpy(source_ptr, target_ptr, count * row_width);
+		if (swap) {
+			memcpy(orig_ptr, temp_ptr, count * row_width);
 		}
+		return;
+	}
+	if (max_count == count) {
+		RadixSortMSD(orig_ptr, temp_ptr, count, row_width, comp_width, offset + 1, locations + 257, swap);
 		return;
 	}
 	// Recurse
@@ -1051,10 +1070,10 @@ void RadixSortMSD(const data_ptr_t source_ptr, const data_ptr_t target_ptr, cons
 	for (idx_t radix = 0; radix < 256; radix++) {
 		const idx_t loc = (locations[radix] - radix_count) * row_width;
 		if (radix_count > 24) {
-			RadixSortMSD(target_ptr + loc, source_ptr + loc, radix_count, row_width, comp_width, offset + 1,
-			             locations + 257);
+			RadixSortMSD(orig_ptr + loc, temp_ptr + loc, radix_count, row_width, comp_width, offset + 1,
+			             locations + 257, swap);
 		} else if (radix_count != 0) {
-			InsertionSort(target_ptr + loc, source_ptr + loc, radix_count, row_width, comp_width, offset + 1);
+			InsertionSort(orig_ptr + loc, temp_ptr + loc, radix_count, row_width, comp_width, offset + 1, swap);
 		}
 		radix_count = locations[radix + 1] - locations[radix];
 	}
@@ -1062,13 +1081,13 @@ void RadixSortMSD(const data_ptr_t source_ptr, const data_ptr_t target_ptr, cons
 
 void RadixSort(const data_ptr_t source_ptr, const idx_t &count, const idx_t &row_width, const idx_t &comp_width) {
 	if (count <= 24) {
-		InsertionSort(source_ptr, nullptr, count, row_width, comp_width, 0);
+		InsertionSort(source_ptr, nullptr, count, row_width, comp_width, 0, false);
 	} else if (comp_width <= 4) {
 		RadixSortLSD(source_ptr, count, row_width, comp_width);
 	} else {
 		auto target_block = unique_ptr<data_t[]>(new data_t[count * row_width]);
 		auto preallocated_array = unique_ptr<idx_t[]>(new idx_t[comp_width * 257]);
-		RadixSortMSD(source_ptr, target_block.get(), count, row_width, comp_width, 0, preallocated_array.get());
+		RadixSortMSD(source_ptr, target_block.get(), count, row_width, comp_width, 0, preallocated_array.get(), false);
 	}
 }
 
@@ -1080,7 +1099,7 @@ void AssertSorted(data_ptr_t ptr, const idx_t &count, const idx_t &row_width, co
 }
 
 void VerifySort() {
-	idx_t count = 5;
+	idx_t count = 30;
 	idx_t columns = 5;
 
 	// Initialize source data
@@ -1373,7 +1392,7 @@ int main(int argc, char *argv[]) {
 		// VerifySort();
 		// SimulateReOrder(25, 8, 4, 3);
 		// SimulateComparator(25, 8, 3);
-		SimulateSort(25, 8, 3);
+		SimulateSort(25, 8, 5);
 		// SimulateMerge(25, 8, 4, 3);
 	} else {
 		assert(argc == 5);
