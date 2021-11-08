@@ -280,8 +280,8 @@ string CreateReOrderCSVHeader() {
 
 template <class T>
 vector<unique_ptr<data_t[]>> ReOrderColumns(const uint32_t row_ids[], const vector<unique_ptr<data_t[]>> &columns,
-                                            const idx_t &count, const idx_t &col_width) {
-	auto result = AllocateColumns(count, columns.size(), col_width);
+                                            const idx_t &count) {
+	auto result = AllocateColumns(count, columns.size(), sizeof(T));
 	for (idx_t column = 0; column < columns.size(); column++) {
 		T *source = (T *)columns[column].get();
 		T *target = (T *)result[column].get();
@@ -305,25 +305,24 @@ unique_ptr<data_t[]> ReOrderRows(const uint32_t row_ids[], unique_ptr<data_t[]> 
 }
 
 template <class T>
-string SimulateColumnReOrder(const uint32_t row_ids[], const idx_t &count, const idx_t &columns,
-                             const idx_t &col_width) {
+string SimulateColumnReOrder(const uint32_t row_ids[], const idx_t &count, const idx_t &columns) {
 	// Initialize source data
-	auto source = AllocateColumns(count, columns, col_width);
+	auto source = AllocateColumns(count, columns, sizeof(T));
 
 	// ReOrder and timestamp
 	auto before_timestamp = CurrentTime();
-	auto target = ReOrderColumns<T>(row_ids, source, count, col_width);
+	auto target = ReOrderColumns<T>(row_ids, source, count);
 	auto after_timestamp = CurrentTime();
 
 	// Compute duration of phases
 	auto total_duration = after_timestamp - before_timestamp;
-	return CreateOutput("col", {count, columns, col_width, total_duration, total_duration}, 8);
+	return CreateOutput("col", {count, columns, sizeof(T), total_duration, total_duration}, 8);
 }
 
 template <class T>
-string SimulateRowReOrder(const T row_ids[], const idx_t &count, const idx_t &columns, const idx_t &col_width) {
+string SimulateRowReOrder(const T row_ids[], const idx_t &count, const idx_t &columns) {
 	// Initialize source data
-	auto source = AllocateColumns(count, columns, col_width);
+	auto source = AllocateColumns(count, columns, sizeof(T));
 
 	// Scatter, ReOrder, Gather and timestamp
 	auto before_timestamp = CurrentTime();
@@ -331,8 +330,8 @@ string SimulateRowReOrder(const T row_ids[], const idx_t &count, const idx_t &co
 	vector<idx_t> col_widths;
 	vector<bool> radix;
 	for (idx_t i = 0; i < columns; i++) {
-		row_width += col_width;
-		col_widths.push_back(col_width);
+		row_width += sizeof(T);
+		col_widths.push_back(sizeof(T));
 		radix.push_back(false);
 	}
 
@@ -349,19 +348,19 @@ string SimulateRowReOrder(const T row_ids[], const idx_t &count, const idx_t &co
 	auto reorder_duration = reorder_timestamp - scatter_timestamp;
 	auto gather_duration = after_timestamp - reorder_timestamp;
 	return CreateOutput(
-	    "row", {count, columns, col_width, total_duration, reorder_duration, scatter_duration, gather_duration}, 8);
+	    "row", {count, columns, sizeof(T), total_duration, reorder_duration, scatter_duration, gather_duration}, 8);
 }
 
 template <class T>
-string SimulateReOrder(idx_t count, idx_t columns, idx_t col_width) {
+string SimulateReOrder(idx_t count, idx_t columns) {
 	auto row_ids = InitRowIDs(count, true);
 	ostringstream result;
-	result << SimulateColumnReOrder<T>((uint32_t *)row_ids.get(), count, columns, col_width) << endl;
-	result << SimulateRowReOrder<T>((uint32_t *)row_ids.get(), count, columns, col_width) << endl;
+	result << SimulateColumnReOrder<T>((uint32_t *)row_ids.get(), count, columns) << endl;
+	result << SimulateRowReOrder<T>((uint32_t *)row_ids.get(), count, columns) << endl;
 	return result.str();
 }
 
-void SimulateReOrder(idx_t row_max, idx_t col_max, idx_t col_width, idx_t iterations) {
+void SimulateReOrder(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateReOrder" << endl;
 	ofstream results_file("results/reorder.csv", ios::trunc);
 	results_file << CreateReOrderCSVHeader() << endl;
@@ -369,7 +368,7 @@ void SimulateReOrder(idx_t row_max, idx_t col_max, idx_t col_width, idx_t iterat
 		for (idx_t c = 0; c < col_max; c++) {
 			for (idx_t i = 0; i < iterations; i++) {
 				idx_t num_cols = min<idx_t>(1 << c, 96);
-				results_file << SimulateReOrder<uint32_t>(1 << r, num_cols, col_width);
+				results_file << SimulateReOrder<uint32_t>(1 << r, num_cols);
 				results_file.flush();
 				cout << "." << flush;
 			}
@@ -418,7 +417,7 @@ void VerifyColumnReOrder(const uint32_t row_ids[], idx_t count, idx_t columns) {
 	PrintColumns<T>(source, count, columns);
 
 	// ReOrder and print
-	auto target = ReOrderColumns<T>(row_ids, source, count, sizeof(T));
+	auto target = ReOrderColumns<T>(row_ids, source, count);
 	cout << "--- AFTER --- " << endl;
 	PrintColumns<T>(target, count, columns);
 }
@@ -436,7 +435,7 @@ void VerifyReOrder() {
 // Comparator Simulation
 //===--------------------------------------------------------------------===//
 string CreateComparatorCSVHeader() {
-	return "category,count,columns,row_id_width,col_width,total,sort,scatter,gather";
+	return "category,count,columns,col_width,total,sort,scatter,gather";
 }
 
 template <class T>
@@ -961,7 +960,7 @@ void SimulateComparator(idx_t row_max, idx_t col_max, idx_t iterations) {
 // Sorting Simulation
 //===--------------------------------------------------------------------===//
 string CreateSortCSVHeader() {
-	return "category,count,columns,row_id_width,col_width,total,sort,scatter,gather";
+	return "category,count,columns,col_width,total,sort,scatter,gather";
 }
 
 void RadixSortLSD(data_ptr_t orig_ptr, const idx_t &count, const idx_t &row_width, const idx_t &comp_width) {
@@ -1217,9 +1216,10 @@ string CreateMergeCSVHeader() {
 	return "category,count,columns,col_width,total";
 }
 
+template <class T>
 vector<unique_ptr<data_t[]>> MergeColumns(vector<unique_ptr<data_t[]>> left, vector<unique_ptr<data_t[]>> right,
-                                          const idx_t &count, const idx_t &col_width) {
-	auto result = AllocateColumns(count * 2, left.size(), col_width);
+                                          const idx_t &count) {
+	auto result = AllocateColumns(count * 2, left.size(), sizeof(T));
 	bool left_smaller[STANDARD_VECTOR_SIZE];
 	idx_t l_i = 0;
 	idx_t r_i = 0;
@@ -1228,18 +1228,18 @@ vector<unique_ptr<data_t[]>> MergeColumns(vector<unique_ptr<data_t[]>> left, vec
 		if (l_i == count) {
 			idx_t entries = count - r_i;
 			for (idx_t column = 0; column < right.size(); column++) {
-				data_ptr_t r_ptr = right[column].get() + r_i * col_width;
-				data_ptr_t target_ptr = result[column].get() + result_i * col_width;
-				memcpy(target_ptr, r_ptr, entries * col_width);
+				data_ptr_t r_ptr = right[column].get() + r_i * sizeof(T);
+				data_ptr_t target_ptr = result[column].get() + result_i * sizeof(T);
+				memcpy(target_ptr, r_ptr, entries * sizeof(T));
 			}
 			result_i += entries;
 			r_i += entries;
 		} else if (r_i == count) {
 			idx_t entries = count - l_i;
 			for (idx_t column = 0; column < left.size(); column++) {
-				data_ptr_t l_ptr = left[column].get() + l_i * col_width;
-				data_ptr_t target_ptr = result[column].get() + result_i * col_width;
-				memcpy(target_ptr, l_ptr, entries * col_width);
+				data_ptr_t l_ptr = left[column].get() + l_i * sizeof(T);
+				data_ptr_t target_ptr = result[column].get() + result_i * sizeof(T);
+				memcpy(target_ptr, l_ptr, entries * sizeof(T));
 			}
 			result_i += entries;
 			l_i += entries;
@@ -1254,17 +1254,19 @@ vector<unique_ptr<data_t[]>> MergeColumns(vector<unique_ptr<data_t[]>> left, vec
 			}
 			const idx_t next = j;
 			for (idx_t column = 0; column < left.size(); column++) {
-				data_ptr_t l_ptr = left[column].get() + l_i * col_width;
-				data_ptr_t r_ptr = right[column].get() + r_i * col_width;
-				data_ptr_t target_ptr = result[column].get() + result_i * col_width;
+				T *l = (T *)left[column].get();
+				T *r = (T *)right[column].get();
+				T *target = (T *)(result[column].get() + result_i * sizeof(T));
+				l_i_temp = l_i;
+				r_i_temp = r_i;
 				for (j = 0; j < next; j++) {
 					bool &copy_left = left_smaller[j];
 					bool copy_right = !copy_left;
-					memcpy(target_ptr, l_ptr, copy_left * col_width);
-					memcpy(target_ptr, r_ptr, copy_right * col_width);
-					target_ptr += col_width;
-					l_ptr += copy_left * col_width;
-					r_ptr += copy_right * col_width;
+					target[j] = 0;
+					target[j] += copy_left * l[l_i_temp];
+					target[j] += copy_right * r[r_i_temp];
+					l_i_temp += copy_left;
+					r_i_temp += copy_right;
 				}
 			}
 			result_i += next;
@@ -1327,24 +1329,26 @@ unique_ptr<data_t[]> MergeRows(unique_ptr<data_t[]> left, unique_ptr<data_t[]> r
 	return result;
 }
 
-string SimulateColumnMerge(const idx_t &count, const idx_t &columns, const idx_t &col_width) {
+template <class T>
+string SimulateColumnMerge(const idx_t &count, const idx_t &columns) {
 	// Initialize source data
-	auto left = AllocateColumns(count / 2, columns, col_width);
-	auto right = AllocateColumns(count / 2, columns, col_width);
+	auto left = AllocateColumns(count / 2, columns, sizeof(T));
+	auto right = AllocateColumns(count / 2, columns, sizeof(T));
 
 	// Merge
 	auto before_timestamp = CurrentTime();
-	auto target = MergeColumns(move(left), move(right), count / 2, col_width);
+	auto target = MergeColumns<T>(move(left), move(right), count / 2);
 	auto after_timestamp = CurrentTime();
 
 	// Compute duration of phases
 	auto total_duration = after_timestamp - before_timestamp;
-	return CreateOutput("col", {count, columns, col_width, total_duration}, 5);
+	return CreateOutput("col", {count, columns, sizeof(T), total_duration}, 5);
 }
 
-string SimulateRowMerge(const idx_t &count, const idx_t &columns, const idx_t &col_width) {
+template <class T>
+string SimulateRowMerge(const idx_t &count, const idx_t &columns) {
 	// Initialize source data
-	const idx_t row_width = columns * col_width;
+	const idx_t row_width = columns * sizeof(T);
 	auto left = AllocateRows(count / 2, row_width);
 	auto right = AllocateRows(count / 2, row_width);
 
@@ -1355,25 +1359,26 @@ string SimulateRowMerge(const idx_t &count, const idx_t &columns, const idx_t &c
 
 	// Compute duration of phases
 	auto total_duration = after_timestamp - before_timestamp;
-	return CreateOutput("row", {count, columns, col_width, total_duration}, 5);
+	return CreateOutput("row", {count, columns, sizeof(T), total_duration}, 5);
 }
 
-string SimulateMerge(idx_t count, idx_t columns, idx_t col_width) {
+template <class T>
+string SimulateMerge(idx_t count, idx_t columns) {
 	ostringstream result;
-	result << SimulateColumnMerge(count, columns, col_width) << endl;
-	result << SimulateRowMerge(count, columns, col_width) << endl;
+	result << SimulateColumnMerge<T>(count, columns) << endl;
+	result << SimulateRowMerge<T>(count, columns) << endl;
 	return result.str();
 }
 
-void SimulateMerge(idx_t row_max, idx_t col_max, idx_t col_width, idx_t iterations) {
+void SimulateMerge(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateMerge" << endl;
 	ofstream results_file("results/merge.csv", ios::trunc);
 	results_file << CreateMergeCSVHeader() << endl;
-	for (idx_t r = 4; r < row_max; r += 2) {
+	for (idx_t r = 10; r < row_max; r += 2) {
 		for (idx_t c = 0; c < col_max; c++) {
 			for (idx_t i = 0; i < iterations; i++) {
 				idx_t num_cols = min<idx_t>(1 << c, 96);
-				results_file << SimulateMerge(1 << r, num_cols, col_width);
+				results_file << SimulateMerge<uint32_t>(1 << r, num_cols);
 				results_file.flush();
 				cout << "." << flush;
 			}
@@ -1389,15 +1394,13 @@ int main(int argc, char *argv[]) {
 	// NOTE: for comparator we'd like a lot of key collisions so that the 2nd, 3rd, etc. columns are needed more often
 	//  This would allow us to show off the better data locality of the row comparator
 	//  However, radix sort is definitely worse on this same data: No such thing as free lunch!
-	SimulateSort<uint32_t>(16777216, 4, false);
-	return 0;
 	if (argc == 1) {
 		// VerifyReOrder();
 		// VerifySort();
-		// SimulateReOrder(25, 8, 4, 3);
-		// SimulateComparator(25, 8, 3);
-		SimulateSort(25, 8, 5);
-		// SimulateMerge(25, 8, 4, 3);
+		SimulateReOrder(25, 8, 5);
+		// SimulateComparator(25, 8, 5);
+		// SimulateSort(25, 8, 5);
+		// SimulateMerge(25, 8, 3);
 	} else {
 		assert(argc == 5);
 		auto category = string(argv[2]);
@@ -1410,26 +1413,26 @@ int main(int argc, char *argv[]) {
 		if (category == "col") {
 			if (sim == "reorder") {
 				auto row_ids = InitRowIDs(count, true);
-				SimulateColumnReOrder<uint32_t>((uint32_t *)row_ids.get(), count, columns, 4);
+				SimulateColumnReOrder<uint32_t>((uint32_t *)row_ids.get(), count, columns);
 			} else if (sim == "comparator") {
 				SimulateColumnComparator<uint32_t>(count, columns);
 			} else if (sim == "sort") {
 				// category "col" means std::sort here
 				SimulateSort<uint32_t>(count, columns, false);
 			} else if (sim == "merge") {
-				SimulateColumnMerge(count, columns, 4);
+				SimulateColumnMerge<uint32_t>(count, columns);
 			}
 		} else if (category == "row") {
 			if (sim == "reorder") {
 				auto row_ids = InitRowIDs(count, true);
-				SimulateRowReOrder<uint32_t>((uint32_t *)row_ids.get(), count, columns, 4);
+				SimulateRowReOrder<uint32_t>((uint32_t *)row_ids.get(), count, columns);
 			} else if (sim == "comparator") {
 				SimulateRowComparator<uint32_t>(count, columns, true);
 			} else if (sim == "sort") {
 				// category "col" means radix sort here
 				SimulateSort<uint32_t>(count, columns, true);
 			} else if (sim == "merge") {
-				SimulateRowMerge(count, columns, 4);
+				SimulateRowMerge<uint32_t>(count, columns);
 			}
 		}
 	}
