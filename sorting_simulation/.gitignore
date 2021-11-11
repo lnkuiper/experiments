@@ -2,4 +2,5 @@
 simulation
 *.trace
 *.dSYM
+.vscode
 
