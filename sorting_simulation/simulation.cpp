@@ -904,17 +904,16 @@ void SortRowBranched(data_ptr_t row_data, const idx_t &count, const idx_t &colum
 template <class T>
 void SortColumn(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_t[]>> &columns, const idx_t &count) {
 	uint32_t *row_ids = (uint32_t *)row_id_col.get();
-	vector<T *> typed_columns;
+	vector<T *> cols;
 	for (const auto &col : columns) {
-		typed_columns.push_back((T *)col.get());
+		cols.push_back((T *)col.get());
 	}
-	if (typed_columns.size() == 1) {
-		const auto &col = typed_columns[0];
+	if (cols.size() == 1) {
+		const auto &col = cols[0];
 		pdqsort_branchless(
 		    row_ids, row_ids + count,
 		    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
 	} else {
-		const auto &cols = typed_columns;
 		pdqsort(row_ids, row_ids + count, [&row_ids, &cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
 			for (const auto &col : cols) {
 				if (col[lhs] != col[rhs]) {
@@ -923,6 +922,68 @@ void SortColumn(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_t[]>> &
 			}
 			return false;
 		});
+	}
+}
+
+template <class T>
+bool ComputeTies(bool ties[], uint32_t row_ids[], const T col[], const idx_t &count) {
+	bool any_tie = false;
+	for (idx_t i = 0; i < count - 1; i++) {
+		ties[i] = ties[i] && col[row_ids[i]] == col[row_ids[i + 1]];
+		any_tie = any_tie || ties[i];
+	}
+	return any_tie;
+}
+
+template <class T>
+void SortColumnSubsort(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_t[]>> &columns, const idx_t &count) {
+	uint32_t *row_ids = (uint32_t *)row_id_col.get();
+	vector<T *> cols;
+	for (const auto &col : columns) {
+		cols.push_back((T *)col.get());
+	}
+	if (cols.size() == 1) {
+		const auto &col = cols[0];
+		pdqsort_branchless(
+		    row_ids, row_ids + count,
+		    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
+		return;
+	}
+	unique_ptr<bool[]> ties_ptr;
+	bool *ties = nullptr;
+	for (idx_t col_idx = 0; col_idx < cols.size(); col_idx++) {
+		const auto &col = cols[col_idx];
+		if (!ties) {
+			// This is the first sort
+			pdqsort_branchless(
+			    row_ids, row_ids + count,
+			    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
+			// Initialize ties array
+			ties_ptr = unique_ptr<bool[]>(new bool[count]);
+			ties = ties_ptr.get();
+			std::fill_n(ties, count - 1, true);
+			ties[count - 1] = false;
+		} else {
+			if (!ComputeTies(ties, row_ids, cols[col_idx - 1], count)) {
+				break;
+			}
+			// Subsort tied tuples
+			for (idx_t i = 0; i < count; i++) {
+				if (!ties[i]) {
+					continue;
+				}
+				idx_t j;
+				for (j = i + 1; j < count; j++) {
+					if (!ties[j]) {
+						break;
+					}
+				}
+				pdqsort_branchless(
+				    row_ids + i, row_ids + j + 1,
+				    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
+				i = j;
+			}
+		}
 	}
 }
 
@@ -982,15 +1043,42 @@ string SimulateRowComparator(const idx_t &count, const idx_t &columns, bool bran
 }
 
 template <class T>
-string SimulateColumnComparator(const idx_t &count, const idx_t &columns) {
+void AssertSortedColumns(const data_t idxs[], const idx_t &count, vector<unique_ptr<data_t[]>> &columns) {
+	const uint32_t *row_ids = (uint32_t *)idxs;
+	vector<T *> cols;
+	for (const auto &col : columns) {
+		cols.push_back((T *)col.get());
+	}
+	for (idx_t i = 0; i < count - 1; i++) {
+		const auto &l_id = row_ids[i];
+		const auto &r_id = row_ids[i + 1];
+		for (const auto &col : cols) {
+			if (col[l_id] < col[r_id]) {
+				break;
+			} else if (col[l_id] == col[r_id]) {
+				continue;
+			} else {
+				assert(false);
+			}
+		}
+	}
+}
+
+template <class T>
+string SimulateColumnComparator(const idx_t &count, const idx_t &columns, bool subsort) {
 	// Initialize source data
 	auto row_ids = InitRowIDs(count, false);
 	auto source = AllocateColumns(count, columns, sizeof(T));
 	FillColumns<T>(source, count, "skewed");
 
 	auto before_timestamp = CurrentTime();
-	SortColumn<T>(row_ids, source, count);
+	if (subsort) {
+		SortColumnSubsort<T>(row_ids, source, count);
+	} else {
+		SortColumn<T>(row_ids, source, count);
+	}
 	auto after_timestamp = CurrentTime();
+	AssertSortedColumns<T>(row_ids.get(), count, source);
 
 	vector<unique_ptr<data_t[]>> dummy_cols;
 	dummy_cols.push_back(move(row_ids));
@@ -998,13 +1086,15 @@ string SimulateColumnComparator(const idx_t &count, const idx_t &columns) {
 
 	// Compute duration of phases
 	auto total_duration = after_timestamp - before_timestamp;
-	return CreateOutput("col", {count, columns, sizeof(T), total_duration, total_duration}, 8);
+	string category = subsort ? "col_ss" : "col";
+	return CreateOutput(category, {count, columns, sizeof(T), total_duration, total_duration}, 8);
 }
 
 template <class T>
 string SimulateComparator(idx_t count, idx_t columns) {
 	ostringstream result;
-	result << SimulateColumnComparator<T>(count, columns) << endl;
+	result << SimulateColumnComparator<T>(count, columns, true) << endl;
+	result << SimulateColumnComparator<T>(count, columns, false) << endl;
 	result << SimulateRowComparator<T>(count, columns, true) << endl;
 	result << SimulateRowComparator<T>(count, columns, false) << endl;
 	return result.str();
@@ -1063,9 +1153,9 @@ void RadixSortLSD(data_ptr_t orig_ptr, const idx_t &count, const idx_t &row_widt
 		}
 		// Re-order the data in temporary array
 		data_ptr_t row_ptr = source_ptr + (count - 1) * row_width;
-		for (idx_t i = 0; i < count; i++) {
+		for (idx_t i = 1; i <= count; i++) {
 			idx_t &radix_offset = --counts[*(row_ptr + offset)];
-			memcpy(target_ptr + radix_offset * row_width, row_ptr, row_width);
+			memcpy(target_ptr + radix_offset * row_width, row_ptr, row_width); // assignment is faster than memcpy
 			row_ptr -= row_width;
 		}
 		swap = !swap;
@@ -1469,9 +1559,11 @@ void Main(int argc, char *argv[]) {
 		// VerifyReOrder();
 		// VerifySort();
 		// SimulateReOrder<T>(25, 8, 5);
-		// SimulateComparator<T>(25, 8, 5);
-		SimulateSort<T>(25, 8, 5);
+		SimulateComparator<T>(27, 6, 3);
+		SimulateSort<T>(27, 6, 3);
 		// SimulateMerge<T>(25, 8, 5);
+		// SimulateSortInternal<T>(16777216, 1, "radix");
+		// SimulateColumnComparator<T>(64, 2, true);
 	} else {
 		assert(argc == 5);
 		auto category = string(argv[2]);
@@ -1486,7 +1578,7 @@ void Main(int argc, char *argv[]) {
 				auto row_ids = InitRowIDs(count, true);
 				SimulateColumnReOrder<T>((uint32_t *)row_ids.get(), count, columns);
 			} else if (sim == "comparator") {
-				SimulateColumnComparator<T>(count, columns);
+				SimulateColumnComparator<T>(count, columns, false);
 			} else if (sim == "sort") {
 				// category "col" means pdqsort here
 				SimulateSortInternal<T>(count, columns, "pdq_dynamic");
