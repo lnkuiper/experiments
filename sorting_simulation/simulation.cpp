@@ -1,3 +1,4 @@
+#include "fast_mem.hpp"
 #include "pdqsort.h"
 
 #include <algorithm>
@@ -308,7 +309,7 @@ unique_ptr<data_t[]> ReOrderRows(const uint32_t row_ids[], unique_ptr<data_t[]> 
 	auto source_ptr = rows.get();
 	auto target_ptr = result.get();
 	for (idx_t i = 0; i < count; i++) {
-		memcpy(target_ptr, source_ptr + row_ids[i] * row_width, row_width);
+		duckdb::fast_memcpy(target_ptr, source_ptr + row_ids[i] * row_width, row_width);
 		target_ptr += row_width;
 	}
 	return result;
@@ -1155,14 +1156,15 @@ void RadixSortLSD(data_ptr_t orig_ptr, const idx_t &count, const idx_t &row_widt
 		data_ptr_t row_ptr = source_ptr + (count - 1) * row_width;
 		for (idx_t i = 1; i <= count; i++) {
 			idx_t &radix_offset = --counts[*(row_ptr + offset)];
-			memcpy(target_ptr + radix_offset * row_width, row_ptr, row_width); // assignment is faster than memcpy
+			duckdb::fast_memcpy(target_ptr + radix_offset * row_width, row_ptr,
+			                    row_width); // assignment is faster than memcpy
 			row_ptr -= row_width;
 		}
 		swap = !swap;
 	}
 	// Move data back to original buffer (if it was swapped)
 	if (swap) {
-		memcpy(orig_ptr, temp_block.get(), count * row_width);
+		duckdb::fast_memcpy(orig_ptr, temp_block.get(), count * row_width);
 	}
 }
 
@@ -1175,17 +1177,18 @@ inline void InsertionSort(const data_ptr_t orig_ptr, const data_ptr_t temp_ptr, 
 		const data_ptr_t val = temp_val.get();
 		const auto comp_width = total_comp_width - offset;
 		for (idx_t i = 1; i < count; i++) {
-			memcpy(val, source_ptr + i * row_width, row_width);
+			duckdb::fast_memcpy(val, source_ptr + i * row_width, row_width);
 			idx_t j = i;
-			while (j > 0 && memcmp(source_ptr + (j - 1) * row_width + offset, val + offset, comp_width) > 0) {
-				memcpy(source_ptr + j * row_width, source_ptr + (j - 1) * row_width, row_width);
+			while (j > 0 &&
+			       duckdb::fast_memcmp(source_ptr + (j - 1) * row_width + offset, val + offset, comp_width) > 0) {
+				duckdb::fast_memcpy(source_ptr + j * row_width, source_ptr + (j - 1) * row_width, row_width);
 				j--;
 			}
-			memcpy(source_ptr + j * row_width, val, row_width);
+			duckdb::fast_memcpy(source_ptr + j * row_width, val, row_width);
 		}
 	}
 	if (swap) {
-		memcpy(target_ptr, source_ptr, count * row_width);
+		duckdb::fast_memcpy(target_ptr, source_ptr, count * row_width);
 	}
 }
 
@@ -1213,7 +1216,7 @@ void RadixSortMSD(const data_ptr_t orig_ptr, const data_ptr_t temp_ptr, const id
 		data_ptr_t row_ptr = source_ptr;
 		for (idx_t i = 0; i < count; i++) {
 			const idx_t &radix_offset = locations[*(row_ptr + offset)]++;
-			memcpy(target_ptr + radix_offset * row_width, row_ptr, row_width);
+			duckdb::fast_memcpy(target_ptr + radix_offset * row_width, row_ptr, row_width);
 			row_ptr += row_width;
 		}
 		swap = !swap;
@@ -1221,7 +1224,7 @@ void RadixSortMSD(const data_ptr_t orig_ptr, const data_ptr_t temp_ptr, const id
 	// Check if done
 	if (offset == comp_width - 1) {
 		if (swap) {
-			memcpy(orig_ptr, temp_ptr, count * row_width);
+			duckdb::fast_memcpy(orig_ptr, temp_ptr, count * row_width);
 		}
 		return;
 	}
@@ -1372,15 +1375,161 @@ void SimulateSort(idx_t row_max, idx_t col_max, idx_t iterations) {
 }
 
 //===--------------------------------------------------------------------===//
-// Merge Simulation
+// Key Merge Simulation
 //===--------------------------------------------------------------------===//
-string CreateMergeCSVHeader() {
+string CreateMergeKeyCSVHeader() {
 	return "category,count,columns,col_width,total";
 }
 
 template <class T>
-vector<unique_ptr<data_t[]>> MergeColumns(vector<unique_ptr<data_t[]>> left, vector<unique_ptr<data_t[]>> right,
-                                          const idx_t &count) {
+inline static bool CompareColumnar(const vector<const T *> &l_cols, const vector<const T *> &r_cols, const idx_t &l_i,
+                                   const idx_t &r_i, const idx_t &columns) {
+	for (idx_t col_idx = 0; col_idx < columns; col_idx++) {
+		if (l_cols[col_idx][l_i] != r_cols[col_idx][r_i]) {
+			return l_cols[col_idx][l_i] < r_cols[col_idx][r_i];
+		}
+	}
+	return false;
+}
+
+template <class T>
+void MergeKeyColumns(const vector<unique_ptr<data_t[]>> &left, const vector<unique_ptr<data_t[]>> &right,
+                     const idx_t &count) {
+	assert(left.size() == right.size());
+	const idx_t columns = left.size();
+	vector<const T *> l_cols;
+	vector<const T *> r_cols;
+	for (idx_t col_idx = 0; col_idx < columns; col_idx++) {
+		l_cols.push_back((T *)left[col_idx].get());
+		r_cols.push_back((T *)right[col_idx].get());
+	}
+	idx_t l_i = 0;
+	idx_t r_i = 0;
+	idx_t result_i = 0;
+	auto left_smaller_ptr = unique_ptr<bool[]>(new bool[count * 2]);
+	auto left_smaller = left_smaller_ptr.get();
+	while (l_i < count && r_i < count) {
+		left_smaller[result_i] = CompareColumnar<T>(l_cols, r_cols, l_i, r_i, columns);
+		l_i += left_smaller[result_i];
+		r_i += !left_smaller[result_i];
+		result_i++;
+	}
+	const bool left_rest_smaller = l_i != count;
+	for (; result_i < 2 * count; result_i++) {
+		left_smaller[result_i] = left_rest_smaller;
+	}
+}
+
+void MergeKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &count, const idx_t row_width) {
+	const idx_t comp_width = row_width - sizeof(uint32_t);
+	const data_ptr_t l_end = left + count * row_width;
+	const data_ptr_t r_end = right + count * row_width;
+	idx_t result_i = 0;
+	auto left_smaller_ptr = unique_ptr<bool[]>(new bool[count * 2]);
+	auto left_smaller = left_smaller_ptr.get();
+	while (left != l_end && right != r_end) {
+		left_smaller[result_i] = duckdb::fast_memcmp(left, right, comp_width);
+		left += left_smaller[result_i] * row_width;
+		right += !left_smaller[result_i] * row_width;
+		result_i++;
+	}
+	const bool left_rest_smaller = left != l_end;
+	for (; result_i < 2 * count; result_i++) {
+		left_smaller[result_i] = left_rest_smaller;
+	}
+}
+
+template <class T>
+string SimulateColumnKeyMerge(const idx_t &count, const idx_t &columns) {
+	// Initialize source data
+	auto left = AllocateColumns(count, columns, sizeof(T));
+	auto right = AllocateColumns(count, columns, sizeof(T));
+	FillColumns<T>(left, count, "skewed");
+	FillColumns<T>(right, count, "skewed");
+
+	// Merge
+	auto before_timestamp = CurrentTime();
+	MergeKeyColumns<T>(left, right, count);
+	auto after_timestamp = CurrentTime();
+
+	// Compute duration of phases
+	auto total_duration = after_timestamp - before_timestamp;
+	return CreateOutput("col", {count, columns, sizeof(T), total_duration}, 5);
+}
+
+template <class T>
+string SimulateRowKeyMerge(const idx_t &count, const idx_t &columns) {
+	auto row_ids = InitRowIDs(count, false);
+	// Initialize source data
+	auto l_row_ids = InitRowIDs(count, false);
+	auto r_row_ids = InitRowIDs(count, false);
+	auto left = AllocateColumns(count, columns, sizeof(T));
+	auto right = AllocateColumns(count, columns, sizeof(T));
+	left.push_back(move(l_row_ids));
+	right.push_back(move(r_row_ids));
+	FillColumns<T>(left, count, "skewed");
+	FillColumns<T>(right, count, "skewed");
+
+	idx_t row_width = 0;
+	vector<idx_t> col_widths;
+	vector<bool> radix;
+	for (idx_t i = 0; i < columns; i++) {
+		row_width += sizeof(T);
+		col_widths.push_back(sizeof(T));
+		radix.push_back(true);
+	}
+	row_width += sizeof(uint32_t);
+	col_widths.push_back(sizeof(uint32_t));
+	radix.push_back(false);
+
+	auto left_rows = Scatter<uint32_t>(move(left), count, row_width, col_widths, radix);
+	auto right_rows = Scatter<uint32_t>(move(right), count, row_width, col_widths, radix);
+
+	// Merge
+	auto before_timestamp = CurrentTime();
+	MergeKeyRows(left_rows.get(), right_rows.get(), count, row_width);
+	auto after_timestamp = CurrentTime();
+
+	// Compute duration of phases
+	auto total_duration = after_timestamp - before_timestamp;
+	return CreateOutput("row", {count, columns, sizeof(T), total_duration}, 5);
+}
+
+template <class T>
+string SimulateKeyMerge(idx_t count, idx_t columns) {
+	ostringstream result;
+	result << SimulateColumnKeyMerge<T>(count, columns) << endl;
+	result << SimulateRowKeyMerge<T>(count, columns) << endl;
+	return result.str();
+}
+
+template <class T>
+void SimulateKeyMerge(idx_t row_max, idx_t col_max, idx_t iterations) {
+	cout << "SimulateKeyMerge" << endl;
+	ofstream results_file("results/merge_key.csv", ios::trunc);
+	results_file << CreateMergeKeyCSVHeader() << endl;
+	for (idx_t r = 10; r < row_max; r += 2) {
+		for (idx_t c = 1; c < col_max + 1; c++) {
+			for (idx_t i = 0; i < iterations; i++) {
+				results_file << SimulateKeyMerge<T>(1 << r, c);
+				results_file.flush();
+				cout << "." << flush;
+			}
+		}
+		cout << endl;
+	}
+}
+
+//===--------------------------------------------------------------------===//
+// Payload Merge Simulation
+//===--------------------------------------------------------------------===//
+string CreateMergePayloadCSVHeader() {
+	return "category,count,columns,col_width,total";
+}
+
+template <class T>
+vector<unique_ptr<data_t[]>> MergePayloadColumns(vector<unique_ptr<data_t[]>> left, vector<unique_ptr<data_t[]>> right,
+                                                 const idx_t &count) {
 	auto result = AllocateColumns(count * 2, left.size(), sizeof(T));
 	bool left_smaller[STANDARD_VECTOR_SIZE];
 	idx_t l_i = 0;
@@ -1392,7 +1541,7 @@ vector<unique_ptr<data_t[]>> MergeColumns(vector<unique_ptr<data_t[]>> left, vec
 			for (idx_t column = 0; column < right.size(); column++) {
 				data_ptr_t r_ptr = right[column].get() + r_i * sizeof(T);
 				data_ptr_t target_ptr = result[column].get() + result_i * sizeof(T);
-				memcpy(target_ptr, r_ptr, entries * sizeof(T));
+				duckdb::fast_memcpy(target_ptr, r_ptr, entries * sizeof(T));
 			}
 			result_i += entries;
 			r_i += entries;
@@ -1401,7 +1550,7 @@ vector<unique_ptr<data_t[]>> MergeColumns(vector<unique_ptr<data_t[]>> left, vec
 			for (idx_t column = 0; column < left.size(); column++) {
 				data_ptr_t l_ptr = left[column].get() + l_i * sizeof(T);
 				data_ptr_t target_ptr = result[column].get() + result_i * sizeof(T);
-				memcpy(target_ptr, l_ptr, entries * sizeof(T));
+				duckdb::fast_memcpy(target_ptr, l_ptr, entries * sizeof(T));
 			}
 			result_i += entries;
 			l_i += entries;
@@ -1439,8 +1588,8 @@ vector<unique_ptr<data_t[]>> MergeColumns(vector<unique_ptr<data_t[]>> left, vec
 	return result;
 }
 
-unique_ptr<data_t[]> MergeRows(unique_ptr<data_t[]> left, unique_ptr<data_t[]> right, const idx_t &count,
-                               const idx_t &row_width) {
+unique_ptr<data_t[]> MergePayloadRows(unique_ptr<data_t[]> left, unique_ptr<data_t[]> right, const idx_t &count,
+                                      const idx_t &row_width) {
 	auto result = AllocateRows(count * 2, row_width);
 	bool left_smaller[STANDARD_VECTOR_SIZE];
 	idx_t l_i = 0;
@@ -1451,14 +1600,14 @@ unique_ptr<data_t[]> MergeRows(unique_ptr<data_t[]> left, unique_ptr<data_t[]> r
 			idx_t entries = count - r_i;
 			data_ptr_t r_ptr = right.get() + r_i * row_width;
 			data_ptr_t target_ptr = result.get() + result_i * row_width;
-			memcpy(target_ptr, r_ptr, entries * row_width);
+			duckdb::fast_memcpy(target_ptr, r_ptr, entries * row_width);
 			result_i += entries;
 			r_i += entries;
 		} else if (r_i == count) {
 			idx_t entries = count - l_i;
 			data_ptr_t l_ptr = left.get() + l_i * row_width;
 			data_ptr_t target_ptr = result.get() + result_i * row_width;
-			memcpy(target_ptr, l_ptr, entries * row_width);
+			duckdb::fast_memcpy(target_ptr, l_ptr, entries * row_width);
 			result_i += entries;
 			l_i += entries;
 		} else {
@@ -1477,8 +1626,8 @@ unique_ptr<data_t[]> MergeRows(unique_ptr<data_t[]> left, unique_ptr<data_t[]> r
 			for (j = 0; j < next; j++) {
 				bool &copy_left = left_smaller[j];
 				bool copy_right = !copy_left;
-				memcpy(target_ptr, l_ptr, copy_left * row_width);
-				memcpy(target_ptr, r_ptr, copy_right * row_width);
+				duckdb::fast_memcpy(target_ptr, l_ptr, copy_left * row_width);
+				duckdb::fast_memcpy(target_ptr, r_ptr, copy_right * row_width);
 				target_ptr += row_width;
 				l_ptr += copy_left * row_width;
 				r_ptr += copy_right * row_width;
@@ -1492,14 +1641,14 @@ unique_ptr<data_t[]> MergeRows(unique_ptr<data_t[]> left, unique_ptr<data_t[]> r
 }
 
 template <class T>
-string SimulateColumnMerge(const idx_t &count, const idx_t &columns) {
+string SimulateColumnPayloadMerge(const idx_t &count, const idx_t &columns) {
 	// Initialize source data
 	auto left = AllocateColumns(count / 2, columns, sizeof(T));
 	auto right = AllocateColumns(count / 2, columns, sizeof(T));
 
 	// Merge
 	auto before_timestamp = CurrentTime();
-	auto target = MergeColumns<T>(move(left), move(right), count / 2);
+	auto target = MergePayloadColumns<T>(move(left), move(right), count / 2);
 	auto after_timestamp = CurrentTime();
 
 	// Compute duration of phases
@@ -1508,7 +1657,7 @@ string SimulateColumnMerge(const idx_t &count, const idx_t &columns) {
 }
 
 template <class T>
-string SimulateRowMerge(const idx_t &count, const idx_t &columns) {
+string SimulateRowPayloadMerge(const idx_t &count, const idx_t &columns) {
 	// Initialize source data
 	const idx_t row_width = columns * sizeof(T);
 	auto left = AllocateRows(count / 2, row_width);
@@ -1516,7 +1665,7 @@ string SimulateRowMerge(const idx_t &count, const idx_t &columns) {
 
 	// Merge
 	auto before_timestamp = CurrentTime();
-	auto target = MergeRows(move(left), move(right), count / 2, row_width);
+	auto target = MergePayloadRows(move(left), move(right), count / 2, row_width);
 	auto after_timestamp = CurrentTime();
 
 	// Compute duration of phases
@@ -1525,28 +1674,121 @@ string SimulateRowMerge(const idx_t &count, const idx_t &columns) {
 }
 
 template <class T>
-string SimulateMerge(idx_t count, idx_t columns) {
+string SimulatePayloadMerge(idx_t count, idx_t columns) {
 	ostringstream result;
-	result << SimulateColumnMerge<T>(count, columns) << endl;
-	result << SimulateRowMerge<T>(count, columns) << endl;
+	result << SimulateColumnPayloadMerge<T>(count, columns) << endl;
+	result << SimulateRowPayloadMerge<T>(count, columns) << endl;
 	return result.str();
 }
 
 template <class T>
-void SimulateMerge(idx_t row_max, idx_t col_max, idx_t iterations) {
-	cout << "SimulateMerge" << endl;
-	ofstream results_file("results/merge.csv", ios::trunc);
-	results_file << CreateMergeCSVHeader() << endl;
+void SimulatePayloadMerge(idx_t row_max, idx_t col_max, idx_t iterations) {
+	cout << "SimulatePayloadMerge" << endl;
+	ofstream results_file("results/merge_payload.csv", ios::trunc);
+	results_file << CreateMergePayloadCSVHeader() << endl;
 	for (idx_t r = 10; r < row_max; r += 2) {
 		for (idx_t c = 0; c < col_max; c++) {
 			for (idx_t i = 0; i < iterations; i++) {
 				idx_t num_cols = min<idx_t>(1 << c, 96);
-				results_file << SimulateMerge<T>(1 << r, num_cols);
+				results_file << SimulatePayloadMerge<T>(1 << r, num_cols);
 				results_file.flush();
 				cout << "." << flush;
 			}
 		}
 		cout << endl;
+	}
+}
+
+//===--------------------------------------------------------------------===//
+// Fast Memcpy Simulation
+//===--------------------------------------------------------------------===//
+void SimulateFastMemcpy() {
+	const idx_t max_bytes = 512;
+	const idx_t rep = 1000000;
+	auto ptr = unique_ptr<data_t[]>(new data_t[max_bytes * 2]);
+	const data_ptr_t l_ptr = ptr.get();
+	const data_ptr_t r_ptr = ptr.get() + max_bytes;
+	for (idx_t size = 0; size <= max_bytes; size += 4) {
+		auto before_timestamp = CurrentTime();
+		for (idx_t r = 0; r < rep; r++) {
+			memcpy(l_ptr, r_ptr, size);
+		}
+		auto after_timestamp = CurrentTime();
+		double memcpy_time = (double)(after_timestamp - before_timestamp) / rep;
+
+		before_timestamp = CurrentTime();
+		for (idx_t r = 0; r < rep; r++) {
+			duckdb::fast_memcpy(l_ptr, r_ptr, size);
+		}
+		after_timestamp = CurrentTime();
+		double fast_memcpy_time = (double)(after_timestamp - before_timestamp) / rep;
+
+		cout << size << ": " << (memcpy_time < fast_memcpy_time ? "memcpy better" : "fast_memcpy better")
+		     << ", m = " << memcpy_time << ", f = " << fast_memcpy_time << endl;
+	}
+}
+
+//===--------------------------------------------------------------------===//
+// Fast Memcmp Simulation
+//===--------------------------------------------------------------------===//
+void SimulateFastMemcmp() {
+	const idx_t max_bytes = 128;
+	const idx_t rep = 1000000;
+	const idx_t diffs = 4;
+	auto ptr = unique_ptr<data_t[]>(new data_t[max_bytes * rep * 2]);
+	const data_ptr_t l_ptr = ptr.get();
+	const data_ptr_t r_ptr = ptr.get() + max_bytes * rep;
+
+	// Fill with random data
+	data_ptr_t l_ptr_temp = l_ptr;
+	data_ptr_t r_ptr_temp = r_ptr;
+	for (idx_t i = 0; i < rep; i++) {
+		const idx_t same_until =  ((idx_t)rand() % 32);
+		for (idx_t c = 0; c < same_until; c++) {
+			l_ptr_temp[c] = 42;
+			r_ptr_temp[c] = 42;
+		}
+		l_ptr_temp[same_until] = 13;
+		r_ptr_temp[same_until] = 37;
+		for (idx_t c = same_until + 1; c < max_bytes; c++) {
+			l_ptr_temp[c] = 42;
+			r_ptr_temp[c] = 42;
+		}
+		l_ptr_temp += max_bytes;
+		r_ptr_temp += max_bytes;
+	}
+
+	for (idx_t size = 4; size <= max_bytes; size += 4) {
+		l_ptr_temp = l_ptr;
+		r_ptr_temp = r_ptr;
+		int memcmp_checksum = 0;
+		auto before_timestamp = CurrentTime();
+		for (idx_t r = 0; r < rep; r++) {
+			memcmp_checksum += memcmp(l_ptr_temp, r_ptr_temp, size);
+			memcmp_checksum += memcmp(r_ptr_temp, l_ptr_temp, size);
+			l_ptr_temp += max_bytes;
+			r_ptr_temp += max_bytes;
+		}
+		auto after_timestamp = CurrentTime();
+		double memcmp_time = (double)(after_timestamp - before_timestamp) / rep;
+
+		l_ptr_temp = l_ptr;
+		r_ptr_temp = r_ptr;
+		int fast_memcmp_checksum = 0;
+		before_timestamp = CurrentTime();
+		for (idx_t r = 0; r < rep; r++) {
+			fast_memcmp_checksum += duckdb::fast_memcmp(l_ptr_temp, r_ptr_temp, size);
+			fast_memcmp_checksum += duckdb::fast_memcmp(r_ptr_temp, l_ptr_temp, size);
+			l_ptr_temp += max_bytes;
+			r_ptr_temp += max_bytes;
+		}
+		after_timestamp = CurrentTime();
+		double fast_memcmp_time = (double)(after_timestamp - before_timestamp) / rep;
+
+		assert(memcmp_checksum == fast_memcmp_checksum);
+
+		cout << size << ": " << (memcmp_time < fast_memcmp_time ? "memcmp better" : "fast_memcmp better")
+			<< ", m = " << memcmp_time << ", f = " << fast_memcmp_time << endl;
 	}
 }
 
@@ -1558,12 +1800,16 @@ void Main(int argc, char *argv[]) {
 	if (argc == 1) {
 		// VerifyReOrder();
 		// VerifySort();
-		// SimulateReOrder<T>(25, 8, 5);
-		SimulateComparator<T>(27, 6, 3);
-		SimulateSort<T>(27, 6, 3);
-		// SimulateMerge<T>(25, 8, 5);
-		// SimulateSortInternal<T>(16777216, 1, "radix");
-		// SimulateColumnComparator<T>(64, 2, true);
+		const idx_t row = 21;
+		const idx_t col = 6;
+		const idx_t rep = 3;
+		// SimulateReOrder<T>(row, col, rep);
+		// SimulateComparator<T>(row, col, rep);
+		// SimulateSort<T>(row, col, rep);
+		// SimulateKeyMerge<T>(row, col, rep);
+		// SimulatePayloadMerge<T>(row, col, rep);
+		// SimulateFastMemcpy();
+		SimulateFastMemcmp();
 	} else {
 		assert(argc == 5);
 		auto category = string(argv[2]);
@@ -1583,7 +1829,7 @@ void Main(int argc, char *argv[]) {
 				// category "col" means pdqsort here
 				SimulateSortInternal<T>(count, columns, "pdq_dynamic");
 			} else if (sim == "merge") {
-				SimulateColumnMerge<T>(count, columns);
+				SimulateColumnPayloadMerge<T>(count, columns);
 			}
 		} else if (category == "row") {
 			if (sim == "reorder") {
@@ -1595,7 +1841,7 @@ void Main(int argc, char *argv[]) {
 				// category "col" means radix sort here
 				SimulateSortInternal<T>(count, columns, "radix");
 			} else if (sim == "merge") {
-				SimulateRowMerge<T>(count, columns);
+				SimulateRowPayloadMerge<T>(count, columns);
 			}
 		}
 	}
