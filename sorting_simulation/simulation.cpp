@@ -1541,7 +1541,7 @@ vector<unique_ptr<data_t[]>> MergePayloadColumns(vector<unique_ptr<data_t[]>> le
 			for (idx_t column = 0; column < right.size(); column++) {
 				data_ptr_t r_ptr = right[column].get() + r_i * sizeof(T);
 				data_ptr_t target_ptr = result[column].get() + result_i * sizeof(T);
-				duckdb::fast_memcpy(target_ptr, r_ptr, entries * sizeof(T));
+				memcpy(target_ptr, r_ptr, entries * sizeof(T));
 			}
 			result_i += entries;
 			r_i += entries;
@@ -1550,7 +1550,7 @@ vector<unique_ptr<data_t[]>> MergePayloadColumns(vector<unique_ptr<data_t[]>> le
 			for (idx_t column = 0; column < left.size(); column++) {
 				data_ptr_t l_ptr = left[column].get() + l_i * sizeof(T);
 				data_ptr_t target_ptr = result[column].get() + result_i * sizeof(T);
-				duckdb::fast_memcpy(target_ptr, l_ptr, entries * sizeof(T));
+				memcpy(target_ptr, l_ptr, entries * sizeof(T));
 			}
 			result_i += entries;
 			l_i += entries;
@@ -1573,9 +1573,7 @@ vector<unique_ptr<data_t[]>> MergePayloadColumns(vector<unique_ptr<data_t[]>> le
 				for (j = 0; j < next; j++) {
 					bool &copy_left = left_smaller[j];
 					bool copy_right = !copy_left;
-					target[j] = 0;
-					target[j] += copy_left * l[l_i_temp];
-					target[j] += copy_right * r[r_i_temp];
+					target[j] = copy_left * l[l_i_temp] + copy_right * r[r_i_temp];
 					l_i_temp += copy_left;
 					r_i_temp += copy_right;
 				}
@@ -1600,14 +1598,14 @@ unique_ptr<data_t[]> MergePayloadRows(unique_ptr<data_t[]> left, unique_ptr<data
 			idx_t entries = count - r_i;
 			data_ptr_t r_ptr = right.get() + r_i * row_width;
 			data_ptr_t target_ptr = result.get() + result_i * row_width;
-			duckdb::fast_memcpy(target_ptr, r_ptr, entries * row_width);
+			memcpy(target_ptr, r_ptr, entries * row_width);
 			result_i += entries;
 			r_i += entries;
 		} else if (r_i == count) {
 			idx_t entries = count - l_i;
 			data_ptr_t l_ptr = left.get() + l_i * row_width;
 			data_ptr_t target_ptr = result.get() + result_i * row_width;
-			duckdb::fast_memcpy(target_ptr, l_ptr, entries * row_width);
+			memcpy(target_ptr, l_ptr, entries * row_width);
 			result_i += entries;
 			l_i += entries;
 		} else {
@@ -1626,8 +1624,8 @@ unique_ptr<data_t[]> MergePayloadRows(unique_ptr<data_t[]> left, unique_ptr<data
 			for (j = 0; j < next; j++) {
 				bool &copy_left = left_smaller[j];
 				bool copy_right = !copy_left;
-				duckdb::fast_memcpy(target_ptr, l_ptr, copy_left * row_width);
-				duckdb::fast_memcpy(target_ptr, r_ptr, copy_right * row_width);
+				duckdb::fast_memcpy(target_ptr, (data_ptr_t)(copy_left * (idx_t)l_ptr + copy_right * (idx_t)r_ptr),
+				                    row_width);
 				target_ptr += row_width;
 				l_ptr += copy_left * row_width;
 				r_ptr += copy_right * row_width;
@@ -1703,12 +1701,15 @@ void SimulatePayloadMerge(idx_t row_max, idx_t col_max, idx_t iterations) {
 // Fast Memcpy Simulation
 //===--------------------------------------------------------------------===//
 void SimulateFastMemcpy() {
-	const idx_t max_bytes = 512;
+	ofstream output("results/memcpy.csv", ios::trunc);
+	output << "num_bytes,type,time" << endl;
+
+	const idx_t max_bytes = 64;
 	const idx_t rep = 1000000;
 	auto ptr = unique_ptr<data_t[]>(new data_t[max_bytes * 2]);
 	const data_ptr_t l_ptr = ptr.get();
 	const data_ptr_t r_ptr = ptr.get() + max_bytes;
-	for (idx_t size = 0; size <= max_bytes; size += 4) {
+	for (idx_t size = 0; size <= max_bytes; size++) {
 		auto before_timestamp = CurrentTime();
 		for (idx_t r = 0; r < rep; r++) {
 			memcpy(l_ptr, r_ptr, size);
@@ -1723,8 +1724,10 @@ void SimulateFastMemcpy() {
 		after_timestamp = CurrentTime();
 		double fast_memcpy_time = (double)(after_timestamp - before_timestamp) / rep;
 
-		cout << size << ": " << (memcpy_time < fast_memcpy_time ? "memcpy better" : "fast_memcpy better")
-		     << ", m = " << memcpy_time << ", f = " << fast_memcpy_time << endl;
+		output << size << ",dynamic," << memcpy_time << endl;
+		output << size << ",static," << fast_memcpy_time << endl;
+		// cout << size << ": " << (memcpy_time < fast_memcpy_time ? "memcpy better" : "fast_memcpy better")
+		//      << ", m = " << memcpy_time << ", f = " << fast_memcpy_time << endl;
 	}
 }
 
@@ -1732,33 +1735,36 @@ void SimulateFastMemcpy() {
 // Fast Memcmp Simulation
 //===--------------------------------------------------------------------===//
 void SimulateFastMemcmp() {
-	const idx_t max_bytes = 128;
+	ofstream output("results/memcmp.csv", ios::trunc);
+	output << "num_bytes,type,time" << endl;
+
+	const idx_t max_bytes = 64;
 	const idx_t rep = 1000000;
-	const idx_t diffs = 4;
+
 	auto ptr = unique_ptr<data_t[]>(new data_t[max_bytes * rep * 2]);
 	const data_ptr_t l_ptr = ptr.get();
 	const data_ptr_t r_ptr = ptr.get() + max_bytes * rep;
 
-	// Fill with random data
-	data_ptr_t l_ptr_temp = l_ptr;
-	data_ptr_t r_ptr_temp = r_ptr;
-	for (idx_t i = 0; i < rep; i++) {
-		const idx_t same_until =  ((idx_t)rand() % 32);
-		for (idx_t c = 0; c < same_until; c++) {
-			l_ptr_temp[c] = 42;
-			r_ptr_temp[c] = 42;
+	for (idx_t size = 0; size <= max_bytes; size++) {
+		data_ptr_t l_ptr_temp = l_ptr;
+		data_ptr_t r_ptr_temp = r_ptr;
+		for (idx_t i = 0; i < rep; i++) {
+			// Fill with random data
+			const idx_t same_until = ((idx_t)rand() % (size + 1));
+			for (idx_t c = 0; c < same_until; c++) {
+				l_ptr_temp[c] = 42;
+				r_ptr_temp[c] = 42;
+			}
+			l_ptr_temp[same_until] = 13;
+			r_ptr_temp[same_until] = 37;
+			for (idx_t c = same_until + 1; c < max_bytes; c++) {
+				l_ptr_temp[c] = 42;
+				r_ptr_temp[c] = 42;
+			}
+			l_ptr_temp += max_bytes;
+			r_ptr_temp += max_bytes;
 		}
-		l_ptr_temp[same_until] = 13;
-		r_ptr_temp[same_until] = 37;
-		for (idx_t c = same_until + 1; c < max_bytes; c++) {
-			l_ptr_temp[c] = 42;
-			r_ptr_temp[c] = 42;
-		}
-		l_ptr_temp += max_bytes;
-		r_ptr_temp += max_bytes;
-	}
 
-	for (idx_t size = 4; size <= max_bytes; size += 4) {
 		l_ptr_temp = l_ptr;
 		r_ptr_temp = r_ptr;
 		int memcmp_checksum = 0;
@@ -1787,8 +1793,10 @@ void SimulateFastMemcmp() {
 
 		assert(memcmp_checksum == fast_memcmp_checksum);
 
-		cout << size << ": " << (memcmp_time < fast_memcmp_time ? "memcmp better" : "fast_memcmp better")
-			<< ", m = " << memcmp_time << ", f = " << fast_memcmp_time << endl;
+		output << size << ",dynamic," << memcmp_time << endl;
+		output << size << ",static," << fast_memcmp_time << endl;
+		// cout << size << ": " << (memcmp_time < fast_memcmp_time ? "memcmp better" : "fast_memcmp better")
+		// 	<< ", m = " << memcmp_time << ", f = " << fast_memcmp_time << endl;
 	}
 }
 
@@ -1800,16 +1808,16 @@ void Main(int argc, char *argv[]) {
 	if (argc == 1) {
 		// VerifyReOrder();
 		// VerifySort();
-		const idx_t row = 21;
+		const idx_t row = 23;
 		const idx_t col = 6;
 		const idx_t rep = 3;
 		// SimulateReOrder<T>(row, col, rep);
 		// SimulateComparator<T>(row, col, rep);
 		// SimulateSort<T>(row, col, rep);
 		// SimulateKeyMerge<T>(row, col, rep);
-		// SimulatePayloadMerge<T>(row, col, rep);
+		SimulatePayloadMerge<T>(row, col, rep);
 		// SimulateFastMemcpy();
-		SimulateFastMemcmp();
+		// SimulateFastMemcmp();
 	} else {
 		assert(argc == 5);
 		auto category = string(argv[2]);
