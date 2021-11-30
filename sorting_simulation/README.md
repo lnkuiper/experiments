@@ -7,6 +7,9 @@ Parameters can be changed in the `main()` function at the bottom of the `simulat
 The current parameters can are set to take up less than 16GB of memory.
 The script is run with `./simulation`, which generates CSV files.
 
+Cache misses and branch mispredictions are counted with macOS Instruments.
+Run `make trace` and run `python3 trace.py`.
+
 ## Analysis
 Plots were created in a Jupyter notebook.
 The relevant Python packages can be installed with:

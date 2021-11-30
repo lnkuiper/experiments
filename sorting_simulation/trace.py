@@ -40,7 +40,7 @@ def main():
     key_cols = 3
     payload_cols = 1 << 6
     configurations = [
-        ('comparator', rows, key_cols, ['col_all', 'col_iter', 'row_all', 'row_norm']),
+        ('comparator', rows, key_cols, ['col_all', 'col_iter', 'row_all', 'row_iter', 'row_norm']),
         ('sort', rows, key_cols, ['pdq_static', 'radix']),
         ('merge_key', rows, key_cols, ['row', 'col']),
         ('reorder', rows, payload_cols, ['row', 'col']),

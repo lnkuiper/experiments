@@ -11,6 +11,7 @@
 #include <memory>
 #include <random>
 #include <sstream>
+#include <thread>
 #include <vector>
 
 using namespace std;
@@ -322,7 +323,13 @@ string SimulateColumnReOrder(const uint32_t row_ids[], const idx_t &count, const
 
 	// ReOrder and timestamp
 	auto before_timestamp = CurrentTime();
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto target = ReOrderColumns<T>(row_ids, source, count);
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto after_timestamp = CurrentTime();
 
 	// Compute duration of phases
@@ -348,7 +355,13 @@ string SimulateRowReOrder(const T row_ids[], const idx_t &count, const idx_t &co
 
 	auto source_rows = Scatter<T>(move(source), count, row_width, col_widths, radix);
 	auto scatter_timestamp = CurrentTime();
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto target_rows = ReOrderRows(row_ids, move(source_rows), count, row_width);
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto reorder_timestamp = CurrentTime();
 	auto target = Gather<T>(move(target_rows), count, row_width, col_widths);
 	auto after_timestamp = CurrentTime();
@@ -988,116 +1001,125 @@ void SortColumnSubsort(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_
 	}
 }
 
-// template <class ROW, class T>
-// bool ComputeRowTies(bool ties[], ROW *row_data_ptr, const idx_t &count, const idx_t &col_idx, const idx_t &columns) {
-// 	auto col_ptr = (T *)row_data_ptr + col_idx;
+template <class ROW, class T>
+bool ComputeRowTies(bool ties[], ROW *row_data_ptr, const idx_t &count, const idx_t &col_idx) {
+	assert(sizeof(ROW) % sizeof(T) == 0);
+	const idx_t width = sizeof(ROW) / sizeof(T);
+	T *col_ptr = (T *)row_data_ptr + col_idx;
 
-// 	bool any_tie = false;
-// 	for (idx_t i = 0; i < count - 1; i++) {
-// 		ties[i] = ties[i] && col_ptr[]
-// 		any_tie = any_tie || ties[i];
-// 	}
-// 	return any_tie;
-// }
+	bool any_tie = false;
+	for (idx_t i = 0; i < count - 1; i++) {
+		T &curr = *col_ptr;
+		col_ptr += width;
+		ties[i] = ties[i] && curr == *col_ptr;
+		any_tie = any_tie || ties[i];
+	}
+	return any_tie;
+}
 
-// template <class ROW, class T>
-// void SortRowSubsortPDQ(ROW *row_data_ptr, const idx_t &count, const idx_t &col_idx) {
-// 	switch (col_idx) {
-// 	case 1:
-// 		return pdqsort_branchless(row_data_ptr, row_data_ptr + count,
-// 		                          [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col1 < rhs.col1; });
-// 	case 2:
-// 		return pdqsort_branchless(row_data_ptr, row_data_ptr + count,
-// 		                          [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col2 < rhs.col2; });
-// 	case 1:
-// 		return pdqsort_branchless(row_data_ptr, row_data_ptr + count,
-// 		                          [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col3 < rhs.col3; });
-// 	case 1:
-// 		return pdqsort_branchless(row_data_ptr, row_data_ptr + count,
-// 		                          [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col4 < rhs.col4; });
-// 	case 1:
-// 		return pdqsort_branchless(row_data_ptr, row_data_ptr + count,
-// 		                          [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col5 < rhs.col5; });
-// 	case 1:
-// 		return pdqsort_branchless(row_data_ptr, row_data_ptr + count,
-// 		                          [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col6 < rhs.col6; });
-// 	case 1:
-// 		return pdqsort_branchless(row_data_ptr, row_data_ptr + count,
-// 		                          [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col7 < rhs.col7; });
-// 	case 1:
-// 		return pdqsort_branchless(row_data_ptr, row_data_ptr + count,
-// 		                          [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col8 < rhs.col8; });
-// 	default:
-// 		assert(false);
-// 	}
-// }
+template <class ROW, class T>
+void SortRowSubsortPDQ(ROW *row_data_ptr, const idx_t &count, const idx_t &col_idx) {
+	switch (col_idx) {
+	case 0:
+		return pdqsort_branchless(row_data_ptr, row_data_ptr + count,
+		                          [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col1 < rhs.col1; });
+	case 1:
+		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
+			return *(&lhs.col1 + 1) < *(&rhs.col1 + 1);
+		});
+	case 2:
+		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
+			return *(&lhs.col1 + 2) < *(&rhs.col1 + 2);
+		});
+	case 3:
+		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
+			return *(&lhs.col1 + 3) < *(&rhs.col1 + 3);
+		});
+	case 4:
+		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
+			return *(&lhs.col1 + 4) < *(&rhs.col1 + 4);
+		});
+	case 5:
+		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
+			return *(&lhs.col1 + 5) < *(&rhs.col1 + 5);
+		});
+	case 6:
+		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
+			return *(&lhs.col1 + 6) < *(&rhs.col1 + 6);
+		});
+	case 7:
+		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
+			return *(&lhs.col1 + 7) < *(&rhs.col1 + 7);
+		});
+	default:
+		assert(false);
+	}
+}
 
-// template <class ROW, class T>
-// void SortRowSubsort(ROW *row_data_ptr, const idx_t &count, const idx_t &columns) {
-// 	if (columns == 1) {
-// 		return pdqsort_branchless(row_data_ptr, row_data_ptr + count);
-// 	}
-// 	unique_ptr<bool[]> ties_ptr;
-// 	bool *ties = nullptr;
-// 	for (idx_t col_idx = 0; col_idx < columns; col_idx++) {
-// 		if (!ties) {
-// 			// This is the first sort
-// 			SortRowSubsortPDQ(row_data_ptr, count, col_idx);
-// 			// Initialize ties array
-// 			ties_ptr = unique_ptr<bool[]>(new bool[count]);
-// 			ties = ties_ptr.get();
-// 			std::fill_n(ties, count - 1, true);
-// 			ties[count - 1] = false;
-// 		} else {
-// 			if (!ComputeTies(ties, row_data_ptr, count, col_idx)) {
-// 				break;
-// 			}
-// 			// Subsort tied tuples
-// 			for (idx_t i = 0; i < count; i++) {
-// 				if (!ties[i]) {
-// 					continue;
-// 				}
-// 				idx_t j;
-// 				for (j = i + 1; j < count; j++) {
-// 					if (!ties[j]) {
-// 						break;
-// 					}
-// 				}
-// 				pdqsort_branchless(
-// 				    row_ids + i, row_ids + j + 1,
-// 				    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
-// 				i = j;
-// 			}
-// 		}
-// 	}
-// }
-
-// template <class T>
-// void SortRowSubsort(data_ptr_t row_data, const idx_t &count, const idx_t &columns) {
-// 	switch (columns) {
-// 	case 1:
-// 		return SortRowSubsort<BranchedRowOrderEntry1<T>, T>((BranchedRowOrderEntry1<T> *)row_data, count, columns);
-// 	case 2:
-// 		return SortRowSubsort<BranchedRowOrderEntry2<T>, T>((BranchedRowOrderEntry2<T> *)row_data, count, columns);
-// 	case 3:
-// 		return SortRowSubsort<BranchedRowOrderEntry3<T>, T>((BranchedRowOrderEntry3<T> *)row_data, count, columns);
-// 	case 4:
-// 		return SortRowSubsort<BranchedRowOrderEntry4<T>, T>((BranchedRowOrderEntry4<T> *)row_data, count, columns);
-// 	case 5:
-// 		return SortRowSubsort<BranchedRowOrderEntry5<T>, T>((BranchedRowOrderEntry5<T> *)row_data, count, columns);
-// 	case 6:
-// 		return SortRowSubsort<BranchedRowOrderEntry6<T>, T>((BranchedRowOrderEntry6<T> *)row_data, count, columns);
-// 	case 7:
-// 		return SortRowSubsort<BranchedRowOrderEntry7<T>, T>((BranchedRowOrderEntry7<T> *)row_data, count, columns);
-// 	case 8:
-// 		return SortRowSubsort<BranchedRowOrderEntry8<T>, T>((BranchedRowOrderEntry8<T> *)row_data, count, columns);
-// 	default:
-// 		assert(false);
-// 	}
-// }
+template <class ROW, class T>
+void SortRowSubsort(ROW *row_data_ptr, const idx_t &count, const idx_t &columns) {
+	if (columns == 1) {
+		return SortRowSubsortPDQ<ROW, T>(row_data_ptr, count, 0);
+	}
+	unique_ptr<bool[]> ties_ptr;
+	bool *ties = nullptr;
+	for (idx_t col_idx = 0; col_idx < columns; col_idx++) {
+		if (!ties) {
+			// This is the first sort
+			SortRowSubsortPDQ<ROW, T>(row_data_ptr, count, col_idx);
+			// Initialize ties array
+			ties_ptr = unique_ptr<bool[]>(new bool[count]);
+			ties = ties_ptr.get();
+			std::fill_n(ties, count - 1, true);
+			ties[count - 1] = false;
+		} else {
+			if (!ComputeRowTies<ROW, T>(ties, row_data_ptr, count, col_idx - 1)) {
+				break;
+			}
+			// Subsort tied tuples
+			for (idx_t i = 0; i < count; i++) {
+				if (!ties[i]) {
+					continue;
+				}
+				idx_t j;
+				for (j = i + 1; j < count; j++) {
+					if (!ties[j]) {
+						break;
+					}
+				}
+				SortRowSubsortPDQ<ROW, T>(row_data_ptr + i, j - i + 1, col_idx);
+				i = j;
+			}
+		}
+	}
+}
 
 template <class T>
-string SimulateRowComparator(const idx_t &count, const idx_t &columns, bool branchless) {
+void SortRowSubsort(data_ptr_t row_data, const idx_t &count, const idx_t &columns) {
+	switch (columns) {
+	case 1:
+		return SortRowSubsort<BranchedRowOrderEntry1<T>, T>((BranchedRowOrderEntry1<T> *)row_data, count, columns);
+	case 2:
+		return SortRowSubsort<BranchedRowOrderEntry2<T>, T>((BranchedRowOrderEntry2<T> *)row_data, count, columns);
+	case 3:
+		return SortRowSubsort<BranchedRowOrderEntry3<T>, T>((BranchedRowOrderEntry3<T> *)row_data, count, columns);
+	case 4:
+		return SortRowSubsort<BranchedRowOrderEntry4<T>, T>((BranchedRowOrderEntry4<T> *)row_data, count, columns);
+	case 5:
+		return SortRowSubsort<BranchedRowOrderEntry5<T>, T>((BranchedRowOrderEntry5<T> *)row_data, count, columns);
+	case 6:
+		return SortRowSubsort<BranchedRowOrderEntry6<T>, T>((BranchedRowOrderEntry6<T> *)row_data, count, columns);
+	case 7:
+		return SortRowSubsort<BranchedRowOrderEntry7<T>, T>((BranchedRowOrderEntry7<T> *)row_data, count, columns);
+	case 8:
+		return SortRowSubsort<BranchedRowOrderEntry8<T>, T>((BranchedRowOrderEntry8<T> *)row_data, count, columns);
+	default:
+		assert(false);
+	}
+}
+
+template <class T>
+string SimulateRowComparator(const idx_t &count, const idx_t &columns, string category) {
 	// This must hold for for alignment
 	assert((columns * sizeof(T)) % sizeof(uint32_t) == 0);
 
@@ -1115,7 +1137,7 @@ string SimulateRowComparator(const idx_t &count, const idx_t &columns, bool bran
 	for (idx_t i = 0; i < columns; i++) {
 		row_width += sizeof(T);
 		col_widths.push_back(sizeof(T));
-		radix.push_back(branchless);
+		radix.push_back(category == "row_norm");
 	}
 	row_width += sizeof(uint32_t);
 	col_widths.push_back(sizeof(uint32_t));
@@ -1124,13 +1146,24 @@ string SimulateRowComparator(const idx_t &count, const idx_t &columns, bool bran
 	auto row_data = Scatter<T>(move(source), count, row_width, col_widths, radix);
 	auto scatter_timestamp = CurrentTime();
 	// PrintRows<T>(row_data.get(), count, col_widths, true);
+	// cout << endl;
 
-	if (branchless) {
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
+	if (category == "row_norm") {
 		SortRowBranchless<T>(row_data.get(), count, columns, "pdq_static");
-	} else {
+	} else if (category == "row_all") {
 		SortRowBranched<T>(row_data.get(), count, columns);
+	} else if (category == "row_iter") {
+		SortRowSubsort<T>(row_data.get(), count, columns);
+	} else {
+		assert(false);
 	}
 	auto sort_timestamp = CurrentTime();
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	// PrintRows<T>(row_data.get(), count, col_widths, true);
 
 	auto target = GatherRowID(move(row_data), count, row_width, row_width - sizeof(uint32_t));
@@ -1146,7 +1179,6 @@ string SimulateRowComparator(const idx_t &count, const idx_t &columns, bool bran
 	auto scatter_duration = scatter_timestamp - before_timestamp;
 	auto sort_duration = sort_timestamp - scatter_timestamp;
 	auto gather_duration = after_timestamp - sort_timestamp;
-	string category = branchless ? "row_branchless" : "row_branched";
 	return CreateOutput(
 	    category, {count, columns, sizeof(T), total_duration, sort_duration, scatter_duration, gather_duration}, 8);
 }
@@ -1181,11 +1213,17 @@ string SimulateColumnComparator(const idx_t &count, const idx_t &columns, bool s
 	FillColumns<T>(source, count, "skewed");
 
 	auto before_timestamp = CurrentTime();
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	if (subsort) {
 		SortColumnSubsort<T>(row_ids, source, count);
 	} else {
 		SortColumn<T>(row_ids, source, count);
 	}
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto after_timestamp = CurrentTime();
 	AssertSortedColumns<T>(row_ids.get(), count, source);
 
@@ -1204,8 +1242,9 @@ string SimulateComparator(idx_t count, idx_t columns) {
 	ostringstream result;
 	result << SimulateColumnComparator<T>(count, columns, true) << endl;
 	result << SimulateColumnComparator<T>(count, columns, false) << endl;
-	result << SimulateRowComparator<T>(count, columns, true) << endl;
-	result << SimulateRowComparator<T>(count, columns, false) << endl;
+	result << SimulateRowComparator<T>(count, columns, "row_all") << endl;
+	result << SimulateRowComparator<T>(count, columns, "row_iter") << endl;
+	result << SimulateRowComparator<T>(count, columns, "row_norm") << endl;
 	return result.str();
 }
 
@@ -1437,11 +1476,17 @@ string SimulateSortInternal(const idx_t &count, const idx_t &columns, string met
 	auto row_data = Scatter<T>(move(source), count, row_width, col_widths, radix);
 	auto scatter_timestamp = CurrentTime();
 
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	if (method == "radix") {
 		RadixSort(row_data.get(), count, row_width, row_width - sizeof(uint32_t));
 	} else {
 		SortRowBranchless<T>(row_data.get(), count, columns, method);
 	}
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto sort_timestamp = CurrentTime();
 	AssertSorted(row_data.get(), count, row_width, row_width - sizeof(uint32_t));
 
@@ -1566,7 +1611,13 @@ string SimulateColumnKeyMerge(const idx_t &count, const idx_t &columns) {
 
 	// Merge
 	auto before_timestamp = CurrentTime();
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	MergeKeyColumns<T>(left, right, count);
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto after_timestamp = CurrentTime();
 
 	// Compute duration of phases
@@ -1606,7 +1657,13 @@ string SimulateRowKeyMerge(const idx_t &count, const idx_t &columns) {
 
 	// Merge
 	auto before_timestamp = CurrentTime();
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	MergeKeyRows(left_rows.get(), right_rows.get(), count, row_width);
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto after_timestamp = CurrentTime();
 
 	// Compute duration of phases
@@ -1790,7 +1847,13 @@ string SimulateColumnPayloadMerge(const idx_t &count, const idx_t &columns) {
 
 	// Merge
 	auto before_timestamp = CurrentTime();
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto target = MergePayloadColumns<T>(left_smaller.get(), move(left), move(right), count / 2);
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto after_timestamp = CurrentTime();
 
 	// Compute duration of phases
@@ -1810,7 +1873,13 @@ string SimulateRowPayloadMerge(const idx_t &count, const idx_t &columns) {
 
 	// Merge
 	auto before_timestamp = CurrentTime();
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto target = MergePayloadRows(left_smaller.get(), move(left), move(right), count / 2, row_width);
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 	auto after_timestamp = CurrentTime();
 
 	// Compute duration of phases
@@ -1973,11 +2042,8 @@ void ParseArgs(int argc, char *argv[]) {
 		} else if (category == "col_iter") {
 			SimulateColumnComparator<T>(count, columns, true);
 			return;
-		} else if (category == "row_all") {
-			SimulateRowComparator<T>(count, columns, false);
-			return;
-		} else if (category == "row_norm") {
-			SimulateRowComparator<T>(count, columns, true);
+		} else if (category == "row_all" || category == "row_iter" || category == "row_norm") {
+			SimulateRowComparator<T>(count, columns, category);
 			return;
 		}
 	} else if (sim == "sort") {
@@ -2011,13 +2077,14 @@ void Main(int argc, char *argv[]) {
 		const idx_t row = 21;
 		const idx_t col = 6;
 		const idx_t rep = 3;
-		SimulateReOrder<T>(row, col, rep);
-		// SimulateComparator<T>(row, col, rep);
+		// SimulateReOrder<T>(row, col, rep);
+		SimulateComparator<T>(row, col, rep);
 		// SimulateSort<T>(row, col, rep);
 		// SimulateKeyMerge<T>(row, col, rep);
 		// SimulatePayloadMerge<T>(row, col, rep);
 		// SimulateFastMemcpy();
 		// SimulateFastMemcmp();
+		// SimulateRowComparator<T>(1024, 2, "row_iter");
 	} else {
 		ParseArgs<T>(argc, argv);
 	}
