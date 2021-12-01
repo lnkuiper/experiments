@@ -1,6 +1,6 @@
 #include <stddef.h>
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
 
 template <size_t SIZE>
 static inline void memcpy_fixed(void *dest, const void *src) {
@@ -9,7 +9,7 @@ static inline void memcpy_fixed(void *dest, const void *src) {
 
 template <size_t SIZE>
 static inline int memcmp_fixed(const void *str1, const void *str2) {
-    return memcmp(str1, str2, SIZE);
+	return memcmp(str1, str2, SIZE);
 }
 
 namespace duckdb {
@@ -19,8 +19,8 @@ namespace duckdb {
 //! For instance `while (<cond>) { memcpy(<dest>, <src>, const_size); ... }`
 static inline void fast_memcpy(void *dest, const void *src, const size_t size) {
 	switch (size) {
-    case 0:
-        return;
+	case 0:
+		return;
 	case 1:
 		return memcpy_fixed<1>(dest, src);
 	case 2:
@@ -534,9 +534,9 @@ static inline void fast_memcpy(void *dest, const void *src, const size_t size) {
 	case 256:
 		return memcpy_fixed<256>(dest, src);
 	default:
-        memcpy_fixed<256>(dest, src);
-        return fast_memcpy(reinterpret_cast<unsigned char *>(dest) + 256,
-                           reinterpret_cast<const unsigned char *>(src) + 256, size - 256);
+		memcpy_fixed<256>(dest, src);
+		return fast_memcpy(reinterpret_cast<unsigned char *>(dest) + 256,
+		                   reinterpret_cast<const unsigned char *>(src) + 256, size - 256);
 	}
 }
 
@@ -1060,9 +1060,10 @@ static inline int fast_memcmp(const void *str1, const void *str2, const size_t s
 	case 256:
 		return memcmp_fixed<256>(str1, str2);
 	default:
-        return memcmp(str1, str2, size);
+		return memcmp(str1, str2, size);
 		// return memcmp_fixed<32>(str1, str2) + fast_memcmp(reinterpret_cast<const unsigned char *>(str1) + 32,
-		//                                                   reinterpret_cast<const unsigned char *>(str2) + 32, size - 32);
+		//                                                   reinterpret_cast<const unsigned char *>(str2) + 32, size -
+		//                                                   32);
 	}
 }
 

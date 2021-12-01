@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <chrono>
+#include <compare>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -464,32 +465,32 @@ string CreateComparatorCSVHeader() {
 }
 
 template <class T>
-struct BranchlessRowOrderEntry1 {
+struct NormalizedRowOrderEntry1 {
 public:
 	T col1;
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchlessRowOrderEntry1 &rhs) const {
+	bool operator<(const NormalizedRowOrderEntry1 &rhs) const {
 		return memcmp(&col1, &rhs.col1, sizeof(T)) < 0;
 	}
 };
 
 template <class T>
-struct BranchlessRowOrderEntry2 {
+struct NormalizedRowOrderEntry2 {
 public:
 	T col1;
 	T col2;
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchlessRowOrderEntry2 &rhs) const {
+	bool operator<(const NormalizedRowOrderEntry2 &rhs) const {
 		return memcmp(&col1, &rhs.col1, 2 * sizeof(T)) < 0;
 	}
 };
 
 template <class T>
-struct BranchlessRowOrderEntry3 {
+struct NormalizedRowOrderEntry3 {
 public:
 	T col1;
 	T col2;
@@ -497,13 +498,13 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchlessRowOrderEntry3 &rhs) const {
+	bool operator<(const NormalizedRowOrderEntry3 &rhs) const {
 		return memcmp(&col1, &rhs.col1, 3 * sizeof(T)) < 0;
 	}
 };
 
 template <class T>
-struct BranchlessRowOrderEntry4 {
+struct NormalizedRowOrderEntry4 {
 public:
 	T col1;
 	T col2;
@@ -512,13 +513,13 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchlessRowOrderEntry4 &rhs) const {
+	bool operator<(const NormalizedRowOrderEntry4 &rhs) const {
 		return memcmp(&col1, &rhs.col1, 4 * sizeof(T)) < 0;
 	}
 };
 
 template <class T>
-struct BranchlessRowOrderEntry5 {
+struct NormalizedRowOrderEntry5 {
 public:
 	T col1;
 	T col2;
@@ -528,13 +529,13 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchlessRowOrderEntry5 &rhs) const {
+	bool operator<(const NormalizedRowOrderEntry5 &rhs) const {
 		return memcmp(&col1, &rhs.col1, 5 * sizeof(T)) < 0;
 	}
 };
 
 template <class T>
-struct BranchlessRowOrderEntry6 {
+struct NormalizedRowOrderEntry6 {
 public:
 	T col1;
 	T col2;
@@ -545,13 +546,13 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchlessRowOrderEntry6 &rhs) const {
+	bool operator<(const NormalizedRowOrderEntry6 &rhs) const {
 		return memcmp(&col1, &rhs.col1, 6 * sizeof(T)) < 0;
 	}
 };
 
 template <class T>
-struct BranchlessRowOrderEntry7 {
+struct NormalizedRowOrderEntry7 {
 public:
 	T col1;
 	T col2;
@@ -563,13 +564,13 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchlessRowOrderEntry7 &rhs) const {
+	bool operator<(const NormalizedRowOrderEntry7 &rhs) const {
 		return memcmp(&col1, &rhs.col1, 7 * sizeof(T)) < 0;
 	}
 };
 
 template <class T>
-struct BranchlessRowOrderEntry8 {
+struct NormalizedRowOrderEntry8 {
 public:
 	T col1;
 	T col2;
@@ -582,7 +583,7 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchlessRowOrderEntry8 &rhs) const {
+	bool operator<(const NormalizedRowOrderEntry8 &rhs) const {
 		return memcmp(&col1, &rhs.col1, 8 * sizeof(T)) < 0;
 	}
 };
@@ -761,6 +762,209 @@ public:
 };
 
 template <class T>
+struct BranchlessRowOrderEntry1 {
+public:
+	T col1;
+	uint32_t row_id;
+
+public:
+	auto operator<=>(const BranchlessRowOrderEntry1 &) const = default;
+
+	bool operator<(const BranchlessRowOrderEntry1 &rhs) const {
+		return col1 < rhs.col1;
+	}
+};
+
+template <class T>
+struct BranchlessRowOrderEntry2 {
+public:
+	T col1;
+	T col2;
+	uint32_t row_id;
+
+public:
+	auto operator<=>(const BranchlessRowOrderEntry2 &) const = default;
+
+	bool operator<(const BranchlessRowOrderEntry2 &rhs) const {
+		const T *l = &col1;
+		const T *r = &rhs.col1;
+		int8_t comp = 0;
+		for (idx_t i = 0; i < 2; i++) {
+			auto next_comp = l[i] <=> r[i];
+			int8_t se = comp == 0;
+			se |= (se << 7);
+			comp |= *((int8_t *)&next_comp) & se;
+		}
+		return comp < 0;
+	}
+};
+
+template <class T>
+struct BranchlessRowOrderEntry3 {
+public:
+	T col1;
+	T col2;
+	T col3;
+	uint32_t row_id;
+
+public:
+	auto operator<=>(const BranchlessRowOrderEntry3 &) const = default;
+
+	bool operator<(const BranchlessRowOrderEntry3 &rhs) const {
+		const T *l = &col1;
+		const T *r = &rhs.col1;
+		int8_t comp = 0;
+		for (idx_t i = 0; i < 3; i++) {
+			auto next_comp = l[i] <=> r[i];
+			int8_t se = comp == 0;
+			se |= (se << 7);
+			comp |= *((int8_t *)&next_comp) & se;
+		}
+		return comp < 0;
+	}
+};
+
+template <class T>
+struct BranchlessRowOrderEntry4 {
+public:
+	T col1;
+	T col2;
+	T col3;
+	T col4;
+	uint32_t row_id;
+
+public:
+	auto operator<=>(const BranchlessRowOrderEntry4 &) const = default;
+
+	bool operator<(const BranchlessRowOrderEntry4 &rhs) const {
+		const T *l = &col1;
+		const T *r = &rhs.col1;
+		int8_t comp = 0;
+		for (idx_t i = 0; i < 4; i++) {
+			auto next_comp = l[i] <=> r[i];
+			int8_t se = comp == 0;
+			se |= (se << 7);
+			comp |= *((int8_t *)&next_comp) & se;
+		}
+		return comp < 0;
+	}
+};
+
+template <class T>
+struct BranchlessRowOrderEntry5 {
+public:
+	T col1;
+	T col2;
+	T col3;
+	T col4;
+	T col5;
+	uint32_t row_id;
+
+public:
+	auto operator<=>(const BranchlessRowOrderEntry5 &) const = default;
+
+	bool operator<(const BranchlessRowOrderEntry5 &rhs) const {
+		const T *l = &col1;
+		const T *r = &rhs.col1;
+		int8_t comp = 0;
+		for (idx_t i = 0; i < 5; i++) {
+			auto next_comp = l[i] <=> r[i];
+			int8_t se = comp == 0;
+			se |= (se << 7);
+			comp |= *((int8_t *)&next_comp) & se;
+		}
+		return comp < 0;
+	}
+};
+
+template <class T>
+struct BranchlessRowOrderEntry6 {
+public:
+	T col1;
+	T col2;
+	T col3;
+	T col4;
+	T col5;
+	T col6;
+	uint32_t row_id;
+
+public:
+	auto operator<=>(const BranchlessRowOrderEntry6 &) const = default;
+
+	bool operator<(const BranchlessRowOrderEntry6 &rhs) const {
+		const T *l = &col1;
+		const T *r = &rhs.col1;
+		int8_t comp = 0;
+		for (idx_t i = 0; i < 6; i++) {
+			auto next_comp = l[i] <=> r[i];
+			int8_t se = comp == 0;
+			se |= (se << 7);
+			comp |= *((int8_t *)&next_comp) & se;
+		}
+		return comp < 0;
+	}
+};
+
+template <class T>
+struct BranchlessRowOrderEntry7 {
+public:
+	T col1;
+	T col2;
+	T col3;
+	T col4;
+	T col5;
+	T col6;
+	T col7;
+	uint32_t row_id;
+
+public:
+	auto operator<=>(const BranchlessRowOrderEntry7 &) const = default;
+
+	bool operator<(const BranchlessRowOrderEntry7 &rhs) const {
+		const T *l = &col1;
+		const T *r = &rhs.col1;
+		int8_t comp = 0;
+		for (idx_t i = 0; i < 7; i++) {
+			auto next_comp = l[i] <=> r[i];
+			int8_t se = comp == 0;
+			se |= (se << 7);
+			comp |= *((int8_t *)&next_comp) & se;
+		}
+		return comp < 0;
+	}
+};
+
+template <class T>
+struct BranchlessRowOrderEntry8 {
+public:
+	T col1;
+	T col2;
+	T col3;
+	T col4;
+	T col5;
+	T col6;
+	T col7;
+	T col8;
+	uint32_t row_id;
+
+public:
+	auto operator<=>(const BranchlessRowOrderEntry8 &) const = default;
+
+	bool operator<(const BranchlessRowOrderEntry8 &rhs) const {
+		const T *l = &col1;
+		const T *r = &rhs.col1;
+		int8_t comp = 0;
+		for (idx_t i = 0; i < 8; i++) {
+			auto next_comp = l[i] <=> r[i];
+			int8_t se = comp == 0;
+			se |= (se << 7);
+			comp |= *((int8_t *)&next_comp) & se;
+		}
+		return comp < 0;
+	}
+};
+
+template <class T>
 struct NormalizedKeyComparator {
 public:
 	NormalizedKeyComparator(const idx_t &comp_width) : comp_width(comp_width) {
@@ -779,85 +983,85 @@ private:
 };
 
 template <class T>
-void SortRowBranchless(data_ptr_t row_data, const idx_t &count, const idx_t &columns, string method) {
+void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &columns, string method) {
 	auto comp = NormalizedKeyComparator<T>(columns * sizeof(T));
 	switch (columns) {
 	case 1: {
-		auto row_data_ptr = (BranchlessRowOrderEntry1<T> *)row_data;
+		auto row_data_ptr = (NormalizedRowOrderEntry1<T> *)row_data;
 		if (method == "pdq_static") {
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
-			auto comp = NormalizedKeyComparator<BranchlessRowOrderEntry1<T>>(columns * sizeof(T));
+			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry1<T>>(columns * sizeof(T));
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 2: {
-		auto row_data_ptr = (BranchlessRowOrderEntry2<T> *)row_data;
+		auto row_data_ptr = (NormalizedRowOrderEntry2<T> *)row_data;
 		if (method == "pdq_static") {
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
-			auto comp = NormalizedKeyComparator<BranchlessRowOrderEntry2<T>>(columns * sizeof(T));
+			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry2<T>>(columns * sizeof(T));
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 3: {
-		auto row_data_ptr = (BranchlessRowOrderEntry3<T> *)row_data;
+		auto row_data_ptr = (NormalizedRowOrderEntry3<T> *)row_data;
 		if (method == "pdq_static") {
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
-			auto comp = NormalizedKeyComparator<BranchlessRowOrderEntry3<T>>(columns * sizeof(T));
+			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry3<T>>(columns * sizeof(T));
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 4: {
-		auto row_data_ptr = (BranchlessRowOrderEntry4<T> *)row_data;
+		auto row_data_ptr = (NormalizedRowOrderEntry4<T> *)row_data;
 		if (method == "pdq_static") {
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
-			auto comp = NormalizedKeyComparator<BranchlessRowOrderEntry4<T>>(columns * sizeof(T));
+			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry4<T>>(columns * sizeof(T));
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 5: {
-		auto row_data_ptr = (BranchlessRowOrderEntry5<T> *)row_data;
+		auto row_data_ptr = (NormalizedRowOrderEntry5<T> *)row_data;
 		if (method == "pdq_static") {
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
-			auto comp = NormalizedKeyComparator<BranchlessRowOrderEntry5<T>>(columns * sizeof(T));
+			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry5<T>>(columns * sizeof(T));
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 6: {
-		auto row_data_ptr = (BranchlessRowOrderEntry6<T> *)row_data;
+		auto row_data_ptr = (NormalizedRowOrderEntry6<T> *)row_data;
 		if (method == "pdq_static") {
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
-			auto comp = NormalizedKeyComparator<BranchlessRowOrderEntry6<T>>(columns * sizeof(T));
+			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry6<T>>(columns * sizeof(T));
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 7: {
-		auto row_data_ptr = (BranchlessRowOrderEntry7<T> *)row_data;
+		auto row_data_ptr = (NormalizedRowOrderEntry7<T> *)row_data;
 		if (method == "pdq_static") {
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
-			auto comp = NormalizedKeyComparator<BranchlessRowOrderEntry7<T>>(columns * sizeof(T));
+			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry7<T>>(columns * sizeof(T));
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 8: {
-		auto row_data_ptr = (BranchlessRowOrderEntry8<T> *)row_data;
+		auto row_data_ptr = (NormalizedRowOrderEntry8<T> *)row_data;
 		if (method == "pdq_static") {
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
-			auto comp = NormalizedKeyComparator<BranchlessRowOrderEntry8<T>>(columns * sizeof(T));
+			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry8<T>>(columns * sizeof(T));
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
@@ -911,12 +1115,61 @@ void SortRowBranched(data_ptr_t row_data, const idx_t &count, const idx_t &colum
 		break;
 	}
 	default:
+		assert(false);
+	}
+}
+
+template <class T>
+void SortRowBranchless(data_ptr_t row_data, const idx_t &count, const idx_t &columns) {
+	switch (columns) {
+	case 1: {
+		auto row_data_ptr = (BranchlessRowOrderEntry1<T> *)row_data;
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		break;
+	}
+	case 2: {
+		auto row_data_ptr = (BranchlessRowOrderEntry2<T> *)row_data;
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		break;
+	}
+	case 3: {
+		auto row_data_ptr = (BranchlessRowOrderEntry3<T> *)row_data;
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		break;
+	}
+	case 4: {
+		auto row_data_ptr = (BranchlessRowOrderEntry4<T> *)row_data;
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		break;
+	}
+	case 5: {
+		auto row_data_ptr = (BranchlessRowOrderEntry5<T> *)row_data;
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		break;
+	}
+	case 6: {
+		auto row_data_ptr = (BranchlessRowOrderEntry6<T> *)row_data;
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		break;
+	}
+	case 7: {
+		auto row_data_ptr = (BranchlessRowOrderEntry7<T> *)row_data;
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		break;
+	}
+	case 8: {
+		auto row_data_ptr = (BranchlessRowOrderEntry8<T> *)row_data;
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		break;
+	}
+	default:
 		throw exception();
 	}
 }
 
 template <class T>
-void SortColumn(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_t[]>> &columns, const idx_t &count) {
+void SortColumn(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_t[]>> &columns, const idx_t &count,
+                string method) {
 	uint32_t *row_ids = (uint32_t *)row_id_col.get();
 	vector<T *> cols;
 	for (const auto &col : columns) {
@@ -927,7 +1180,7 @@ void SortColumn(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_t[]>> &
 		pdqsort_branchless(
 		    row_ids, row_ids + count,
 		    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
-	} else {
+	} else if (method == "col") {
 		pdqsort(row_ids, row_ids + count, [&row_ids, &cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
 			for (const auto &col : cols) {
 				if (col[lhs] != col[rhs]) {
@@ -936,6 +1189,19 @@ void SortColumn(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_t[]>> &
 			}
 			return false;
 		});
+	} else if (method == "col_branchless") {
+		pdqsort_branchless(row_ids, row_ids + count, [&row_ids, &cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
+			int8_t comp = 0;
+			for (const auto &col : cols) {
+				auto next_comp = col[lhs] <=> col[rhs];
+				int8_t se = comp == 0;
+				se |= (se << 7);
+				comp |= *((int8_t *)&next_comp) & se;
+			}
+			return comp < 0;
+		});
+	} else {
+		assert(false);
 	}
 }
 
@@ -1152,11 +1418,13 @@ string SimulateRowComparator(const idx_t &count, const idx_t &columns, string ca
 	this_thread::sleep_for(seconds(2));
 #endif
 	if (category == "row_norm") {
-		SortRowBranchless<T>(row_data.get(), count, columns, "pdq_static");
+		SortRowNormalized<T>(row_data.get(), count, columns, "pdq_static");
 	} else if (category == "row_all") {
 		SortRowBranched<T>(row_data.get(), count, columns);
 	} else if (category == "row_iter") {
 		SortRowSubsort<T>(row_data.get(), count, columns);
+	} else if (category == "row_all_branchless") {
+		SortRowBranchless<T>(row_data.get(), count, columns);
 	} else {
 		assert(false);
 	}
@@ -1206,7 +1474,7 @@ void AssertSortedColumns(const data_t idxs[], const idx_t &count, vector<unique_
 }
 
 template <class T>
-string SimulateColumnComparator(const idx_t &count, const idx_t &columns, bool subsort) {
+string SimulateColumnComparator(const idx_t &count, const idx_t &columns, string category) {
 	// Initialize source data
 	auto row_ids = InitRowIDs(count, false);
 	auto source = AllocateColumns(count, columns, sizeof(T));
@@ -1216,10 +1484,10 @@ string SimulateColumnComparator(const idx_t &count, const idx_t &columns, bool s
 #ifdef TRACE
 	this_thread::sleep_for(seconds(2));
 #endif
-	if (subsort) {
+	if (category == "col_ss") {
 		SortColumnSubsort<T>(row_ids, source, count);
 	} else {
-		SortColumn<T>(row_ids, source, count);
+		SortColumn<T>(row_ids, source, count, category);
 	}
 #ifdef TRACE
 	this_thread::sleep_for(seconds(2));
@@ -1233,18 +1501,19 @@ string SimulateColumnComparator(const idx_t &count, const idx_t &columns, bool s
 
 	// Compute duration of phases
 	auto total_duration = after_timestamp - before_timestamp;
-	string category = subsort ? "col_ss" : "col";
 	return CreateOutput(category, {count, columns, sizeof(T), total_duration, total_duration}, 8);
 }
 
 template <class T>
 string SimulateComparator(idx_t count, idx_t columns) {
 	ostringstream result;
-	result << SimulateColumnComparator<T>(count, columns, true) << endl;
-	result << SimulateColumnComparator<T>(count, columns, false) << endl;
+	result << SimulateColumnComparator<T>(count, columns, "col") << endl;
+	result << SimulateColumnComparator<T>(count, columns, "col_ss") << endl;
+	result << SimulateColumnComparator<T>(count, columns, "col_branchless") << endl;
 	result << SimulateRowComparator<T>(count, columns, "row_all") << endl;
 	result << SimulateRowComparator<T>(count, columns, "row_iter") << endl;
 	result << SimulateRowComparator<T>(count, columns, "row_norm") << endl;
+	result << SimulateRowComparator<T>(count, columns, "row_all_branchless") << endl;
 	return result.str();
 }
 
@@ -1482,7 +1751,7 @@ string SimulateSortInternal(const idx_t &count, const idx_t &columns, string met
 	if (method == "radix") {
 		RadixSort(row_data.get(), count, row_width, row_width - sizeof(uint32_t));
 	} else {
-		SortRowBranchless<T>(row_data.get(), count, columns, method);
+		SortRowNormalized<T>(row_data.get(), count, columns, method);
 	}
 #ifdef TRACE
 	this_thread::sleep_for(seconds(2));
@@ -1652,8 +1921,8 @@ string SimulateRowKeyMerge(const idx_t &count, const idx_t &columns) {
 
 	auto left_rows = Scatter<uint32_t>(move(left), count, row_width, col_widths, radix);
 	auto right_rows = Scatter<uint32_t>(move(right), count, row_width, col_widths, radix);
-	SortRowBranchless<T>(left_rows.get(), count, columns, "pdq_static");
-	SortRowBranchless<T>(right_rows.get(), count, columns, "pdq_static");
+	SortRowNormalized<T>(left_rows.get(), count, columns, "pdq_static");
+	SortRowNormalized<T>(right_rows.get(), count, columns, "pdq_static");
 
 	// Merge
 	auto before_timestamp = CurrentTime();
@@ -2036,11 +2305,8 @@ void ParseArgs(int argc, char *argv[]) {
 			return;
 		}
 	} else if (sim == "comparator") {
-		if (category == "col_all") {
-			SimulateColumnComparator<T>(count, columns, false);
-			return;
-		} else if (category == "col_iter") {
-			SimulateColumnComparator<T>(count, columns, true);
+		if (category == "col_all" || category == "col_ss" || category == "col_branchless") {
+			SimulateColumnComparator<T>(count, columns, category);
 			return;
 		} else if (category == "row_all" || category == "row_iter" || category == "row_norm") {
 			SimulateRowComparator<T>(count, columns, category);
@@ -2084,7 +2350,7 @@ void Main(int argc, char *argv[]) {
 		// SimulatePayloadMerge<T>(row, col, rep);
 		// SimulateFastMemcpy();
 		// SimulateFastMemcmp();
-		// SimulateRowComparator<T>(1024, 2, "row_iter");
+		// SimulateRowComparator<T>(1024, 2, "row_all_branchless");
 	} else {
 		ParseArgs<T>(argc, argv);
 	}
