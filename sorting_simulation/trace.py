@@ -1,3 +1,4 @@
+#!python3
 import os
 import shutil
 import subprocess
@@ -36,15 +37,15 @@ def append_run(category, count, columns, csv):
 
 
 def main():
-    rows = 1 << 22
+    rows = 1 << 24
     key_cols = 3
-    payload_cols = 1 << 6
+    payload_cols = 1 << 5
     configurations = [
-        ('comparator', rows, key_cols, ['col_all', 'col_ss', 'col_branchless', 'row_all', 'row_iter', 'row_norm']),
-        ('sort', rows, key_cols, ['pdq_static', 'radix']),
-        ('merge_key', rows, key_cols, ['row', 'col']),
-        ('reorder', rows, payload_cols, ['row', 'col']),
-        ('merge_payload', rows, payload_cols, ['row', 'col'])
+        # ('comparator', rows, key_cols, ['col_all', 'col_ss', 'col_branchless', 'row_all', 'row_all_branchless', 'row_iter', 'row_norm']),
+        # ('sort', rows, key_cols, ['pdq_static', 'radix']),
+        ('merge_key', rows, key_cols, ['row_all', 'row_all_branchless', 'row_norm', 'col_branch', 'col_branchless']),
+        # ('reorder', rows, payload_cols, ['row', 'col']),
+        # ('merge_payload', rows, payload_cols, ['row', 'col'])
     ]
     for sim, count, columns, categories in configurations:
         fname = f'results/trace_{sim}.csv'

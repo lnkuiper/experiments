@@ -344,7 +344,6 @@ string SimulateRowReOrder(const T row_ids[], const idx_t &count, const idx_t &co
 	auto source = AllocateColumns(count, columns, sizeof(T));
 
 	// Scatter, ReOrder, Gather and timestamp
-	auto before_timestamp = CurrentTime();
 	idx_t row_width = 0;
 	vector<idx_t> col_widths;
 	vector<bool> radix;
@@ -354,18 +353,21 @@ string SimulateRowReOrder(const T row_ids[], const idx_t &count, const idx_t &co
 		radix.push_back(false);
 	}
 
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
+	auto before_timestamp = CurrentTime();
 	auto source_rows = Scatter<T>(move(source), count, row_width, col_widths, radix);
 	auto scatter_timestamp = CurrentTime();
-#ifdef TRACE
-	this_thread::sleep_for(seconds(2));
-#endif
+
 	auto target_rows = ReOrderRows(row_ids, move(source_rows), count, row_width);
-#ifdef TRACE
-	this_thread::sleep_for(seconds(2));
-#endif
 	auto reorder_timestamp = CurrentTime();
+
 	auto target = Gather<T>(move(target_rows), count, row_width, col_widths);
 	auto after_timestamp = CurrentTime();
+#ifdef TRACE
+	this_thread::sleep_for(seconds(2));
+#endif
 
 	// Compute duration of phases
 	auto total_duration = after_timestamp - before_timestamp;
@@ -608,15 +610,16 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchedRowOrderEntry2 &rhs) const {
+	inline bool operator<(const BranchedRowOrderEntry2 &rhs) const {
 		const T *order_columns = &col1;
 		const T *rhs_order_columns = &rhs.col1;
-		for (idx_t i = 0; i < 2; i++) {
+		idx_t i;
+		for (i = 0; i < 1; i++) {
 			if (order_columns[i] != rhs_order_columns[i]) {
-				return order_columns[i] < rhs_order_columns[i];
+				break;
 			}
 		}
-		return false;
+		return order_columns[i] < rhs_order_columns[i];
 	}
 };
 
@@ -629,15 +632,16 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchedRowOrderEntry3 &rhs) const {
+	inline bool operator<(const BranchedRowOrderEntry3 &rhs) const {
 		const T *order_columns = &col1;
 		const T *rhs_order_columns = &rhs.col1;
-		for (idx_t i = 0; i < 3; i++) {
+		idx_t i;
+		for (i = 0; i < 2; i++) {
 			if (order_columns[i] != rhs_order_columns[i]) {
-				return order_columns[i] < rhs_order_columns[i];
+				break;
 			}
 		}
-		return false;
+		return order_columns[i] < rhs_order_columns[i];
 	}
 };
 
@@ -651,15 +655,16 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchedRowOrderEntry4 &rhs) const {
+	inline bool operator<(const BranchedRowOrderEntry4 &rhs) const {
 		const T *order_columns = &col1;
 		const T *rhs_order_columns = &rhs.col1;
-		for (idx_t i = 0; i < 4; i++) {
+		idx_t i;
+		for (i = 0; i < 3; i++) {
 			if (order_columns[i] != rhs_order_columns[i]) {
-				return order_columns[i] < rhs_order_columns[i];
+				break;
 			}
 		}
-		return false;
+		return order_columns[i] < rhs_order_columns[i];
 	}
 };
 
@@ -674,15 +679,16 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchedRowOrderEntry5 &rhs) const {
+	inline bool operator<(const BranchedRowOrderEntry5 &rhs) const {
 		const T *order_columns = &col1;
 		const T *rhs_order_columns = &rhs.col1;
-		for (idx_t i = 0; i < 5; i++) {
+		idx_t i;
+		for (i = 0; i < 4; i++) {
 			if (order_columns[i] != rhs_order_columns[i]) {
-				return order_columns[i] < rhs_order_columns[i];
+				break;
 			}
 		}
-		return false;
+		return order_columns[i] < rhs_order_columns[i];
 	}
 };
 
@@ -698,15 +704,16 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchedRowOrderEntry6 &rhs) const {
+	inline bool operator<(const BranchedRowOrderEntry6 &rhs) const {
 		const T *order_columns = &col1;
 		const T *rhs_order_columns = &rhs.col1;
-		for (idx_t i = 0; i < 6; i++) {
+		idx_t i;
+		for (i = 0; i < 5; i++) {
 			if (order_columns[i] != rhs_order_columns[i]) {
-				return order_columns[i] < rhs_order_columns[i];
+				break;
 			}
 		}
-		return false;
+		return order_columns[i] < rhs_order_columns[i];
 	}
 };
 
@@ -723,15 +730,16 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchedRowOrderEntry7 &rhs) const {
+	inline bool operator<(const BranchedRowOrderEntry7 &rhs) const {
 		const T *order_columns = &col1;
 		const T *rhs_order_columns = &rhs.col1;
-		for (idx_t i = 0; i < 7; i++) {
+		idx_t i;
+		for (i = 0; i < 6; i++) {
 			if (order_columns[i] != rhs_order_columns[i]) {
-				return order_columns[i] < rhs_order_columns[i];
+				break;
 			}
 		}
-		return false;
+		return order_columns[i] < rhs_order_columns[i];
 	}
 };
 
@@ -749,15 +757,16 @@ public:
 	uint32_t row_id;
 
 public:
-	bool operator<(const BranchedRowOrderEntry8 &rhs) const {
+	inline bool operator<(const BranchedRowOrderEntry8 &rhs) const {
 		const T *order_columns = &col1;
 		const T *rhs_order_columns = &rhs.col1;
-		for (idx_t i = 0; i < 8; i++) {
+		idx_t i;
+		for (i = 0; i < 7; i++) {
 			if (order_columns[i] != rhs_order_columns[i]) {
-				return order_columns[i] < rhs_order_columns[i];
+				break;
 			}
 		}
-		return false;
+		return order_columns[i] < rhs_order_columns[i];
 	}
 };
 
@@ -770,7 +779,7 @@ public:
 public:
 	auto operator<=>(const BranchlessRowOrderEntry1 &) const = default;
 
-	bool operator<(const BranchlessRowOrderEntry1 &rhs) const {
+	inline bool operator<(const BranchlessRowOrderEntry1 &rhs) const {
 		return col1 < rhs.col1;
 	}
 };
@@ -785,7 +794,7 @@ public:
 public:
 	auto operator<=>(const BranchlessRowOrderEntry2 &) const = default;
 
-	bool operator<(const BranchlessRowOrderEntry2 &rhs) const {
+	inline bool operator<(const BranchlessRowOrderEntry2 &rhs) const {
 		const T *l = &col1;
 		const T *r = &rhs.col1;
 		int8_t comp = 0;
@@ -810,7 +819,7 @@ public:
 public:
 	auto operator<=>(const BranchlessRowOrderEntry3 &) const = default;
 
-	bool operator<(const BranchlessRowOrderEntry3 &rhs) const {
+	inline bool operator<(const BranchlessRowOrderEntry3 &rhs) const {
 		const T *l = &col1;
 		const T *r = &rhs.col1;
 		int8_t comp = 0;
@@ -836,7 +845,7 @@ public:
 public:
 	auto operator<=>(const BranchlessRowOrderEntry4 &) const = default;
 
-	bool operator<(const BranchlessRowOrderEntry4 &rhs) const {
+	inline bool operator<(const BranchlessRowOrderEntry4 &rhs) const {
 		const T *l = &col1;
 		const T *r = &rhs.col1;
 		int8_t comp = 0;
@@ -863,7 +872,7 @@ public:
 public:
 	auto operator<=>(const BranchlessRowOrderEntry5 &) const = default;
 
-	bool operator<(const BranchlessRowOrderEntry5 &rhs) const {
+	inline bool operator<(const BranchlessRowOrderEntry5 &rhs) const {
 		const T *l = &col1;
 		const T *r = &rhs.col1;
 		int8_t comp = 0;
@@ -891,7 +900,7 @@ public:
 public:
 	auto operator<=>(const BranchlessRowOrderEntry6 &) const = default;
 
-	bool operator<(const BranchlessRowOrderEntry6 &rhs) const {
+	inline bool operator<(const BranchlessRowOrderEntry6 &rhs) const {
 		const T *l = &col1;
 		const T *r = &rhs.col1;
 		int8_t comp = 0;
@@ -920,7 +929,7 @@ public:
 public:
 	auto operator<=>(const BranchlessRowOrderEntry7 &) const = default;
 
-	bool operator<(const BranchlessRowOrderEntry7 &rhs) const {
+	inline bool operator<(const BranchlessRowOrderEntry7 &rhs) const {
 		const T *l = &col1;
 		const T *r = &rhs.col1;
 		int8_t comp = 0;
@@ -950,7 +959,7 @@ public:
 public:
 	auto operator<=>(const BranchlessRowOrderEntry8 &) const = default;
 
-	bool operator<(const BranchlessRowOrderEntry8 &rhs) const {
+	inline bool operator<(const BranchlessRowOrderEntry8 &rhs) const {
 		const T *l = &col1;
 		const T *r = &rhs.col1;
 		int8_t comp = 0;
@@ -1081,37 +1090,37 @@ void SortRowBranched(data_ptr_t row_data, const idx_t &count, const idx_t &colum
 	}
 	case 2: {
 		auto row_data_ptr = (BranchedRowOrderEntry2<T> *)row_data;
-		pdqsort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 3: {
 		auto row_data_ptr = (BranchedRowOrderEntry3<T> *)row_data;
-		pdqsort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 4: {
 		auto row_data_ptr = (BranchedRowOrderEntry4<T> *)row_data;
-		pdqsort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 5: {
 		auto row_data_ptr = (BranchedRowOrderEntry5<T> *)row_data;
-		pdqsort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 6: {
 		auto row_data_ptr = (BranchedRowOrderEntry6<T> *)row_data;
-		pdqsort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 7: {
 		auto row_data_ptr = (BranchedRowOrderEntry7<T> *)row_data;
-		pdqsort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 8: {
 		auto row_data_ptr = (BranchedRowOrderEntry8<T> *)row_data;
-		pdqsort(row_data_ptr, row_data_ptr + count);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	default:
@@ -1180,26 +1189,29 @@ void SortColumn(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_t[]>> &
 		pdqsort_branchless(
 		    row_ids, row_ids + count,
 		    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
-	} else if (method == "col") {
-		pdqsort(row_ids, row_ids + count, [&row_ids, &cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
-			for (const auto &col : cols) {
-				if (col[lhs] != col[rhs]) {
-					return col[lhs] < col[rhs];
-				}
-			}
-			return false;
-		});
+	} else if (method == "col" || method == "col_all") {
+		pdqsort_branchless(row_ids, row_ids + count,
+		                   [&row_ids, &cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
+			                   idx_t col_idx;
+			                   for (col_idx = 0; col_idx < cols.size() - 1; col_idx++) {
+				                   if (cols[col_idx][lhs] != cols[col_idx][rhs]) {
+					                   break;
+				                   }
+			                   }
+			                   return cols[col_idx][lhs] < cols[col_idx][rhs];
+		                   });
 	} else if (method == "col_branchless") {
-		pdqsort_branchless(row_ids, row_ids + count, [&row_ids, &cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
-			int8_t comp = 0;
-			for (const auto &col : cols) {
-				auto next_comp = col[lhs] <=> col[rhs];
-				int8_t se = comp == 0;
-				se |= (se << 7);
-				comp |= *((int8_t *)&next_comp) & se;
-			}
-			return comp < 0;
-		});
+		pdqsort_branchless(row_ids, row_ids + count,
+		                   [&row_ids, &cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
+			                   int8_t comp = 0;
+			                   for (const auto &col : cols) {
+				                   auto next_comp = col[lhs] <=> col[rhs];
+				                   int8_t se = comp == 0;
+				                   se |= (se << 7);
+				                   comp |= *((int8_t *)&next_comp) & se;
+			                   }
+			                   return comp < 0;
+		                   });
 	} else {
 		assert(false);
 	}
@@ -1775,7 +1787,7 @@ template <class T>
 string SimulateSort(idx_t count, idx_t columns) {
 	ostringstream result;
 	result << SimulateSortInternal<T>(count, columns, "radix") << endl;
-	result << SimulateSortInternal<T>(count, columns, "pdq_dynamic") << endl;
+	// result << SimulateSortInternal<T>(count, columns, "pdq_dynamic") << endl;
 	result << SimulateSortInternal<T>(count, columns, "pdq_static") << endl;
 	return result.str();
 }
@@ -1805,19 +1817,56 @@ string CreateMergeKeyCSVHeader() {
 }
 
 template <class T>
-inline static bool CompareColumnar(const vector<const T *> &l_cols, const vector<const T *> &r_cols, const idx_t &l_i,
-                                   const idx_t &r_i, const idx_t &columns) {
-	for (idx_t col_idx = 0; col_idx < columns; col_idx++) {
+inline static bool CompareColumnarBranch(const vector<const T *> &l_cols, const vector<const T *> &r_cols,
+                                         const idx_t &l_i, const idx_t &r_i, const idx_t &columns) {
+	idx_t col_idx;
+	for (col_idx = 0; col_idx < columns - 1; col_idx++) {
 		if (l_cols[col_idx][l_i] != r_cols[col_idx][r_i]) {
-			return l_cols[col_idx][l_i] < r_cols[col_idx][r_i];
+			break;
 		}
 	}
-	return false;
+	return l_cols[col_idx][l_i] < r_cols[col_idx][r_i];
+}
+
+template <class T>
+inline static bool CompareColumnarBranchless(const vector<const T *> &l_cols, const vector<const T *> &r_cols,
+                                             const idx_t &l_i, const idx_t &r_i, const idx_t &columns) {
+	int8_t comp = 0;
+	for (idx_t col_idx = 0; col_idx < columns; col_idx++) {
+		auto next_comp = l_cols[col_idx][l_i] <=> r_cols[col_idx][r_i];
+		int8_t se = comp == 0;
+		se |= (se << 7);
+		comp |= *((int8_t *)&next_comp) & se;
+	}
+	return comp < 0;
+}
+
+template <class T>
+inline static bool CompareRowBranch(const T *l, const T *r, const idx_t &columns) {
+	idx_t col_idx;
+	for (col_idx = 0; col_idx < columns - 1; col_idx++) {
+		if (l[col_idx] != r[col_idx]) {
+			break;
+		}
+	}
+	return l[col_idx] < r[col_idx];
+}
+
+template <class T>
+inline static bool CompareRowBranchless(const T *l, const T *r, const idx_t &columns) {
+	int8_t comp = 0;
+	for (idx_t col_idx = 0; col_idx < columns; col_idx++) {
+		auto next_comp = l[col_idx] <=> r[col_idx];
+		int8_t se = comp == 0;
+		se |= (se << 7);
+		comp |= *((int8_t *)&next_comp) & se;
+	}
+	return comp < 0;
 }
 
 template <class T>
 void MergeKeyColumns(const vector<unique_ptr<data_t[]>> &left, const vector<unique_ptr<data_t[]>> &right,
-                     const idx_t &count) {
+                     const idx_t &count, bool branchless) {
 	assert(left.size() == right.size());
 	const idx_t columns = left.size();
 	vector<const T *> l_cols;
@@ -1831,11 +1880,20 @@ void MergeKeyColumns(const vector<unique_ptr<data_t[]>> &left, const vector<uniq
 	idx_t result_i = 0;
 	auto left_smaller_ptr = unique_ptr<bool[]>(new bool[count * 2]);
 	auto left_smaller = left_smaller_ptr.get();
-	while (l_i < count && r_i < count) {
-		left_smaller[result_i] = CompareColumnar<T>(l_cols, r_cols, l_i, r_i, columns);
-		l_i += left_smaller[result_i];
-		r_i += !left_smaller[result_i];
-		result_i++;
+	if (branchless) {
+		while (l_i < count && r_i < count) {
+			left_smaller[result_i] = CompareColumnarBranchless<T>(l_cols, r_cols, l_i, r_i, columns);
+			l_i += left_smaller[result_i];
+			r_i += !left_smaller[result_i];
+			result_i++;
+		}
+	} else {
+		while (l_i < count && r_i < count) {
+			left_smaller[result_i] = CompareColumnarBranch<T>(l_cols, r_cols, l_i, r_i, columns);
+			l_i += left_smaller[result_i];
+			r_i += !left_smaller[result_i];
+			result_i++;
+		}
 	}
 	const bool left_rest_smaller = l_i != count;
 	for (; result_i < 2 * count; result_i++) {
@@ -1843,18 +1901,38 @@ void MergeKeyColumns(const vector<unique_ptr<data_t[]>> &left, const vector<uniq
 	}
 }
 
-void MergeKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &count, const idx_t row_width) {
+template <class T>
+void MergeKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &count, const idx_t row_width, const idx_t columns,
+                  string method) {
 	const idx_t comp_width = row_width - sizeof(uint32_t);
 	const data_ptr_t l_end = left + count * row_width;
 	const data_ptr_t r_end = right + count * row_width;
 	idx_t result_i = 0;
 	auto left_smaller_ptr = unique_ptr<bool[]>(new bool[count * 2]);
 	auto left_smaller = left_smaller_ptr.get();
-	while (left != l_end && right != r_end) {
-		left_smaller[result_i] = duckdb::fast_memcmp(left, right, comp_width);
-		left += left_smaller[result_i] * row_width;
-		right += !left_smaller[result_i] * row_width;
-		result_i++;
+	if (method == "row_norm") {
+		while (left != l_end && right != r_end) {
+			left_smaller[result_i] = duckdb::fast_memcmp(left, right, comp_width);
+			left += left_smaller[result_i] * row_width;
+			right += !left_smaller[result_i] * row_width;
+			result_i++;
+		}
+	} else if (method == "row_all") {
+		while (left != l_end && right != r_end) {
+			left_smaller[result_i] = CompareRowBranch<T>((T *)left, (T *)right, columns);
+			left += left_smaller[result_i] * row_width;
+			right += !left_smaller[result_i] * row_width;
+			result_i++;
+		}
+	} else if (method == "row_all_branchless") {
+		while (left != l_end && right != r_end) {
+			left_smaller[result_i] = CompareRowBranchless<T>((T *)left, (T *)right, columns);
+			left += left_smaller[result_i] * row_width;
+			right += !left_smaller[result_i] * row_width;
+			result_i++;
+		}
+	} else {
+		assert(false);
 	}
 	const bool left_rest_smaller = left != l_end;
 	for (; result_i < 2 * count; result_i++) {
@@ -1863,7 +1941,7 @@ void MergeKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &count, const i
 }
 
 template <class T>
-string SimulateColumnKeyMerge(const idx_t &count, const idx_t &columns) {
+string SimulateColumnKeyMerge(const idx_t &count, const idx_t &columns, bool branchless) {
 	// Initialize source data
 	auto left = AllocateColumns(count, columns, sizeof(T));
 	auto right = AllocateColumns(count, columns, sizeof(T));
@@ -1883,7 +1961,7 @@ string SimulateColumnKeyMerge(const idx_t &count, const idx_t &columns) {
 #ifdef TRACE
 	this_thread::sleep_for(seconds(2));
 #endif
-	MergeKeyColumns<T>(left, right, count);
+	MergeKeyColumns<T>(left, right, count, branchless);
 #ifdef TRACE
 	this_thread::sleep_for(seconds(2));
 #endif
@@ -1891,11 +1969,12 @@ string SimulateColumnKeyMerge(const idx_t &count, const idx_t &columns) {
 
 	// Compute duration of phases
 	auto total_duration = after_timestamp - before_timestamp;
-	return CreateOutput("col", {count, columns, sizeof(T), total_duration}, 5);
+	string category = branchless ? "col_branchless" : "col_branch";
+	return CreateOutput(category, {count, columns, sizeof(T), total_duration}, 5);
 }
 
 template <class T>
-string SimulateRowKeyMerge(const idx_t &count, const idx_t &columns) {
+string SimulateRowKeyMerge(const idx_t &count, const idx_t &columns, string category) {
 	auto row_ids = InitRowIDs(count, false);
 	// Initialize source data
 	auto l_row_ids = InitRowIDs(count, false);
@@ -1913,7 +1992,7 @@ string SimulateRowKeyMerge(const idx_t &count, const idx_t &columns) {
 	for (idx_t i = 0; i < columns; i++) {
 		row_width += sizeof(T);
 		col_widths.push_back(sizeof(T));
-		radix.push_back(true);
+		radix.push_back(category == "row_norm");
 	}
 	row_width += sizeof(uint32_t);
 	col_widths.push_back(sizeof(uint32_t));
@@ -1929,7 +2008,7 @@ string SimulateRowKeyMerge(const idx_t &count, const idx_t &columns) {
 #ifdef TRACE
 	this_thread::sleep_for(seconds(2));
 #endif
-	MergeKeyRows(left_rows.get(), right_rows.get(), count, row_width);
+	MergeKeyRows<T>(left_rows.get(), right_rows.get(), count, row_width, columns, category);
 #ifdef TRACE
 	this_thread::sleep_for(seconds(2));
 #endif
@@ -1937,14 +2016,17 @@ string SimulateRowKeyMerge(const idx_t &count, const idx_t &columns) {
 
 	// Compute duration of phases
 	auto total_duration = after_timestamp - before_timestamp;
-	return CreateOutput("row", {count, columns, sizeof(T), total_duration}, 5);
+	return CreateOutput(category, {count, columns, sizeof(T), total_duration}, 5);
 }
 
 template <class T>
 string SimulateKeyMerge(idx_t count, idx_t columns) {
 	ostringstream result;
-	result << SimulateColumnKeyMerge<T>(count, columns) << endl;
-	result << SimulateRowKeyMerge<T>(count, columns) << endl;
+	result << SimulateColumnKeyMerge<T>(count, columns, true) << endl;
+	result << SimulateColumnKeyMerge<T>(count, columns, false) << endl;
+	result << SimulateRowKeyMerge<T>(count, columns, "row_all") << endl;
+	result << SimulateRowKeyMerge<T>(count, columns, "row_all_branchless") << endl;
+	result << SimulateRowKeyMerge<T>(count, columns, "row_norm") << endl;
 	return result.str();
 }
 
@@ -2211,8 +2293,6 @@ void SimulateFastMemcpy() {
 
 		output << size << ",dynamic," << memcpy_time << endl;
 		output << size << ",static," << fast_memcpy_time << endl;
-		// cout << size << ": " << (memcpy_time < fast_memcpy_time ? "memcpy better" : "fast_memcpy better")
-		//      << ", m = " << memcpy_time << ", f = " << fast_memcpy_time << endl;
 	}
 }
 
@@ -2280,8 +2360,6 @@ void SimulateFastMemcmp() {
 
 		output << size << ",dynamic," << memcmp_time << endl;
 		output << size << ",static," << fast_memcmp_time << endl;
-		// cout << size << ": " << (memcmp_time < fast_memcmp_time ? "memcmp better" : "fast_memcmp better")
-		// 	<< ", m = " << memcmp_time << ", f = " << fast_memcmp_time << endl;
 	}
 }
 
@@ -2308,7 +2386,8 @@ void ParseArgs(int argc, char *argv[]) {
 		if (category == "col_all" || category == "col_ss" || category == "col_branchless") {
 			SimulateColumnComparator<T>(count, columns, category);
 			return;
-		} else if (category == "row_all" || category == "row_iter" || category == "row_norm") {
+		} else if (category == "row_all" || category == "row_iter" || category == "row_norm" ||
+		           category == "row_all_branchless") {
 			SimulateRowComparator<T>(count, columns, category);
 			return;
 		}
@@ -2316,11 +2395,14 @@ void ParseArgs(int argc, char *argv[]) {
 		SimulateSortInternal<T>(count, columns, category);
 		return;
 	} else if (sim == "merge_key") {
-		if (category == "row") {
-			SimulateRowKeyMerge<T>(count, columns);
+		if (category == "row_all" || category == "row_all_branchless" || category == "row_norm") {
+			SimulateRowKeyMerge<T>(count, columns, category);
 			return;
-		} else if (category == "col") {
-			SimulateColumnKeyMerge<T>(count, columns);
+		} else if (category == "col_branch") {
+			SimulateColumnKeyMerge<T>(count, columns, false);
+			return;
+		} else if (category == "col_branchless") {
+			SimulateColumnKeyMerge<T>(count, columns, true);
 			return;
 		}
 	} else if (sim == "merge_payload") {
@@ -2350,7 +2432,7 @@ void Main(int argc, char *argv[]) {
 		// SimulatePayloadMerge<T>(row, col, rep);
 		// SimulateFastMemcpy();
 		// SimulateFastMemcmp();
-		// SimulateRowComparator<T>(1024, 2, "row_all_branchless");
+		// SimulateRowKeyMerge<T>(1 << 24, 3, "row_all");
 	} else {
 		ParseArgs<T>(argc, argv);
 	}
