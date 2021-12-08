@@ -37,9 +37,7 @@ def run(con, query_folder, results_folder, threads=False):
 
 def main():
     con = Client(host = 'localhost', port = '9001')
-    con.execute('set max_memory_usage=12000000000;')
-    con.execute('set max_bytes_before_external_sort=10000000000;')
-    con.execute('set max_threads=4;')
+    con.execute('set max_threads=16;')
     run(con, '../../queries/randints/clickhouse/', '../../results/clickhouse/randints/')
     run(con, '../../queries/randints/clickhouse/threads/', '../../results/clickhouse/randints_threads/', True)
 

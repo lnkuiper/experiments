@@ -19,10 +19,6 @@ def run(sf, query_folder, results_folder, external=False):
         # time and execute the query
         for i in range(5):
             con = duckdb.connect(f'tpcds_sf{sf}.db', read_only=True)
-            con.execute("PRAGMA threads=4;")
-            con.execute("PRAGMA memory_limit='12GB';")
-            if external:
-                con.execute("PRAGMA force_external;")
 
             before = time.time()
             con.execute(query)

@@ -1,0 +1,3 @@
+num_job_worker_threads:1
+num_task_worker_threads:1
+enable_copy_to_statement:1
