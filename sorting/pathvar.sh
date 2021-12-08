@@ -1,4 +1,4 @@
 #!/bin/bash
-export PATHVAR='/Users/laurens/git/experiments/sorting'
-export DUCKDB_BINARY='/Users/laurens/git/duckdb/build/release/duckdb'
+export PATHVAR='/export/scratch2/home/lnk/experiments/sorting/'
+export DUCKDB_BINARY='/export/scratch2/home/lnk/duckdb/build/release/duckdb'
 
