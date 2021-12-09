@@ -16,10 +16,16 @@ def run(con, query_folder, results_folder):
 
         # read the query
         with open(query_folder + qname, 'r') as f:
+            #lines = f.readlines()
+            #create = lines[0]
+            #query = lines[1]
             query = f.read()
 
         # time and execute the query
         for i in range(5):
+            #con.execute('DROP TABLE IF EXISTS output')
+            #con.execute(create)
+
             before = time.time()
             con.execute(query)
             after = time.time()
@@ -28,7 +34,6 @@ def run(con, query_folder, results_folder):
             with open(results_folder + 'results.csv', 'a+') as f:
                 print(qname.split('.')[0] + f',{after - before}', file=f)
 
-            con.execute('DROP TABLE output;')
 
         # create empty file to mark query as done
         open(results_folder + qname, 'w+')

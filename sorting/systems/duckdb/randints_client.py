@@ -5,6 +5,10 @@ import time
 from tqdm import tqdm
 
 def run(query_folder, results_folder):
+    con = duckdb.connect('randints.db', read_only=True)
+    con.execute('START TRANSACTION;')
+    con.execute('PRAGMA threads=8')
+
     qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
     qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
     for qname in tqdm(qnames):
@@ -14,17 +18,18 @@ def run(query_folder, results_folder):
 
         # read the query
         with open(query_folder + qname, 'r') as f:
-            query = f.read()
+            lines = f.readlines()
+            create = lines[0]
+            query = lines[1]
 
         # time and execute the query
         for i in range(5):
-            con = duckdb.connect('randints.db', read_only=True)
+            con.execute('DROP TABLE IF EXISTS output')
+            con.execute(create)           
 
             before = time.time()
             con.execute(query)
             after = time.time()
-
-            con.close()
 
             # write time to csv
             with open(results_folder + 'results.csv', 'a+') as f:
