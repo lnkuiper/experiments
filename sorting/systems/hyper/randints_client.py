@@ -33,7 +33,6 @@ def run(con, query_folder, results_folder):
 def main():
     con = '| psql -U raasveld -p 7484 -h localhost mydb'
     run(con, '../../queries/randints/sql/', '../../results/hyper/randints/')
-    run(con, '../../queries/randints/hyper/', '../../results/hyper/randints_threads/')
 
 if __name__ == '__main__':
     main()

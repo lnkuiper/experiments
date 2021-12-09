@@ -12,12 +12,8 @@ docker run \
 
 docker exec \
     --interactive umbra-container /umbra/bin/sql \
-    --createdb test \
-    create-role.sql
-
-docker exec \
-    --detach umbra-container \
-    /umbra/bin/server -address 0.0.0.0 test
+    --createdb /umbra/my.db \
+    /umbra/create-role.sql
 
 sleep 10
 

@@ -19,16 +19,22 @@ def run(sf, query_folder, results_folder, external=False):
         # time and execute the query
         for i in range(5):
             con = duckdb.connect(f'tpcds_sf{sf}.db', read_only=True)
+            con.execute("pragma memory_limit='20GB';")
+            con.execute("pragma threads=8;")
 
             before = time.time()
             con.execute(query)
             after = time.time()
 
+            con.execute("drop table output;")
             con.close()
 
             # write time to csv
             with open(results_folder + 'results.csv', 'a+') as f:
                 print(qname.split('.')[0] + f',{after - before}', file=f)
+            
+            del con
+            time.sleep(2)
 
         # create empty file to mark query as done
         open(results_folder + qname, 'w+')
@@ -38,7 +44,6 @@ def main():
     if int(sf) != 300:
         run(sf, '../../queries/tpcds/catalog_sales/sql/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
     run(sf, '../../queries/tpcds/customer/sql/', f'../../results/duckdb/tpcds/sf{sf}/customer/')
-    run(sf, '../../queries/tpcds/customer/sql/', f'../../results/duckdb/tpcds/sf{sf}/customer_external/', true)
 
 if __name__ == '__main__':
     main()

@@ -9,10 +9,16 @@ sfs=(
 )
 
 for sys in */ ; do
-  echo "$sys"
-  if [ "$sys" != "duckdb/" ]; then
+  if [ "$sys" == "pandas/" ]; then
     continue
   fi
+  if [ "$sys" == "sqlite3/" ]; then
+    continue
+  fi
+  if [ "$sys" == "clickhouse/" ]; then
+    continue
+  fi
+  echo "$sys"
   cd $sys
   FILE=${PATHVAR}/results/${sys}/randints.sql
   if ! test -f "$FILE"; then

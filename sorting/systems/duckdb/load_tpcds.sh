@@ -1,5 +1,7 @@
 #!/bin/bash
 . ../../pathvar.sh
-
-cat $PATHVAR/data/tpcds/schema/schema.sql | $DUCKDB_BINARY tpcds_sf$SF.db
-cat $PATHVAR/data/tpcds/sf$SF/load/duckdb_load.sql | $DUCKDB_BINARY tpcds_sf$SF.db
+FILE=tpcds_sf$SF.db
+if ! test -f "$FILE"; then
+  cat $PATHVAR/data/tpcds/schema/schema.sql | $DUCKDB_BINARY $FILE
+  cat $PATHVAR/data/tpcds/sf$SF/load/duckdb_load.sql | $DUCKDB_BINARY $FILE
+fi

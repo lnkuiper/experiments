@@ -33,7 +33,7 @@ def run(con, query_folder, results_folder):
 
 def main():
     sf = os.environ['SF']
-    con = Client(host = 'localhost', port = '9001')
+    con = Client(host = 'localhost', port = '9000')
     con.execute('set max_threads=16;')
     if int(sf) != 300:
         run(con, '../../queries/tpcds/catalog_sales/clickhouse/', f'../../results/clickhouse/tpcds/sf{sf}/catalog_sales/')

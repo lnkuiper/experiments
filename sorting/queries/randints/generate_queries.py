@@ -14,7 +14,7 @@ for i in range(1, 11):
     with open(f'clickhouse/{i * 10}.sql', 'w+') as f:
         print(f'CREATE TABLE output ENGINE = File(Native) AS SELECT * from ints{i * 10} ORDER BY i;', file=f, end='')
 
-for i in range(1, 9):
+for i in range(1, 17):
     with open(f'duckdb/{i}.sql', 'w+') as f:
         print(f'PRAGMA threads={i}; CREATE TEMPORARY TABLE output AS SELECT * from ints100 ORDER BY i;', file=f, end='')
     with open(f'clickhouse/threads/{i}.sql', 'w+') as f:

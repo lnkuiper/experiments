@@ -1,7 +1,7 @@
 FROM fedora:34
 
 COPY umbra/ /umbra/
-COPY create-role.sql /create-role.sql
+COPY create-role.sql /umbra/create-role.sql
 
 ENV LD_LIBRARY_PATH=/umbra/lib/
 

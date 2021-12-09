@@ -36,7 +36,7 @@ def run(con, query_folder, results_folder, threads=False):
         open(results_folder + qname, 'w+')
 
 def main():
-    con = Client(host = 'localhost', port = '9001')
+    con = Client(host = 'localhost', port = '9000')
     con.execute('set max_threads=16;')
     run(con, '../../queries/randints/clickhouse/', '../../results/clickhouse/randints/')
     run(con, '../../queries/randints/clickhouse/threads/', '../../results/clickhouse/randints_threads/', True)
