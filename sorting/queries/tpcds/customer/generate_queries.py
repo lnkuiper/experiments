@@ -1,3 +1,5 @@
+table = 'customer'
+
 int_columns = [
     'c_birth_day',
     'c_birth_month',
@@ -10,6 +12,7 @@ int_columns = [
     'c_first_sales_date_sk',
     'c_last_review_date_sk'
 ]
+
 varchar_columns = [
     'c_customer_id',
     'c_salutation',
@@ -21,58 +24,64 @@ varchar_columns = [
     'c_email_address'
 ]
 
+def query(key_columns, payload_columns, table):
+    last_values = ', '.join([f'last_value({pc}) OVER ()' for pc in payload_columns])
+    select_cols = ', '.join(payload_columns)
+    order_clause = ', '.join(key_columns)
+    return f'SELECT {last_values} FROM (SELECT {select_cols} FROM {table} ORDER BY {order_clause}) sq LIMIT 1;'
+
 # increase the amount of int sorting columns
+payload_columns = int_columns + varchar_columns
 for i in range(1, len(int_columns) + 1):
+    key_columns = int_columns[:i]
     with open(f'sql/int{i}.sql', 'w+') as f:
-        print('CREATE TEMPORARY TABLE output AS SELECT * FROM customer ORDER BY ' + ', '.join(int_columns[:i]) + ';', file=f)
-    with open(f'clickhouse/int{i}.sql', 'w+') as f:
-        print('CREATE TABLE output ENGINE = File(Native) AS SELECT * FROM customer ORDER BY ' + ', '.join(int_columns[:i]) + ';', file=f)
+        print(query(key_columns, payload_columns, table), file=f)
     with open(f'pandas/int{i}.sql', 'w+') as f:
-        print(','.join(int_columns + varchar_columns), file=f)
-        print(','.join(int_columns[:i]), file=f)
+        print(','.join(payload_columns), file=f)
+        print(','.join(key_columns), file=f)
 
 # increase the amount of varchar sorting columns
+payload_columns = int_columns + varchar_columns
 for i in range(1, len(varchar_columns) + 1):
+    key_columns = varchar_columns[:i]
     with open(f'sql/varchar{i}.sql', 'w+') as f:
-        print('CREATE TEMPORARY TABLE output AS SELECT * FROM customer ORDER BY ' + ', '.join(varchar_columns[:i]) + ';', file=f)
-    with open(f'clickhouse/varchar{i}.sql', 'w+') as f:
-        print('CREATE TABLE output ENGINE = File(Native) AS SELECT * FROM customer ORDER BY ' + ', '.join(varchar_columns[:i]) + ';', file=f)
+        print(query(key_columns, payload_columns, table), file=f)
     with open(f'pandas/varchar{i}.sql', 'w+') as f:
-        print(','.join(int_columns + varchar_columns), file=f)
-        print(','.join(varchar_columns[:i]), file=f)
+        print(','.join(payload_columns), file=f)
+        print(','.join(key_columns), file=f)
 
 # increase the amount of int payload columns
+key_columns = ['c_birth_year', 'c_birth_month', 'c_birth_day']
 for i in range(1, len(int_columns) + 1):
+    payload_columns = int_columns[:i]
     with open(f'sql/int_payload{i}.sql', 'w+') as f:
-        print('CREATE TEMPORARY TABLE output AS SELECT ' + ', '.join(int_columns[:i]) + ' FROM customer ORDER BY c_birth_year, c_birth_month, c_birth_day;', file=f)
-    with open(f'clickhouse/int_payload{i}.sql', 'w+') as f:
-        print('CREATE TABLE output ENGINE = File(Native) AS SELECT ' + ', '.join(int_columns[:i]) + ' FROM customer ORDER BY c_birth_year, c_birth_month, c_birth_day;', file=f)
+        print(query(key_columns, payload_columns, table), file=f)
     with open(f'pandas/int_payload{i}.sql', 'w+') as f:
-        print(','.join(int_columns[:i]), file=f)
-        print('c_birth_year,c_birth_month,c_birth_day', file=f)
+        print(','.join(payload_columns), file=f)
+        print(','.join(key_columns), file=f)
 
 # increase the amount of varchar payload columns
+key_columns = ['c_birth_year', 'c_birth_month', 'c_birth_day']
 for i in range(1, len(varchar_columns) + 1):
+    payload_columns = varchar_columns[:i]
     with open(f'sql/varchar_payload{i}.sql', 'w+') as f:
-        print('CREATE TEMPORARY TABLE output AS SELECT ' + ', '.join(varchar_columns[:i]) + ' FROM customer ORDER BY c_birth_year, c_birth_month, c_birth_day;', file=f)
-    with open(f'clickhouse/varchar_payload{i}.sql', 'w+') as f:
-        print('CREATE TABLE output ENGINE = File(Native) AS SELECT ' + ', '.join(varchar_columns[:i]) + ' FROM customer ORDER BY c_birth_year, c_birth_month, c_birth_day;', file=f)
+        print(query(key_columns, payload_columns, table), file=f)
     with open(f'pandas/varchar_payload{i}.sql', 'w+') as f:
-        print(','.join(varchar_columns[:i]), file=f)
-        print('c_birth_year,c_birth_month,c_birth_day', file=f)
+        print(','.join(payload_columns), file=f)
+        print(','.join(key_columns), file=f)
 
+key_columns = ['c_first_name', 'c_last_name']
+payload_columns = int_columns + varchar_columns
 with open('sql/sort_strings.sql', 'w+') as f:
-    print('CREATE TEMPORARY TABLE output AS SELECT * FROM customer ORDER BY c_first_name, c_last_name;', file=f)
-with open('clickhouse/sort_strings.sql', 'w+') as f:
-    print('CREATE TABLE output ENGINE = File(Native) AS SELECT * FROM customer ORDER BY c_first_name, c_last_name;', file=f)
+    print(query(key_columns, payload_columns, table), file=f)
 with open('pandas/sort_strings.sql', 'w+') as f:
-    print(','.join(int_columns + varchar_columns), file=f)
-    print('c_first_name,c_last_name', file=f)
+    print(','.join(payload_columns), file=f)
+    print(','.join(key_columns), file=f)
 
+key_columns = ['c_birth_year', 'c_birth_month', 'c_birth_day']
+payload_columns = int_columns + varchar_columns
 with open('sql/sort_ints.sql', 'w+') as f:
-    print('CREATE TEMPORARY TABLE output AS SELECT * FROM customer ORDER BY c_birth_year, c_birth_month, c_birth_day;', file=f)
-with open('clickhouse/sort_ints.sql', 'w+') as f:
-    print('CREATE TABLE output ENGINE = File(Native) AS SELECT * FROM customer ORDER BY c_birth_year, c_birth_month, c_birth_day;', file=f)
+    print(query(key_columns, payload_columns, table), file=f)
 with open('pandas/sort_ints.sql', 'w+') as f:
-    print(','.join(int_columns + varchar_columns), file=f)
-    print('c_birth_year,c_birth_month,c_birth_day', file=f)
+    print(','.join(payload_columns), file=f)
+    print(','.join(key_columns), file=f)

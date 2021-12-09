@@ -1,3 +1,5 @@
+table = 'catalog_sales'
+
 columns = [
     'cs_sold_time_sk',
     'cs_sold_date_sk',
@@ -35,24 +37,28 @@ columns = [
     'cs_net_profit'
 ]
 
-col_idxs = [2, 1] + list(range(3, len(columns) + 1))
+def query(key_columns, payload_columns, table):
+    last_values = ', '.join([f'last_value({pc}) OVER ()' for pc in payload_columns])
+    select_cols = ', '.join(payload_columns)
+    order_clause = ', '.join(key_columns)
+    return f'SELECT {last_values} FROM (SELECT {select_cols} FROM {table} ORDER BY {order_clause}) sq LIMIT 1;'
 
 # increase the amount of payload columns
+key_columns = ['cs_quantity', 'cs_item_sk']
 for i in range(1, len(columns) + 1):
+    payload_columns = columns[:i]
     with open(f'sql/payload{i}.sql', 'w+') as f:
-        print('CREATE TEMPORARY TABLE output AS SELECT ' + ', '.join(columns[:i]) + ' FROM catalog_sales ORDER BY cs_quantity, cs_item_sk;', file=f)
-    with open(f'clickhouse/payload{i}.sql', 'w+') as f:
-        print('CREATE TABLE output ENGINE = File(Native) AS SELECT ' + ', '.join(columns[:i]) + ' FROM catalog_sales ORDER BY cs_quantity, cs_item_sk;', file=f)
+        print(query(key_columns, payload_columns, table), file=f)
     with open(f'pandas/payload{i}.sql', 'w+') as f:
-        print(','.join(columns[:i]), file=f)
-        print('cs_quantity,cs_item_sk', file=f)
+        print(','.join(payload_columns), file=f)
+        print(','.join(key_columns), file=f)
 
 # increase the amount of sorting columns
+payload_columns = columns
 for i in range(1, 5):
+    key_columns = columns[:i]
     with open(f'sql/sorting{i}.sql', 'w+') as f:
-        print('CREATE TEMPORARY TABLE output AS SELECT * FROM catalog_sales ORDER BY ' + ', '.join(columns[:i]) + ';', file=f)
-    with open(f'clickhouse/sorting{i}.sql', 'w+') as f:
-        print('CREATE TABLE output ENGINE = File(Native) AS SELECT * FROM catalog_sales ORDER BY ' + ', '.join(columns[:i]) + ';', file=f)
+        print(query(key_columns, payload_columns, table), file=f)
     with open(f'pandas/sorting{i}.sql', 'w+') as f:
-        print(','.join(columns), file=f)
-        print(','.join(columns[:i]), file=f)
+        print(','.join(payload_columns), file=f)
+        print(','.join(key_columns), file=f)
