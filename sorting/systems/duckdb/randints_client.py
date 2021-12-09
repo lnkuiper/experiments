@@ -6,8 +6,7 @@ from tqdm import tqdm
 
 def run(query_folder, results_folder):
     con = duckdb.connect('randints.db', read_only=True)
-    con.execute('START TRANSACTION;')
-    con.execute('PRAGMA threads=8')
+    # con.execute('PRAGMA threads=8')
 
     qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
     qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
@@ -18,15 +17,10 @@ def run(query_folder, results_folder):
 
         # read the query
         with open(query_folder + qname, 'r') as f:
-            lines = f.readlines()
-            create = lines[0]
-            query = lines[1]
+            lines = f.read()
 
         # time and execute the query
         for i in range(5):
-            con.execute('DROP TABLE IF EXISTS output')
-            con.execute(create)           
-
             before = time.time()
             con.execute(query)
             after = time.time()
@@ -39,8 +33,8 @@ def run(query_folder, results_folder):
         open(results_folder + qname, 'w+')
 
 def main():
-    run('../../queries/randints/sql/', '../../results/duckdb/randints/')
-    run('../../queries/randints/duckdb/', '../../results/duckdb/randints_threads/')
+    run('../../queries/randints/duckdb/', '../../results/duckdb/randints/')
+    run('../../queries/randints/duckdb_threads/', '../../results/duckdb/randints_threads/')
 
 if __name__ == '__main__':
     main()

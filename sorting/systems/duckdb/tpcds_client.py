@@ -6,8 +6,8 @@ from tqdm import tqdm
 
 def run(sf, query_folder, results_folder, external=False):
     con = duckdb.connect(f'tpcds_sf{sf}.db', read_only=True)
-    con.execute("pragma memory_limit='20GB';")
-    con.execute("pragma threads=8;")
+    # con.execute("pragma memory_limit='20GB';")
+    # con.execute("pragma threads=8;")
 
     qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
     qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
@@ -22,8 +22,6 @@ def run(sf, query_folder, results_folder, external=False):
 
         # time and execute the query
         for i in range(5):
-            con.execute("DROP TABLE IF EXISTS output;")
-
             before = time.time()
             con.execute(query)
             after = time.time()
@@ -38,8 +36,8 @@ def run(sf, query_folder, results_folder, external=False):
 def main():
     sf = os.environ['SF']
     if int(sf) != 300:
-        run(sf, '../../queries/tpcds/catalog_sales/sql/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
-    run(sf, '../../queries/tpcds/customer/sql/', f'../../results/duckdb/tpcds/sf{sf}/customer/')
+        run(sf, '../../queries/tpcds/catalog_sales/duckdb/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
+    run(sf, '../../queries/tpcds/customer/duckdb/', f'../../results/duckdb/tpcds/sf{sf}/customer/')
 
 if __name__ == '__main__':
     main()

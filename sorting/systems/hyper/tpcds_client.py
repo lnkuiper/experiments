@@ -1,5 +1,4 @@
 import os
-import re
 import subprocess
 import time
 from tqdm import tqdm

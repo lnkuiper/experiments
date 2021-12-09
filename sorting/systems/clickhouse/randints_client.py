@@ -22,8 +22,6 @@ def run(con, query_folder, results_folder, threads=False):
 
         # time and execute the query
         for i in range(5):
-            con.execute('DROP TABLE IF EXISTS output;')
-
             before = time.time()
             con.execute(query)
             after = time.time()
