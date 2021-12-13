@@ -33,7 +33,7 @@ def run(query_folder, results_folder):
         open(results_folder + qname, 'w+')
 
 def main():
-    run('../../queries/randints/duckdb/', '../../results/duckdb/randints/')
+    run('../../queries/randints/sql/', '../../results/duckdb/randints/')
     run('../../queries/randints/duckdb_threads/', '../../results/duckdb/randints_threads/')
 
 if __name__ == '__main__':

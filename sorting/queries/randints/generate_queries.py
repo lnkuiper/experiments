@@ -1,33 +1,21 @@
-def query(table, system=None):
-    if not system:
-        fun = 'last_value'
-        over = ' OVER () '
-        limit = ' LIMIT 1'
-    elif system == 'duckdb':
-        fun = 'last'
-        over = ' '
-        limit = ''
+def query(table):
+    fun = 'first_value'
+    over = ' OVER () '
+    limit = ' LIMIT 1'
     return f'SELECT {fun}(i){over}FROM (SELECT * FROM {table} ORDER BY i) sq{limit};'
 
 def threads_query(threads, table):
-    return f'PRAGMA threads={threads}; ' + query(table, system='duckdb')
+    return f'PRAGMA threads={threads}; ' + query(table)
 
 with open('sql/100_asc.sql', 'w+') as f:
     print(query('ints100_asc'), file=f)
-with open('duckdb/100_asc.sql', 'w+') as f:
-    print(query('ints100_asc', system='duckdb'), file=f)
 
 with open('sql/100_desc.sql', 'w+') as f:
     print(query('ints100_desc'), file=f)
-with open('duckdb/100_desc.sql', 'w+') as f:
-    print(query('ints100_desc', system='duckdb'), file=f)
 
 for i in range(1, 11):
     with open(f'sql/{i * 10}.sql', 'w+') as f:
         print(query(f'ints{i * 10}'), file=f)
-    with open(f'duckdb/{i * 10}.sql', 'w+') as f:
-        print(query(f'ints{i * 10}', system='duckdb'), file=f)
-
 
 for i in range(1, 17):
     with open(f'duckdb_threads/{i}.sql', 'w+') as f:

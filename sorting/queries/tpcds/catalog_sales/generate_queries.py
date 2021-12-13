@@ -37,15 +37,10 @@ columns = [
     'cs_net_profit'
 ]
 
-def query(key_columns, payload_columns, table, system=None):
-    if not system:
-        fun = 'last_value'
-        over = ' OVER () '
-        limit = ' LIMIT 1'
-    elif system == 'duckdb':
-        fun = 'last'
-        over = ' '
-        limit = ''
+def query(key_columns, payload_columns, table):
+    fun = 'last_value'
+    over = ' OVER () '
+    limit = ' LIMIT 1'
 
     last_values = ', '.join([f'{fun}({pc}){over}' for pc in payload_columns])
     select_cols = ', '.join(payload_columns)
@@ -58,8 +53,6 @@ for i in range(1, len(columns) + 1):
     payload_columns = columns[:i]
     with open(f'sql/payload{i}.sql', 'w+') as f:
         print(query(key_columns, payload_columns, table), file=f)
-    with open(f'duckdb/payload{i}.sql', 'w+') as f:
-        print(query(key_columns, payload_columns, table, system='duckdb'), file=f)
     with open(f'pandas/payload{i}.sql', 'w+') as f:
         print(','.join(payload_columns), file=f)
         print(','.join(key_columns), file=f)
@@ -70,8 +63,6 @@ for i in range(1, 5):
     key_columns = columns[:i]
     with open(f'sql/sorting{i}.sql', 'w+') as f:
         print(query(key_columns, payload_columns, table), file=f)
-    with open(f'duckdb/sorting{i}.sql', 'w+') as f:
-        print(query(key_columns, payload_columns, table, system='duckdb'), file=f)
     with open(f'pandas/sorting{i}.sql', 'w+') as f:
         print(','.join(payload_columns), file=f)
         print(','.join(key_columns), file=f)

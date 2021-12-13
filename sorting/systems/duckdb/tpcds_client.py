@@ -36,7 +36,7 @@ def run(sf, query_folder, results_folder, external=False):
 def main():
     sf = os.environ['SF']
     if int(sf) != 300:
-        run(sf, '../../queries/tpcds/catalog_sales/duckdb/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
+        run(sf, '../../queries/tpcds/catalog_sales/sql/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
     run(sf, '../../queries/tpcds/customer/duckdb/', f'../../results/duckdb/tpcds/sf{sf}/customer/')
 
 if __name__ == '__main__':
