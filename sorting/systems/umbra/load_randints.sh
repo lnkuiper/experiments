@@ -1,6 +1,6 @@
 #!/bin/bash
-docker exec -it umbra-container /umbra/bin/sql /umbra/my.db /sorting_data/randints/schema/schema.sql
-docker exec -it umbra-container /umbra/bin/sql /umbra/my.db /sorting_data/randints/load/load.sql
+docker exec -i umbra-container /umbra/bin/sql /umbra/my.db /sorting_data/randints/schema/schema.sql
+docker exec -i umbra-container /umbra/bin/sql /umbra/my.db /sorting_data/randints/load/load.sql
 
 docker exec \
     --detach \

@@ -5,7 +5,9 @@ import time
 from tqdm import tqdm
 
 def run(con, query_folder, results_folder):
-    for qname in tqdm(os.listdir(query_folder)):
+    qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
+    qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
+    for qname in tqdm(qnames):
         # skip .keep file
         if not qname.endswith('.sql'):
             continue

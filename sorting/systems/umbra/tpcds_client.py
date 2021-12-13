@@ -5,7 +5,9 @@ import time
 from tqdm import tqdm
 
 def run(con, query_folder, results_folder):
-    for qname in tqdm(os.listdir(query_folder)):
+    qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
+    qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
+    for qname in tqdm(qnames):
         # skip .keep file
         if not qname.endswith('.sql'):
             continue
@@ -20,8 +22,6 @@ def run(con, query_folder, results_folder):
 
         # time and execute the query
         for i in range(5):
-            con.execute("DROP TABLE IF EXISTS output;")
-
             before = time.time()
             con.execute(query)
             after = time.time()
@@ -35,7 +35,7 @@ def run(con, query_folder, results_folder):
 
 def main():
     sf = os.environ['SF']
-    con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5433)
+    con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5432)
     cur = con.cursor()
     run(cur, '../../queries/tpcds/catalog_sales/sql/', f'../../results/umbra/tpcds/sf{sf}/catalog_sales/')
     run(cur, '../../queries/tpcds/customer/sql/', f'../../results/umbra/tpcds/sf{sf}/customer/')

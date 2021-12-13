@@ -17,7 +17,7 @@ def run(query_folder, results_folder):
 
         # read the query
         with open(query_folder + qname, 'r') as f:
-            lines = f.read()
+            query = f.read()
 
         # time and execute the query
         for i in range(5):

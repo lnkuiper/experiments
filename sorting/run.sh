@@ -12,6 +12,9 @@ for sys in */ ; do
   if [ "$sys" == "duckdb/" ]; then
     continue
   fi
+  if [ "$sys" == "hyper/" ]; then
+    continue
+  fi
   if [ "$sys" == "pandas/" ]; then
     continue
   fi
