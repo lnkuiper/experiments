@@ -272,7 +272,7 @@ vector<unique_ptr<data_t[]>> Gather(unique_ptr<data_t[]> rows, const idx_t &coun
 	return result;
 }
 
-unique_ptr<data_t[]> GatherRowID(unique_ptr<data_t[]> rows, const idx_t &count, const idx_t &row_width,
+unique_ptr<data_t[]> GatherRowID(unique_ptr<data_t[]> &rows, const idx_t &count, const idx_t &row_width,
                                  const idx_t &offset) {
 	auto result = unique_ptr<data_t[]>(new data_t[count * sizeof(uint32_t)]);
 	data_ptr_t source_ptr = rows.get() + offset;
@@ -1459,7 +1459,7 @@ string SimulateRowComparator(const idx_t &count, const idx_t &columns, string ca
 #endif
 	// PrintRows<T>(row_data.get(), count, col_widths, true);
 
-	auto target = GatherRowID(move(row_data), count, row_width, row_width - sizeof(uint32_t));
+	auto target = GatherRowID(row_data, count, row_width, row_width - sizeof(uint32_t));
 	auto after_timestamp = CurrentTime();
 
 	// Verification stuff
@@ -1629,7 +1629,7 @@ inline void InsertionSort(const data_ptr_t orig_ptr, const data_ptr_t temp_ptr, 
 		}
 	}
 	if (swap) {
-		duckdb::fast_memcpy(target_ptr, source_ptr, count * row_width);
+		memcpy(target_ptr, source_ptr, count * row_width);
 	}
 }
 
@@ -1784,7 +1784,7 @@ string SimulateSortInternal(const idx_t &count, const idx_t &columns, string met
 	auto sort_timestamp = CurrentTime();
 	AssertSorted(row_data.get(), count, row_width, row_width - sizeof(uint32_t));
 
-	auto target = GatherRowID(move(row_data), count, row_width, row_width - sizeof(uint32_t));
+	auto target = GatherRowID(row_data, count, row_width, row_width - sizeof(uint32_t));
 	auto after_timestamp = CurrentTime();
 
 	// Compute duration of phases
@@ -1830,8 +1830,8 @@ string CreateMergeKeyCSVHeader() {
 }
 
 template <class T>
-void MergeKeyColumns(const vector<unique_ptr<data_t[]>> &left, const vector<unique_ptr<data_t[]>> &right,
-                     const idx_t &count, bool branchless) {
+unique_ptr<bool[]> MergeKeyColumns(const vector<unique_ptr<data_t[]>> &left, const vector<unique_ptr<data_t[]>> &right,
+                                   const idx_t &count, bool branchless) {
 	assert(left.size() == right.size());
 	const idx_t columns = left.size();
 	vector<const T *> l_cols;
@@ -1864,10 +1864,11 @@ void MergeKeyColumns(const vector<unique_ptr<data_t[]>> &left, const vector<uniq
 	for (; result_i < 2 * count; result_i++) {
 		left_smaller[result_i] = left_rest_smaller;
 	}
+	return left_smaller_ptr;
 }
 
 template <class T>
-void MergeNormalizedKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &count, const idx_t &columns) {
+unique_ptr<bool[]> MergeNormalizedKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &count, const idx_t &columns) {
 	const idx_t row_width = columns * sizeof(T) + sizeof(uint32_t);
 	const idx_t comp_width = row_width - sizeof(uint32_t);
 	const data_ptr_t l_end = left + count * row_width;
@@ -1876,7 +1877,7 @@ void MergeNormalizedKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &coun
 	auto left_smaller_ptr = unique_ptr<bool[]>(new bool[count * 2]);
 	auto left_smaller = left_smaller_ptr.get();
 	while (left != l_end && right != r_end) {
-		left_smaller[result_i] = duckdb::fast_memcmp(left, right, comp_width);
+		left_smaller[result_i] = duckdb::fast_memcmp(left, right, comp_width) < 0;
 		left += left_smaller[result_i] * row_width;
 		right += !left_smaller[result_i] * row_width;
 		result_i++;
@@ -1885,10 +1886,11 @@ void MergeNormalizedKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &coun
 	for (; result_i < 2 * count; result_i++) {
 		left_smaller[result_i] = left_rest_smaller;
 	}
+	return left_smaller_ptr;
 }
 
 template <class ROW>
-void MergeKeyRows(data_ptr_t l_ptr, data_ptr_t r_ptr, const idx_t &count) {
+unique_ptr<bool[]> MergeKeyRows(data_ptr_t l_ptr, data_ptr_t r_ptr, const idx_t &count) {
 	idx_t l_i = 0;
 	idx_t r_i = 0;
 	idx_t result_i = 0;
@@ -1905,11 +1907,13 @@ void MergeKeyRows(data_ptr_t l_ptr, data_ptr_t r_ptr, const idx_t &count) {
 	for (; result_i < 2 * count; result_i++) {
 		left_smaller[result_i] = left_rest_smaller;
 	}
+	return left_smaller_ptr;
 }
 
 template <class T>
-void MergeKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &count, const idx_t columns, string method) {
-	if (method == "row_all") {
+unique_ptr<bool[]> MergeKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &count, const idx_t columns,
+                                string method) {
+	if (method == "row_all" || method == "row") {
 		switch (columns) {
 		case 1:
 			return MergeKeyRows<BranchedRowOrderEntry1<T>>(left, right, count);
@@ -1949,7 +1953,7 @@ void MergeKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &count, const i
 		}
 	} else if (method == "row_norm") {
 		// Normalized key has to have specialized code so memcmp can be inlined
-		MergeNormalizedKeyRows<T>(left, right, count, columns);
+		return MergeNormalizedKeyRows<T>(left, right, count, columns);
 	} else {
 		assert(false);
 	}
@@ -2377,6 +2381,233 @@ void SimulateFastMemcmp() {
 }
 
 //===--------------------------------------------------------------------===//
+// End-to-End
+//===--------------------------------------------------------------------===//
+string CreateEndToEndCSVHeader() {
+	return "category,count,key_columns,payload_columns,col_width,init,scatter,sort,reorder,merge_key,merge_payload,"
+	       "gather,total";
+}
+
+template <class T>
+string EndToEndColumnar(idx_t count, idx_t key_columns, idx_t payload_columns) {
+	auto before_timestamp = CurrentTime();
+
+	const idx_t num_runs = 4;
+	vector<unique_ptr<data_t[]>> run_row_ids;
+	vector<vector<unique_ptr<data_t[]>>> key_column_data;
+	vector<vector<unique_ptr<data_t[]>>> payload_column_data;
+	for (idx_t run = 0; run < num_runs; run++) {
+		run_row_ids.push_back(InitRowIDs(count, false));
+		key_column_data.push_back(AllocateColumns(count, key_columns, sizeof(T)));
+		FillColumns<T>(key_column_data.back(), count, "skewed");
+		payload_column_data.push_back(AllocateColumns(count, payload_columns, sizeof(T)));
+	}
+
+	auto init_timestamp = CurrentTime();
+
+	for (idx_t run = 0; run < num_runs; run++) {
+		SortColumnSubsort<T>(run_row_ids[run], key_column_data[run], count);
+	}
+
+	auto sort_timestamp = CurrentTime();
+
+	for (idx_t run = 0; run < num_runs; run++) {
+		key_column_data[run] = ReOrderColumns<T>((uint32_t *)run_row_ids[run].get(), key_column_data[run], count);
+		payload_column_data[run] =
+		    ReOrderColumns<T>((uint32_t *)run_row_ids[run].get(), payload_column_data[run], count);
+	}
+
+	auto reorder_timestamp = CurrentTime();
+
+	idx_t merge_key_duration = 0;
+	idx_t merge_payload_duration = 0;
+	while (key_column_data.size() > 1) {
+		idx_t actual_count = key_column_data.size() == 2 ? 2 * count : count;
+
+		auto merge_before_timestamp = CurrentTime();
+
+		auto left_key_cols = move(key_column_data.back());
+		key_column_data.pop_back();
+		auto right_key_cols = move(key_column_data.back());
+		key_column_data.pop_back();
+		auto left_smaller = MergeKeyColumns<T>(left_key_cols, right_key_cols, actual_count, false);
+
+		auto merge_key_timestamp = CurrentTime();
+
+		key_column_data.insert(key_column_data.begin(), MergePayloadColumns<T>(left_smaller.get(), move(left_key_cols),
+		                                                                       move(right_key_cols), actual_count));
+
+		auto left_payload_cols = move(payload_column_data.back());
+		payload_column_data.pop_back();
+		auto right_payload_cols = move(payload_column_data.back());
+		payload_column_data.pop_back();
+		payload_column_data.insert(payload_column_data.begin(),
+		                           MergePayloadColumns<T>(left_smaller.get(), move(left_payload_cols),
+		                                                  move(right_payload_cols), actual_count));
+
+		auto merge_payload_timestamp = CurrentTime();
+
+		merge_key_duration += merge_key_timestamp - merge_before_timestamp;
+		merge_payload_duration += merge_payload_timestamp - merge_key_timestamp;
+	}
+
+	auto after_timestamp = CurrentTime();
+
+	auto init_duration = init_timestamp - before_timestamp;
+	idx_t scatter_duration = 0;
+	auto sort_duration = sort_timestamp - init_timestamp;
+	auto reorder_duration = reorder_timestamp - sort_timestamp;
+	idx_t gather_duration = 0;
+	auto total_duration = after_timestamp - before_timestamp;
+	return CreateOutput("col",
+	                    {count, key_columns, payload_columns, sizeof(T), init_duration, scatter_duration, sort_duration,
+	                     reorder_duration, merge_key_duration, merge_payload_duration, gather_duration, total_duration},
+	                    13);
+}
+
+template <class T>
+string EndToEndRow(idx_t count, idx_t key_columns, idx_t payload_columns, string category) {
+	auto before_timestamp = CurrentTime();
+
+	const idx_t num_runs = 4;
+	vector<unique_ptr<data_t[]>> run_row_ids;
+	vector<vector<unique_ptr<data_t[]>>> key_column_data;
+	vector<vector<unique_ptr<data_t[]>>> payload_column_data;
+	for (idx_t run = 0; run < num_runs; run++) {
+		run_row_ids.push_back(InitRowIDs(count, false));
+		key_column_data.push_back(AllocateColumns(count, key_columns, sizeof(T)));
+		FillColumns<T>(key_column_data.back(), count, "skewed");
+		payload_column_data.push_back(AllocateColumns(count, payload_columns, sizeof(T)));
+	}
+
+	auto init_timestamp = CurrentTime();
+
+	vector<unique_ptr<data_t[]>> key_row_data;
+	idx_t key_row_width = 0;
+	{
+		vector<idx_t> col_widths;
+		vector<bool> radix;
+		for (idx_t i = 0; i < key_columns; i++) {
+			key_row_width += sizeof(T);
+			col_widths.push_back(sizeof(T));
+			radix.push_back(category == "row_norm");
+		}
+		key_row_width += sizeof(uint32_t);
+		col_widths.push_back(sizeof(uint32_t));
+		radix.push_back(false);
+
+		for (idx_t run = 0; run < num_runs; run++) {
+			key_column_data[run].push_back(move(run_row_ids[run]));
+			key_row_data.push_back(Scatter<T>(move(key_column_data[run]), count, key_row_width, col_widths, radix));
+		}
+	}
+
+	vector<unique_ptr<data_t[]>> payload_row_data;
+	idx_t payload_row_width = 0;
+	vector<idx_t> payload_col_widths;
+	{
+		vector<bool> radix;
+		for (idx_t i = 0; i < payload_columns; i++) {
+			payload_row_width += sizeof(T);
+			payload_col_widths.push_back(sizeof(T));
+			radix.push_back(false);
+		}
+
+		for (idx_t run = 0; run < num_runs; run++) {
+			payload_row_data.push_back(
+			    Scatter<T>(move(payload_column_data[run]), count, payload_row_width, payload_col_widths, radix));
+		}
+	}
+
+	auto scatter_timestamp = CurrentTime();
+
+	for (idx_t run = 0; run < num_runs; run++) {
+		if (category == "row_norm") {
+			RadixSort(key_row_data[run].get(), count, key_row_width, key_row_width - sizeof(uint32_t));
+		} else if (category == "row") {
+			SortRowSubsort<T>(key_row_data[run].get(), count, key_columns);
+		} else {
+			assert(false);
+		}
+	}
+
+	auto sort_timestamp = CurrentTime();
+
+	for (idx_t run = 0; run < num_runs; run++) {
+		auto row_ids = GatherRowID(key_row_data[run], count, key_row_width, key_row_width - sizeof(uint32_t));
+		payload_row_data[run] =
+		    ReOrderRows((uint32_t *)row_ids.get(), move(payload_row_data[run]), count, payload_row_width);
+	}
+
+	auto reorder_timestamp = CurrentTime();
+
+	idx_t merge_key_duration = 0;
+	idx_t merge_payload_duration = 0;
+	while (key_row_data.size() > 1) {
+		idx_t actual_count = key_row_data.size() == 2 ? 2 * count : count;
+
+		auto merge_before_timestamp = CurrentTime();
+
+		auto left_key_rows = move(key_row_data.back());
+		key_row_data.pop_back();
+		auto right_key_rows = move(key_row_data.back());
+		key_row_data.pop_back();
+		auto left_smaller =
+		    MergeKeyRows<T>(left_key_rows.get(), right_key_rows.get(), actual_count, key_columns, category);
+
+		auto merge_key_timestamp = CurrentTime();
+
+		key_row_data.insert(key_row_data.begin(), MergePayloadRows(left_smaller.get(), move(left_key_rows),
+		                                                           move(right_key_rows), actual_count, key_row_width));
+
+		auto left_payload_rows = move(payload_row_data.back());
+		payload_row_data.pop_back();
+		auto right_payload_rows = move(payload_row_data.back());
+		payload_row_data.pop_back();
+		payload_row_data.insert(payload_row_data.begin(),
+		                        MergePayloadRows(left_smaller.get(), move(left_payload_rows), move(right_payload_rows),
+		                                         actual_count, payload_row_width));
+
+		auto merge_payload_timestamp = CurrentTime();
+
+		merge_key_duration += merge_key_timestamp - merge_before_timestamp;
+		merge_payload_duration += merge_payload_timestamp - merge_key_timestamp;
+	}
+
+	auto merge_timestamp = CurrentTime();
+
+	auto result = Gather<T>(move(payload_row_data[0]), 4 * count, payload_row_width, payload_col_widths);
+
+	auto after_timestamp = CurrentTime();
+
+	auto init_duration = init_timestamp - before_timestamp;
+	auto scatter_duration = scatter_timestamp - init_timestamp;
+	auto sort_duration = sort_timestamp - scatter_timestamp;
+	auto reorder_duration = reorder_timestamp - sort_timestamp;
+	auto gather_duration = after_timestamp - merge_timestamp;
+	auto total_duration = after_timestamp - before_timestamp;
+	return CreateOutput(category,
+	                    {count, key_columns, payload_columns, sizeof(T), init_duration, scatter_duration, sort_duration,
+	                     reorder_duration, merge_key_duration, merge_payload_duration, gather_duration, total_duration},
+	                    13);
+}
+
+template <class T>
+void SimulateEndToEnd(idx_t key_columns, idx_t payload_columns, idx_t count, idx_t rep) {
+	cout << "SimulateEndToEnd" << endl;
+	ofstream results_file("results/end_to_end.csv", ios::trunc);
+	results_file << CreateEndToEndCSVHeader() << endl;
+	for (idx_t i = 0; i < rep; i++) {
+		results_file << EndToEndColumnar<T>(count, key_columns, payload_columns) << endl;
+		cout << ".";
+		results_file << EndToEndRow<T>(count, key_columns, payload_columns, "row") << endl;
+		cout << ".";
+		results_file << EndToEndRow<T>(count, key_columns, payload_columns, "row_norm") << endl;
+		cout << "." << endl;
+	}
+}
+
+//===--------------------------------------------------------------------===//
 // Main
 //===--------------------------------------------------------------------===//
 template <class T>
@@ -2442,10 +2673,10 @@ void Main(int argc, char *argv[]) {
 		// SimulateComparator<T>(row, col, rep);
 		// SimulateSort<T>(row, col, rep);
 		// SimulateKeyMerge<T>(row, col, rep);
-		SimulatePayloadMerge<T>(row, col, rep);
+		// SimulatePayloadMerge<T>(row, col, rep);
 		// SimulateFastMemcpy();
 		// SimulateFastMemcmp();
-		// SimulateRowKeyMerge<T>(1 << 24, 3, "row_all");
+		SimulateEndToEnd<T>(3, 32, (1 << 10), rep);
 	} else {
 		ParseArgs<T>(argc, argv);
 	}
