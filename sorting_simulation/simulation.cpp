@@ -2666,16 +2666,16 @@ void Main(int argc, char *argv[]) {
 	if (argc == 1) {
 		// VerifyReOrder();
 		// VerifySort();
-		const idx_t row = 21;
-		const idx_t col = 6;
-		const idx_t rep = 3;
-		// SimulateReOrder<T>(row, col, rep);
-		// SimulateComparator<T>(row, col, rep);
-		// SimulateSort<T>(row, col, rep);
-		// SimulateKeyMerge<T>(row, col, rep);
-		// SimulatePayloadMerge<T>(row, col, rep);
-		// SimulateFastMemcpy();
-		// SimulateFastMemcmp();
+		const idx_t row = 25;
+		const idx_t col = 7;
+		const idx_t rep = 5;
+		SimulateReOrder<T>(row, col, rep);
+		SimulateComparator<T>(row, col, rep);
+		SimulateSort<T>(row, col, rep);
+		SimulateKeyMerge<T>(row, col, rep);
+		SimulatePayloadMerge<T>(row, col, rep);
+		SimulateFastMemcpy();
+		SimulateFastMemcmp();
 		SimulateEndToEnd<T>(3, 32, (1 << 10), rep);
 	} else {
 		ParseArgs<T>(argc, argv);
