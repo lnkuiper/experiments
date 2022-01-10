@@ -12,7 +12,7 @@ for sys in */ ; do
   if [ "$sys" == "hyper/" ]; then
     continue
   fi
-  if [ "$sys" == "umbra/" ]; then
+  if [ "$sys" == "duckdb/" ]; then
     continue
   fi
   if [ "$sys" == "pandas/" ]; then

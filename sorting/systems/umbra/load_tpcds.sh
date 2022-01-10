@@ -9,4 +9,5 @@ docker exec \
     --address 0.0.0.0 \
     /dbs/my.db
 
+sleep 10
 
