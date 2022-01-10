@@ -2676,7 +2676,7 @@ void Main(int argc, char *argv[]) {
 		SimulatePayloadMerge<T>(row, col, rep);
 		SimulateFastMemcpy();
 		SimulateFastMemcmp();
-		SimulateEndToEnd<T>(3, 32, (1 << 10), rep);
+		SimulateEndToEnd<T>(3, 32, (1 << 24), rep);
 	} else {
 		ParseArgs<T>(argc, argv);
 	}
