@@ -38,7 +38,7 @@ columns = [
 ]
 
 def query(key_columns, payload_columns, table):
-    fun = 'last_value'
+    fun = 'first_value'
     over = ' OVER () '
     limit = ' LIMIT 1'
 

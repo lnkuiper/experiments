@@ -17,6 +17,6 @@ for i in range(1, 11):
     with open(f'sql/{i * 10}.sql', 'w+') as f:
         print(query(f'ints{i * 10}'), file=f)
 
-for i in range(1, 17):
+for i in range(1, 33):
     with open(f'duckdb_threads/{i}.sql', 'w+') as f:
         print(threads_query(i, 'ints100'), file=f)

@@ -4,10 +4,7 @@ import subprocess
 import time
 from tqdm import tqdm
 
-def run(query_folder, results_folder):
-    con = duckdb.connect('randints.db', read_only=True)
-    # con.execute('PRAGMA threads=8')
-
+def run(con, query_folder, results_folder):
     qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
     qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
     for qname in tqdm(qnames):
@@ -33,8 +30,9 @@ def run(query_folder, results_folder):
         open(results_folder + qname, 'w+')
 
 def main():
-    run('../../queries/randints/sql/', '../../results/duckdb/randints/')
-    run('../../queries/randints/duckdb_threads/', '../../results/duckdb/randints_threads/')
+    con = duckdb.connect('randints.db', read_only=True)
+    run(con, '../../queries/randints/sql/', '../../results/duckdb/randints/')
+    run(con, '../../queries/randints/duckdb_threads/', '../../results/duckdb/randints_threads/')
 
 if __name__ == '__main__':
     main()
