@@ -18,16 +18,10 @@ def run(con, query_folder, results_folder):
 
         # read the query
         with open(query_folder + qname, 'r') as f:
-            #lines = f.readlines()
-            #create = lines[0]
-            #query = lines[1]
             query = f.read()
 
         # time and execute the query
         for i in range(5):
-            #con.execute('DROP TABLE IF EXISTS output')
-            #con.execute(create)
-
             before = time.time()
             con.execute(query)
             after = time.time()
@@ -36,13 +30,13 @@ def run(con, query_folder, results_folder):
             with open(results_folder + 'results.csv', 'a+') as f:
                 print(qname.split('.')[0] + f',{after - before}', file=f)
 
-
         # create empty file to mark query as done
         open(results_folder + qname, 'w+')
 
 def main():
     con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5432)
     cur = con.cursor()
+    cur.execute("SET debug.disableoptimizer=1;")
     run(cur, '../../queries/randints/sql/', '../../results/umbra/randints/')
 
 if __name__ == '__main__':

@@ -31,6 +31,7 @@ def run(con, query_folder, results_folder):
 
 def main():
     con = duckdb.connect('randints.db', read_only=True)
+    con.execute("PRAGMA disable_optimizer;")
     run(con, '../../queries/randints/sql/', '../../results/duckdb/randints/')
     run(con, '../../queries/randints/duckdb_threads/', '../../results/duckdb/randints_threads/')
 

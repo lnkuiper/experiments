@@ -38,14 +38,9 @@ columns = [
 ]
 
 def query(key_columns, payload_columns, table):
-    fun = 'first_value'
-    over = ' OVER () '
-    limit = ' LIMIT 1'
-
-    last_values = ', '.join([f'{fun}({pc}){over}' for pc in payload_columns])
     select_cols = ', '.join(payload_columns)
     order_clause = ', '.join(key_columns)
-    return f'SELECT {last_values} FROM (SELECT {select_cols} FROM {table} ORDER BY {order_clause}) sq{limit};'
+    return f'SELECT {select_cols} FROM {table} ORDER BY {order_clause} LIMIT 1;'
 
 # increase the amount of payload columns
 key_columns = ['cs_quantity', 'cs_item_sk']

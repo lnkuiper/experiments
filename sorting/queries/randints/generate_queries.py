@@ -1,8 +1,5 @@
 def query(table):
-    fun = 'first_value'
-    over = ' OVER () '
-    limit = ' LIMIT 1'
-    return f'SELECT {fun}(i){over}FROM (SELECT * FROM {table} ORDER BY i) sq{limit};'
+    return f'SELECT i FROM {table} ORDER BY i LIMIT 1;'
 
 def threads_query(threads, table):
     return f'PRAGMA threads={threads}; ' + query(table)

@@ -37,6 +37,7 @@ def main():
     sf = os.environ['SF']
     con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5432)
     cur = con.cursor()
+    cur.execute("SET debug.disableoptimizer=1;")
     run(cur, '../../queries/tpcds/catalog_sales/sql/', f'../../results/umbra/tpcds/sf{sf}/catalog_sales/')
     run(cur, '../../queries/tpcds/customer/sql/', f'../../results/umbra/tpcds/sf{sf}/customer/')
 
