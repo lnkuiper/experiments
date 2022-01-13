@@ -1,5 +1,5 @@
 def query(table):
-    return f'SELECT i FROM {table} ORDER BY i LIMIT 1;'
+    return f'SELECT i FROM {table} ORDER BY i'
 
 def threads_query(threads, table):
     return f'PRAGMA threads={threads}; ' + query(table)

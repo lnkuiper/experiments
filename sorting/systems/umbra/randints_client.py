@@ -1,5 +1,6 @@
 import psycopg2
 import os
+import re
 import subprocess
 import time
 from tqdm import tqdm
@@ -19,6 +20,11 @@ def run(con, query_folder, results_folder):
         # read the query
         with open(query_folder + qname, 'r') as f:
             query = f.read()
+
+        table = re.search("FROM ([^ ]*)", q).group(1)
+        con.execute(f"SELECT COUNT(*) FROM {table};")
+        count = con.fetchall()[0][0]
+        query = f"{query} LIMIT 1 OFFSET {count - 1};"
 
         # time and execute the query
         for i in range(5):
