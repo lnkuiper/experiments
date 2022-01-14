@@ -51,7 +51,7 @@ for i in range(1, len(varchar_columns) + 1):
         print(','.join(key_columns), file=f)
 
 key_columns = ['c_first_name', 'c_last_name']
-payload_columns = int_columns + varchar_columns
+payload_columns = int_columns[0:1]
 with open('sql/sort_strings.sql', 'w+') as f:
     print(query(key_columns, payload_columns, table), file=f)
 with open('pandas/sort_strings.sql', 'w+') as f:
@@ -59,7 +59,7 @@ with open('pandas/sort_strings.sql', 'w+') as f:
     print(','.join(key_columns), file=f)
 
 key_columns = ['c_birth_year', 'c_birth_month', 'c_birth_day']
-payload_columns = int_columns + varchar_columns
+payload_columns = int_columns[0:1]
 with open('sql/sort_ints.sql', 'w+') as f:
     print(query(key_columns, payload_columns, table), file=f)
 with open('pandas/sort_ints.sql', 'w+') as f:
