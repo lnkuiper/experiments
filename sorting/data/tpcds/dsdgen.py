@@ -15,7 +15,7 @@ def dsdgen(sf):
     subprocess.run(f"rm -rf tpcds_sf{sf}.db*", shell=True)
 
 def main():
-    dsdgen(100)
+    dsdgen(10)
 #    for sf in [1, 10, 100, 300]:
 #        if "22_customer.csv" in os.listdir(f"sf{sf}/data/"):
 #            continue
