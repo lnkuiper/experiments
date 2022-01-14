@@ -17,11 +17,6 @@ def run(con, query_folder, results_folder):
         with open(query_folder + qname, 'r') as f:
             query = f.read()
 
-        table = re.search("FROM ([^ ]*)", query).group(1)
-        con.execute(f"SELECT COUNT(*) FROM {table};")
-        count = con.fetchall()[0][0]
-        query = f"{query} LIMIT 1 OFFSET {count - 1};"
-
         # time and execute the query
         for i in range(5):
             before = time.time()
