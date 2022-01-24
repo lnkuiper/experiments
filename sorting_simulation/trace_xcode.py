@@ -11,7 +11,7 @@ RECORD_CMD = 'xcrun xctrace record --template counters.tracetemplate --output "s
 
 
 def create_csv_header(csv):
-    print("category,count,columns,time,L2_TLB_MISS_DATA,L1D_CACHE_MISS_LD,L1D_CACHE_MISS_ST,L1D_TLB_MISS,BRANCH_COND_MISPRED_NONSPEC", file=csv)
+    print("category,count,columns,time,L2_TLB_MISS_DATA,L1D_CACHE_MISS_LD,L1D_CACHE_MISS_ST,L1D_TLB_MISS,BRANCH_COND_MISPRED_NONSPEC,BRANCH_MISPRED_NONSPEC", file=csv)
     csv.flush()
 
 
@@ -41,14 +41,14 @@ def main():
     key_cols = 3
     payload_cols = 1 << 5
     configurations = [
-        ('comparator', rows, key_cols, ['col_all', 'col_ss', 'col_branchless', 'row_all', 'row_all_branchless', 'row_iter', 'row_norm']),
-        ('sort', rows, key_cols, ['pdq_static', 'radix']),
+        # ('comparator', rows, key_cols, ['col_all', 'col_ss', 'col_branchless', 'row_all', 'row_all_branchless', 'row_iter', 'row_norm']),
+        # ('sort', rows, key_cols, ['pdq_static', 'radix']),
         ('merge_key', rows, key_cols, ['row_all', 'row_all_branchless', 'row_norm', 'col_branch', 'col_branchless']),
-        ('reorder', rows, payload_cols, ['row', 'col']),
-        ('merge_payload', rows, payload_cols, ['row', 'col'])
+        # ('reorder', rows, payload_cols, ['row', 'col']),
+        # ('merge_payload', rows, payload_cols, ['row', 'col'])
     ]
     for sim, count, columns, categories in configurations:
-        fname = f'results/trace_{sim}.csv'
+        fname = f'results/xcode_output/trace_{sim}.csv'
         with open(fname, 'w+') as f:
             create_csv_header(f)
             for category in categories:

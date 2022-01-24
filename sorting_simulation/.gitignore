@@ -4,5 +4,5 @@ simulation
 *.dSYM
 .vscode
 *.eps
-trace_*.csv
+perf.data*
 

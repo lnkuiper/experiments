@@ -611,15 +611,10 @@ public:
 
 public:
 	inline bool operator<(const BranchedRowOrderEntry2 &rhs) const {
-		const T *order_columns = &col1;
-		const T *rhs_order_columns = &rhs.col1;
-		idx_t i;
-		for (i = 0; i < 1; i++) {
-			if (order_columns[i] != rhs_order_columns[i]) {
-				break;
-			}
+		if (col1 != rhs.col1) {
+			return col1 < rhs.col1;
 		}
-		return order_columns[i] < rhs_order_columns[i];
+		return col2 < rhs.col2;
 	}
 };
 
@@ -633,15 +628,13 @@ public:
 
 public:
 	inline bool operator<(const BranchedRowOrderEntry3 &rhs) const {
-		const T *order_columns = &col1;
-		const T *rhs_order_columns = &rhs.col1;
-		idx_t i;
-		for (i = 0; i < 2; i++) {
-			if (order_columns[i] != rhs_order_columns[i]) {
-				break;
-			}
+		if (col1 != rhs.col1) {
+			return col1 < rhs.col1;
 		}
-		return order_columns[i] < rhs_order_columns[i];
+		if (col2 != rhs.col2) {
+			return col2 < rhs.col2;
+		}
+		return col3 < rhs.col3;
 	}
 };
 
@@ -656,15 +649,16 @@ public:
 
 public:
 	inline bool operator<(const BranchedRowOrderEntry4 &rhs) const {
-		const T *order_columns = &col1;
-		const T *rhs_order_columns = &rhs.col1;
-		idx_t i;
-		for (i = 0; i < 3; i++) {
-			if (order_columns[i] != rhs_order_columns[i]) {
-				break;
-			}
+		if (col1 != rhs.col1) {
+			return col1 < rhs.col1;
 		}
-		return order_columns[i] < rhs_order_columns[i];
+		if (col2 != rhs.col2) {
+			return col2 < rhs.col2;
+		}
+		if (col3 != rhs.col3) {
+			return col3 < rhs.col3;
+		}
+		return col4 < rhs.col4;
 	}
 };
 
@@ -680,15 +674,19 @@ public:
 
 public:
 	inline bool operator<(const BranchedRowOrderEntry5 &rhs) const {
-		const T *order_columns = &col1;
-		const T *rhs_order_columns = &rhs.col1;
-		idx_t i;
-		for (i = 0; i < 4; i++) {
-			if (order_columns[i] != rhs_order_columns[i]) {
-				break;
-			}
+		if (col1 != rhs.col1) {
+			return col1 < rhs.col1;
 		}
-		return order_columns[i] < rhs_order_columns[i];
+		if (col2 != rhs.col2) {
+			return col2 < rhs.col2;
+		}
+		if (col3 != rhs.col3) {
+			return col3 < rhs.col3;
+		}
+		if (col4 != rhs.col4) {
+			return col4 < rhs.col4;
+		}
+		return col5 < rhs.col5;
 	}
 };
 
@@ -705,15 +703,22 @@ public:
 
 public:
 	inline bool operator<(const BranchedRowOrderEntry6 &rhs) const {
-		const T *order_columns = &col1;
-		const T *rhs_order_columns = &rhs.col1;
-		idx_t i;
-		for (i = 0; i < 5; i++) {
-			if (order_columns[i] != rhs_order_columns[i]) {
-				break;
-			}
+		if (col1 != rhs.col1) {
+			return col1 < rhs.col1;
 		}
-		return order_columns[i] < rhs_order_columns[i];
+		if (col2 != rhs.col2) {
+			return col2 < rhs.col2;
+		}
+		if (col3 != rhs.col3) {
+			return col3 < rhs.col3;
+		}
+		if (col4 != rhs.col4) {
+			return col4 < rhs.col4;
+		}
+		if (col5 != rhs.col5) {
+			return col5 < rhs.col5;
+		}
+		return col6 < rhs.col6;
 	}
 };
 
@@ -731,15 +736,25 @@ public:
 
 public:
 	inline bool operator<(const BranchedRowOrderEntry7 &rhs) const {
-		const T *order_columns = &col1;
-		const T *rhs_order_columns = &rhs.col1;
-		idx_t i;
-		for (i = 0; i < 6; i++) {
-			if (order_columns[i] != rhs_order_columns[i]) {
-				break;
-			}
+		if (col1 != rhs.col1) {
+			return col1 < rhs.col1;
 		}
-		return order_columns[i] < rhs_order_columns[i];
+		if (col2 != rhs.col2) {
+			return col2 < rhs.col2;
+		}
+		if (col3 != rhs.col3) {
+			return col3 < rhs.col3;
+		}
+		if (col4 != rhs.col4) {
+			return col4 < rhs.col4;
+		}
+		if (col5 != rhs.col5) {
+			return col5 < rhs.col5;
+		}
+		if (col6 != rhs.col6) {
+			return col6 < rhs.col6;
+		}
+		return col7 < rhs.col7;
 	}
 };
 
@@ -758,15 +773,28 @@ public:
 
 public:
 	inline bool operator<(const BranchedRowOrderEntry8 &rhs) const {
-		const T *order_columns = &col1;
-		const T *rhs_order_columns = &rhs.col1;
-		idx_t i;
-		for (i = 0; i < 7; i++) {
-			if (order_columns[i] != rhs_order_columns[i]) {
-				break;
-			}
+		if (col1 != rhs.col1) {
+			return col1 < rhs.col1;
 		}
-		return order_columns[i] < rhs_order_columns[i];
+		if (col2 != rhs.col2) {
+			return col2 < rhs.col2;
+		}
+		if (col3 != rhs.col3) {
+			return col3 < rhs.col3;
+		}
+		if (col4 != rhs.col4) {
+			return col4 < rhs.col4;
+		}
+		if (col5 != rhs.col5) {
+			return col5 < rhs.col5;
+		}
+		if (col6 != rhs.col6) {
+			return col6 < rhs.col6;
+		}
+		if (col7 != rhs.col7) {
+			return col7 < rhs.col7;
+		}
+		return col8 < rhs.col8;
 	}
 };
 
@@ -2666,16 +2694,16 @@ void Main(int argc, char *argv[]) {
 	if (argc == 1) {
 		// VerifyReOrder();
 		// VerifySort();
-		const idx_t row = 25;
-		const idx_t col = 8;
+		const idx_t row = 21;
+		const idx_t col = 7;
 		const idx_t rep = 5;
 		// SimulateReOrder<T>(row, col, rep);
 		// SimulateComparator<T>(row, col, rep);
 		// SimulateSort<T>(row, col, rep);
-		// SimulateKeyMerge<T>(row, col, rep);
+		SimulateKeyMerge<T>(row, col, rep);
 		// SimulatePayloadMerge<T>(row, col, rep);
-		SimulateFastMemcpy();
-		SimulateFastMemcmp();
+		// SimulateFastMemcpy();
+		// SimulateFastMemcmp();
 		// SimulateEndToEnd<T>(3, 32, (1 << 24), rep);
 	} else {
 		ParseArgs<T>(argc, argv);
