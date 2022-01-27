@@ -6,11 +6,11 @@ import re
 
 
 EXPORT_CMD = 'perf script > perf.export'
-RECORD_CMD = 'perf record -e cache-misses,branch-misses -F 100 ./simulation '
+RECORD_CMD = 'perf record -e cache-misses,branch-misses -F 250 ./simulation '
 
 
 def create_csv_header(csv):
-    print("category,count,columns,cmd,pid,time,counter,event,ptr,fun,lib", file=csv)
+    print("category|count|columns|cmd|pid|time|counter|event", file=csv)
     csv.flush()
 
 
@@ -22,10 +22,7 @@ def append_run(category, count, columns, csv):
     subprocess.run(EXPORT_CMD, shell=True, capture_output=True)
 
     with open('perf.export', 'r') as f:
-        export = f.read()
-    
-    export = re.sub(' +', ',', export)
-    export = '\n'.join([f'{category},{count},{columns}' + line for line in export.split('\n')][:-1])
+        export = '\n'.join([f'{category}|{count}|{columns}|' + '|'.join(re.split(' +', line)[1:6]) for line in f.readlines()])
 
     print(export, file=csv)
     os.remove('perf.data')
@@ -49,7 +46,6 @@ def main():
             create_csv_header(f)
             for category in categories:
                 args = f' {sim} {category} {count} {columns}'
-                # print(args)
                 trace(args)
                 append_run(category, count, columns, f)
 
