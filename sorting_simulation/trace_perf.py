@@ -5,7 +5,7 @@ import subprocess
 import re
 
 
-EXPORT_CMD = 'perf script > perf.export'
+EXPORT_CMD = 'perf script --ns > perf.export'
 RECORD_CMD = 'perf record -e cache-misses,branch-misses -F 250 ./simulation '
 
 
