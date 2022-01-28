@@ -2073,11 +2073,19 @@ string SimulateRowKeyMerge(const idx_t &count, const idx_t &columns, string cate
 #ifdef TRACE
 	this_thread::sleep_for(seconds(2));
 #endif
-	MergeKeyRows<T>(left_rows.get(), right_rows.get(), count, columns, category);
+	auto result = MergeKeyRows<T>(left_rows.get(), right_rows.get(), count, columns, category);
 #ifdef TRACE
 	this_thread::sleep_for(seconds(2));
 #endif
 	auto after_timestamp = CurrentTime();
+
+	// Dummy code
+	auto ls = result.get();
+	idx_t dummy = 0;
+	for (idx_t i = 0; i < count; i++) {
+		dummy += ls[i];
+	}
+	assert(dummy > 0);
 
 	// Compute duration of phases
 	auto total_duration = after_timestamp - before_timestamp;
