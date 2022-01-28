@@ -1981,25 +1981,25 @@ unique_ptr<bool[]> MergeKeyRows(data_ptr_t left, data_ptr_t right, const idx_t &
 		}
 	} else if (method == "row_norm") {
 		// Normalized key has to have specialized code so memcmp can be inlined
-		// return MergeNormalizedKeyRows<T>(left, right, count, columns);
-		switch (columns) {
-		case 1:
-			return MergeKeyRows<NormalizedRowOrderEntry1<T>>(left, right, count);
-		case 2:
-			return MergeKeyRows<NormalizedRowOrderEntry2<T>>(left, right, count);
-		case 3:
-			return MergeKeyRows<NormalizedRowOrderEntry3<T>>(left, right, count);
-		case 4:
-			return MergeKeyRows<NormalizedRowOrderEntry4<T>>(left, right, count);
-		case 5:
-			return MergeKeyRows<NormalizedRowOrderEntry5<T>>(left, right, count);
-		case 6:
-			return MergeKeyRows<NormalizedRowOrderEntry6<T>>(left, right, count);
-		case 7:
-			return MergeKeyRows<NormalizedRowOrderEntry7<T>>(left, right, count);
-		default:
-			assert(false);
-		}
+		return MergeNormalizedKeyRows<T>(left, right, count, columns);
+		// switch (columns) {
+		// case 1:
+		// 	return MergeKeyRows<NormalizedRowOrderEntry1<T>>(left, right, count);
+		// case 2:
+		// 	return MergeKeyRows<NormalizedRowOrderEntry2<T>>(left, right, count);
+		// case 3:
+		// 	return MergeKeyRows<NormalizedRowOrderEntry3<T>>(left, right, count);
+		// case 4:
+		// 	return MergeKeyRows<NormalizedRowOrderEntry4<T>>(left, right, count);
+		// case 5:
+		// 	return MergeKeyRows<NormalizedRowOrderEntry5<T>>(left, right, count);
+		// case 6:
+		// 	return MergeKeyRows<NormalizedRowOrderEntry6<T>>(left, right, count);
+		// case 7:
+		// 	return MergeKeyRows<NormalizedRowOrderEntry7<T>>(left, right, count);
+		// default:
+		// 	assert(false);
+		// }
 	} else {
 		assert(false);
 	}
