@@ -1,0 +1,15 @@
+name: Labels
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  change-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label Issue Foundation Member
+        if: "github.event.issue.owner == 'lnkuiper'"
+        uses: andymckay/labeler@master
+        with:
+          add-labels: "bug"
