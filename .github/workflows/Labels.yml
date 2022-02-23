@@ -8,9 +8,6 @@ jobs:
   change-label:
     runs-on: ubuntu-latest
 
-    env:
-      FOUNDATION_MEMBERS: ["lnkuiper"]
-
     steps:
       - name: Label Issue Foundation Member
         if: ${{ github.event.issue.user.login == 'lnkuiper' }}
