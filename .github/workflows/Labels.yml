@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Label Issue Foundation Member
-        if: ${{ equals(github.event.issue.user.login, 'lnkuiper') }}
+        if: ${{ github.event.issue.user.login == 'lnkuiper' }}
         uses: andymckay/labeler@master
         with:
           add-labels: "bug"
