@@ -13,14 +13,14 @@ jobs:
       SILVER_FOUNDATION_MEMBERS: ${{ secrets.SILVER_FOUNDATION_MEMBERS }}
 
     steps:
-      - uses: andymckay/labeler@master
-
       - name: Label Issue Gold Foundation Member
         if: ${{ contains(fromJson(env.GOLD_FOUNDATION_MEMBERS), github.event.issue.user.login) }}
+        uses: andymckay/labeler@master
         with:
           add-labels: "Gold Foundation Member"
 
       - name: Label Issue Silver Foundation Member
         if: ${{ contains(fromJson(env.SILVER_FOUNDATION_MEMBERS), github.event.issue.user.login) }}
+        uses: andymckay/labeler@master
         with:
           add-labels: "Silver Foundation Member"
