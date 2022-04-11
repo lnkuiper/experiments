@@ -44,12 +44,12 @@ idx_t CurrentTime() {
 	return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();
 }
 
-string CreateOutput(string category, vector<idx_t> results, idx_t columns) {
-	while (results.size() < columns - 1) {
+string CreateOutput(string category, vector<idx_t> results, idx_t columns, string distribution = "") {
+	while (results.size() < columns - 2) {
 		results.push_back(0);
 	}
 	ostringstream output;
-	output << category;
+	output << category << "," << distribution;
 	for (idx_t i = 0; i < results.size(); i++) {
 		output << "," << results[i];
 	}
@@ -80,6 +80,27 @@ unique_ptr<data_t[]> AllocateRows(const idx_t &count, const idx_t &row_width) {
 	return unique_ptr<data_t[]>(new data_t[count * row_width]);
 }
 
+//! Random uniform between 0 and 1
+static inline double RandU() {
+	return ((double)rand() / (RAND_MAX));
+}
+
+template <class T>
+static inline T RandRange(const double min, const double max) {
+	if (min < 0) {
+		auto r = RandU();
+		return (T)(r * max + (1 - r) * min);
+	} else {
+		return (T)(RandU() * max);
+	}
+}
+
+//! Get a random index, drawn from a power law distribution (uniform if n = 0)
+// Taken from https://stackoverflow.com/a/918827
+static inline idx_t GetRandomIndex(double x1, double n) {
+	return pow(pow(x1, n + 1) * RandU(), (double)1 / (n + 1));
+}
+
 template <class T>
 void FillColumns(vector<unique_ptr<data_t[]>> &columns, const idx_t &count, string datagen) {
 	for (idx_t column = 0; column < columns.size(); column++) {
@@ -89,9 +110,9 @@ void FillColumns(vector<unique_ptr<data_t[]>> &columns, const idx_t &count, stri
 			for (idx_t i = 0; i < count; i++) {
 				col_ptr[i] = max_val - (((column + 1) * i) % max_val);
 			}
-		} else if (datagen == "skewed") {
+		} else if (datagen == "uniqueN") {
 			const T max_val = numeric_limits<T>::max();
-			const T unique_vals = 1 << 7;
+			const T unique_vals = 1 << 7; // 128
 			const T gap = max_val / unique_vals;
 			for (idx_t i = 0; i < count; i++) {
 				T r = rand();
@@ -100,8 +121,26 @@ void FillColumns(vector<unique_ptr<data_t[]>> &columns, const idx_t &count, stri
 		} else if (datagen == "random") {
 			const T max_val = numeric_limits<T>::max();
 			for (idx_t i = 0; i < count; i++) {
-				double r = (double)rand() / RAND_MAX;
+				double r = RandU();
 				col_ptr[i] = r * max_val;
+			}
+		} else if (datagen == "powerlaw") {
+			const double min = numeric_limits<T>::min();
+			const double max = numeric_limits<T>::max();
+
+			const idx_t unique_vals = 1 << 7;
+			const double dist_power = 10;
+
+			// Generate possible values
+			vector<T> candidate_vals;
+			candidate_vals.reserve(unique_vals);
+			for (idx_t i = 0; i < unique_vals; i++) {
+				candidate_vals.push_back(RandRange<T>(min, max));
+			}
+
+			// Generate data
+			for (idx_t i = 0; i < count; i++) {
+				col_ptr[i] = candidate_vals[GetRandomIndex(unique_vals, dist_power)];
 			}
 		} else {
 			assert(false);
@@ -463,7 +502,7 @@ void VerifyReOrder() {
 // Comparator Simulation
 //===--------------------------------------------------------------------===//
 string CreateComparatorCSVHeader() {
-	return "category,count,columns,col_width,total,sort,scatter,gather";
+	return "category,distribution,count,columns,col_width,total,sort,scatter,gather";
 }
 
 template <class T>
@@ -1156,6 +1195,88 @@ void SortRowBranched(data_ptr_t row_data, const idx_t &count, const idx_t &colum
 	}
 }
 
+template <class ROW, class T>
+struct BranchedKeyComparatorDynamic {
+public:
+	BranchedKeyComparatorDynamic(const idx_t &columns) : columns(columns) {
+	}
+
+	inline bool operator()(const ROW &lhs, const ROW &rhs) const {
+		auto l_ptr = Ptr(lhs);
+		auto r_ptr = Ptr(rhs);
+		idx_t i;
+		for (i = 0; i < columns - 1; i++) {
+			if (l_ptr[i] != r_ptr[i]) {
+				break;
+			}
+		}
+		return l_ptr[i] < r_ptr[i];
+	}
+
+	inline T *Ptr(const ROW &a) const {
+		return (T *)&a;
+	}
+
+private:
+	const idx_t columns;
+};
+
+template <class T>
+void SortRowBranchedDynamic(data_ptr_t row_data, const idx_t &count, const idx_t &columns) {
+	switch (columns) {
+	case 1: {
+		auto row_data_ptr = (BranchedRowOrderEntry1<T> *)row_data;
+		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry1<T>, T>(columns);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		break;
+	}
+	case 2: {
+		auto row_data_ptr = (BranchedRowOrderEntry2<T> *)row_data;
+		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry2<T>, T>(columns);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		break;
+	}
+	case 3: {
+		auto row_data_ptr = (BranchedRowOrderEntry3<T> *)row_data;
+		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry3<T>, T>(columns);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		break;
+	}
+	case 4: {
+		auto row_data_ptr = (BranchedRowOrderEntry4<T> *)row_data;
+		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry4<T>, T>(columns);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		break;
+	}
+	case 5: {
+		auto row_data_ptr = (BranchedRowOrderEntry5<T> *)row_data;
+		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry5<T>, T>(columns);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		break;
+	}
+	case 6: {
+		auto row_data_ptr = (BranchedRowOrderEntry6<T> *)row_data;
+		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry6<T>, T>(columns);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		break;
+	}
+	case 7: {
+		auto row_data_ptr = (BranchedRowOrderEntry7<T> *)row_data;
+		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry7<T>, T>(columns);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		break;
+	}
+	case 8: {
+		auto row_data_ptr = (BranchedRowOrderEntry8<T> *)row_data;
+		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry8<T>, T>(columns);
+		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		break;
+	}
+	default:
+		assert(false);
+	}
+}
+
 template <class T>
 void SortRowBranchless(data_ptr_t row_data, const idx_t &count, const idx_t &columns) {
 	switch (columns) {
@@ -1438,14 +1559,14 @@ void SortRowSubsort(data_ptr_t row_data, const idx_t &count, const idx_t &column
 }
 
 template <class T>
-string SimulateRowComparator(const idx_t &count, const idx_t &columns, string category) {
+string SimulateRowComparator(const idx_t &count, const idx_t &columns, string category, string distribution) {
 	// This must hold for for alignment
 	assert((columns * sizeof(T)) % sizeof(uint32_t) == 0);
 
 	// Initialize source data
 	auto row_ids = InitRowIDs(count, false);
 	auto source = AllocateColumns(count, columns, sizeof(T));
-	FillColumns<T>(source, count, "skewed");
+	FillColumns<T>(source, count, distribution);
 	source.push_back(move(row_ids));
 	// PrintColumns<T>(source, count, columns);
 
@@ -1478,6 +1599,8 @@ string SimulateRowComparator(const idx_t &count, const idx_t &columns, string ca
 		SortRowSubsort<T>(row_data.get(), count, columns);
 	} else if (category == "row_all_branchless") {
 		SortRowBranchless<T>(row_data.get(), count, columns);
+	} else if (category == "row_all_dynamic") {
+		SortRowBranchedDynamic<T>(row_data.get(), count, columns);
 	} else {
 		assert(false);
 	}
@@ -1500,8 +1623,9 @@ string SimulateRowComparator(const idx_t &count, const idx_t &columns, string ca
 	auto scatter_duration = scatter_timestamp - before_timestamp;
 	auto sort_duration = sort_timestamp - scatter_timestamp;
 	auto gather_duration = after_timestamp - sort_timestamp;
-	return CreateOutput(
-	    category, {count, columns, sizeof(T), total_duration, sort_duration, scatter_duration, gather_duration}, 8);
+	return CreateOutput(category,
+	                    {count, columns, sizeof(T), total_duration, sort_duration, scatter_duration, gather_duration},
+	                    9, distribution);
 }
 
 template <class T>
@@ -1527,11 +1651,11 @@ void AssertSortedColumns(const data_t idxs[], const idx_t &count, vector<unique_
 }
 
 template <class T>
-string SimulateColumnComparator(const idx_t &count, const idx_t &columns, string category) {
+string SimulateColumnComparator(const idx_t &count, const idx_t &columns, string category, string distribution) {
 	// Initialize source data
 	auto row_ids = InitRowIDs(count, false);
 	auto source = AllocateColumns(count, columns, sizeof(T));
-	FillColumns<T>(source, count, "skewed");
+	FillColumns<T>(source, count, distribution);
 
 	auto before_timestamp = CurrentTime();
 #ifdef TRACE
@@ -1554,19 +1678,20 @@ string SimulateColumnComparator(const idx_t &count, const idx_t &columns, string
 
 	// Compute duration of phases
 	auto total_duration = after_timestamp - before_timestamp;
-	return CreateOutput(category, {count, columns, sizeof(T), total_duration, total_duration}, 8);
+	return CreateOutput(category, {count, columns, sizeof(T), total_duration, total_duration}, 9, distribution);
 }
 
 template <class T>
-string SimulateComparator(idx_t count, idx_t columns) {
+string SimulateComparator(idx_t count, idx_t columns, string distribution) {
 	ostringstream result;
-	result << SimulateColumnComparator<T>(count, columns, "col") << endl;
-	result << SimulateColumnComparator<T>(count, columns, "col_ss") << endl;
-	result << SimulateColumnComparator<T>(count, columns, "col_branchless") << endl;
-	result << SimulateRowComparator<T>(count, columns, "row_all") << endl;
-	result << SimulateRowComparator<T>(count, columns, "row_iter") << endl;
-	result << SimulateRowComparator<T>(count, columns, "row_norm") << endl;
-	result << SimulateRowComparator<T>(count, columns, "row_all_branchless") << endl;
+	result << SimulateColumnComparator<T>(count, columns, "col", distribution) << endl;
+	result << SimulateColumnComparator<T>(count, columns, "col_ss", distribution) << endl;
+	result << SimulateColumnComparator<T>(count, columns, "col_branchless", distribution) << endl;
+	result << SimulateRowComparator<T>(count, columns, "row_all", distribution) << endl;
+	result << SimulateRowComparator<T>(count, columns, "row_iter", distribution) << endl;
+	result << SimulateRowComparator<T>(count, columns, "row_all_dynamic", distribution) << endl;
+	// result << SimulateRowComparator<T>(count, columns, "row_norm") << endl;
+	result << SimulateRowComparator<T>(count, columns, "row_all_branchless", distribution) << endl;
 	return result.str();
 }
 
@@ -1575,12 +1700,15 @@ void SimulateComparator(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateComparator" << endl;
 	ofstream results_file("results/comparator.csv", ios::trunc);
 	results_file << CreateComparatorCSVHeader() << endl;
+	const vector<string> distributions = {"random", "uniqueN", "powerlaw"};
 	for (idx_t r = 10; r < row_max; r += 2) {
 		for (idx_t c = 1; c < col_max + 1; c++) {
-			for (idx_t i = 0; i < iterations; i++) {
-				results_file << SimulateComparator<T>(1 << r, c);
-				results_file.flush();
-				cout << "." << flush;
+			for (idx_t d = 0; d < distributions.size(); d++) {
+				for (idx_t i = 0; i < iterations; i++) {
+					results_file << SimulateComparator<T>(1 << r, c, distributions[d]);
+					results_file.flush();
+					cout << "." << flush;
+				}
 			}
 		}
 		cout << endl;
@@ -1591,7 +1719,7 @@ void SimulateComparator(idx_t row_max, idx_t col_max, idx_t iterations) {
 // Sorting Simulation
 //===--------------------------------------------------------------------===//
 string CreateSortCSVHeader() {
-	return "category,count,columns,col_width,total,sort,scatter,gather";
+	return "category,distribution,count,columns,col_width,total,sort,scatter,gather";
 }
 
 void RadixSortLSD(data_ptr_t orig_ptr, const idx_t &count, const idx_t &row_width, const idx_t &comp_width) {
@@ -1741,7 +1869,7 @@ void VerifySort() {
 	// Initialize source data
 	auto row_ids = InitRowIDs(count, false);
 	auto source = AllocateColumns(count, columns, sizeof(uint32_t));
-	FillColumns<uint32_t>(source, count, "skewed");
+	FillColumns<uint32_t>(source, count, "uniqueN");
 	source.push_back(move(row_ids));
 	cout << "--- BEFORE --- " << endl;
 	PrintColumns<uint32_t>(source, count, columns);
@@ -1771,7 +1899,7 @@ void VerifySort() {
 }
 
 template <class T>
-string SimulateSortInternal(const idx_t &count, const idx_t &columns, string method) {
+string SimulateSortInternal(const idx_t &count, const idx_t &columns, string method, string distribution) {
 	// This must hold for for alignment
 	assert((columns * sizeof(T)) % sizeof(uint32_t) == 0);
 	assert(method == "radix" || method == "pdq_static" || method == "pdq_dynamic");
@@ -1779,7 +1907,7 @@ string SimulateSortInternal(const idx_t &count, const idx_t &columns, string met
 	// Initialize source data
 	auto row_ids = InitRowIDs(count, false);
 	auto source = AllocateColumns(count, columns, sizeof(T));
-	FillColumns<T>(source, count, "skewed");
+	FillColumns<T>(source, count, distribution);
 	source.push_back(move(row_ids));
 
 	auto before_timestamp = CurrentTime();
@@ -1820,16 +1948,17 @@ string SimulateSortInternal(const idx_t &count, const idx_t &columns, string met
 	auto scatter_duration = scatter_timestamp - before_timestamp;
 	auto sort_duration = sort_timestamp - scatter_timestamp;
 	auto gather_duration = after_timestamp - sort_timestamp;
-	return CreateOutput(
-	    method, {count, columns, sizeof(T), total_duration, sort_duration, scatter_duration, gather_duration}, 8);
+	return CreateOutput(method,
+	                    {count, columns, sizeof(T), total_duration, sort_duration, scatter_duration, gather_duration},
+	                    9, distribution);
 }
 
 template <class T>
-string SimulateSort(idx_t count, idx_t columns) {
+string SimulateSort(idx_t count, idx_t columns, string distribution) {
 	ostringstream result;
-	result << SimulateSortInternal<T>(count, columns, "radix") << endl;
-	// result << SimulateSortInternal<T>(count, columns, "pdq_dynamic") << endl;
-	result << SimulateSortInternal<T>(count, columns, "pdq_static") << endl;
+	result << SimulateSortInternal<T>(count, columns, "radix", distribution) << endl;
+	// result << SimulateSortInternal<T>(count, columns, "pdq_dynamic", distribution) << endl;
+	result << SimulateSortInternal<T>(count, columns, "pdq_static", distribution) << endl;
 	return result.str();
 }
 
@@ -1838,12 +1967,15 @@ void SimulateSort(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateSort" << endl;
 	ofstream results_file("results/sort.csv", ios::trunc);
 	results_file << CreateSortCSVHeader() << endl;
+	const vector<string> distributions = {"random", "uniqueN", "powerlaw"};
 	for (idx_t r = 10; r < row_max; r += 2) {
 		for (idx_t c = 1; c < col_max + 1; c++) {
-			for (idx_t i = 0; i < iterations; i++) {
-				results_file << SimulateSort<T>(1 << r, c);
-				results_file.flush();
-				cout << "." << flush;
+			for (idx_t d = 0; d < distributions.size(); d++) {
+				for (idx_t i = 0; i < iterations; i++) {
+					results_file << SimulateSort<T>(1 << r, c, distributions[d]);
+					results_file.flush();
+					cout << "." << flush;
+				}
 			}
 		}
 		cout << endl;
@@ -2010,8 +2142,8 @@ string SimulateColumnKeyMerge(const idx_t &count, const idx_t &columns, bool bra
 	// Initialize source data
 	auto left = AllocateColumns(count, columns, sizeof(T));
 	auto right = AllocateColumns(count, columns, sizeof(T));
-	FillColumns<T>(left, count, "skewed");
-	FillColumns<T>(right, count, "skewed");
+	FillColumns<T>(left, count, "uniqueN");
+	FillColumns<T>(right, count, "uniqueN");
 
 	auto row_ids = InitRowIDs(count, false);
 	SortColumnSubsort<T>(row_ids, left, count);
@@ -2048,8 +2180,8 @@ string SimulateRowKeyMerge(const idx_t &count, const idx_t &columns, string cate
 	auto right = AllocateColumns(count, columns, sizeof(T));
 	left.push_back(move(l_row_ids));
 	right.push_back(move(r_row_ids));
-	FillColumns<T>(left, count, "skewed");
-	FillColumns<T>(right, count, "skewed");
+	FillColumns<T>(left, count, "uniqueN");
+	FillColumns<T>(right, count, "uniqueN");
 
 	idx_t row_width = 0;
 	vector<idx_t> col_widths;
@@ -2339,25 +2471,36 @@ void SimulatePayloadMerge(idx_t row_max, idx_t col_max, idx_t iterations) {
 // Fast Memcpy Simulation
 //===--------------------------------------------------------------------===//
 void SimulateFastMemcpy() {
+	cout << "SimulateFastMemcpy" << endl;
 	ofstream output("results/memcpy.csv", ios::trunc);
 	output << "num_bytes,type,time" << endl;
 
 	const idx_t max_bytes = 64;
 	const idx_t rep = 1000000;
-	auto ptr = unique_ptr<data_t[]>(new data_t[max_bytes * 2]);
+
+	auto ptr = unique_ptr<data_t[]>(new data_t[max_bytes * rep * 2]);
 	const data_ptr_t l_ptr = ptr.get();
-	const data_ptr_t r_ptr = ptr.get() + max_bytes;
+	const data_ptr_t r_ptr = ptr.get() + max_bytes * rep;
+
 	for (idx_t size = 0; size <= max_bytes; size++) {
+		data_ptr_t l_ptr_temp = l_ptr;
+		data_ptr_t r_ptr_temp = r_ptr;
 		auto before_timestamp = CurrentTime();
 		for (idx_t r = 0; r < rep; r++) {
 			memcpy(l_ptr, r_ptr, size);
+			l_ptr_temp += max_bytes;
+			r_ptr_temp += max_bytes;
 		}
 		auto after_timestamp = CurrentTime();
 		double memcpy_time = (double)(after_timestamp - before_timestamp) / rep;
 
+		l_ptr_temp = l_ptr;
+		r_ptr_temp = r_ptr;
 		before_timestamp = CurrentTime();
 		for (idx_t r = 0; r < rep; r++) {
 			duckdb::fast_memcpy(l_ptr, r_ptr, size);
+			l_ptr_temp += max_bytes;
+			r_ptr_temp += max_bytes;
 		}
 		after_timestamp = CurrentTime();
 		double fast_memcpy_time = (double)(after_timestamp - before_timestamp) / rep;
@@ -2371,6 +2514,7 @@ void SimulateFastMemcpy() {
 // Fast Memcmp Simulation
 //===--------------------------------------------------------------------===//
 void SimulateFastMemcmp() {
+	cout << "SimulateFastMemcmp" << endl;
 	ofstream output("results/memcmp.csv", ios::trunc);
 	output << "num_bytes,type,time" << endl;
 
@@ -2453,7 +2597,7 @@ string EndToEndColumnar(idx_t count, idx_t key_columns, idx_t payload_columns) {
 	for (idx_t run = 0; run < num_runs; run++) {
 		run_row_ids.push_back(InitRowIDs(count, false));
 		key_column_data.push_back(AllocateColumns(count, key_columns, sizeof(T)));
-		FillColumns<T>(key_column_data.back(), count, "skewed");
+		FillColumns<T>(key_column_data.back(), count, "uniqueN");
 		payload_column_data.push_back(AllocateColumns(count, payload_columns, sizeof(T)));
 	}
 
@@ -2530,7 +2674,7 @@ string EndToEndRow(idx_t count, idx_t key_columns, idx_t payload_columns, string
 	for (idx_t run = 0; run < num_runs; run++) {
 		run_row_ids.push_back(InitRowIDs(count, false));
 		key_column_data.push_back(AllocateColumns(count, key_columns, sizeof(T)));
-		FillColumns<T>(key_column_data.back(), count, "skewed");
+		FillColumns<T>(key_column_data.back(), count, "uniqueN");
 		payload_column_data.push_back(AllocateColumns(count, payload_columns, sizeof(T)));
 	}
 
@@ -2670,7 +2814,8 @@ void ParseArgs(int argc, char *argv[]) {
 	auto category = string(argv[2]);
 	int count = stoi(argv[3]);
 	int columns = stoi(argv[4]);
-	cout << sim << " " << category << " " << count << " " << columns << endl;
+	string distribution = argv[5] ? argv[5] : "";
+	cout << sim << " " << category << " " << count << " " << columns << " " << distribution << endl;
 	if (sim == "reorder") {
 		auto row_ids = InitRowIDs(count, true);
 		if (category == "row") {
@@ -2682,15 +2827,15 @@ void ParseArgs(int argc, char *argv[]) {
 		}
 	} else if (sim == "comparator") {
 		if (category == "col_all" || category == "col_ss" || category == "col_branchless") {
-			SimulateColumnComparator<T>(count, columns, category);
+			SimulateColumnComparator<T>(count, columns, category, distribution);
 			return;
 		} else if (category == "row_all" || category == "row_iter" || category == "row_norm" ||
 		           category == "row_all_branchless") {
-			SimulateRowComparator<T>(count, columns, category);
+			SimulateRowComparator<T>(count, columns, category, distribution);
 			return;
 		}
 	} else if (sim == "sort") {
-		SimulateSortInternal<T>(count, columns, category);
+		SimulateSortInternal<T>(count, columns, category, distribution);
 		return;
 	} else if (sim == "merge_key") {
 		if (category == "row_all" || category == "row_all_branchless" || category == "row_norm") {
@@ -2721,15 +2866,15 @@ void Main(int argc, char *argv[]) {
 		// VerifyReOrder();
 		// VerifySort();
 		const idx_t row = 21;
-		const idx_t col = 7;
-		const idx_t rep = 5;
+		const idx_t col = 4;
+		const idx_t rep = 1;
 		// SimulateReOrder<T>(row, col, rep);
-		// SimulateComparator<T>(row, col, rep);
-		// SimulateSort<T>(row, col, rep);
-		SimulateKeyMerge<T>(row, col, rep);
+		SimulateComparator<T>(row, col, rep);
+		SimulateSort<T>(row, col, rep);
+		// SimulateKeyMerge<T>(row, col, rep);
 		// SimulatePayloadMerge<T>(row, col, rep);
-		// SimulateFastMemcpy();
-		// SimulateFastMemcmp();
+		SimulateFastMemcpy();
+		SimulateFastMemcmp();
 		// SimulateEndToEnd<T>(3, 32, (1 << 24), rep);
 	} else {
 		ParseArgs<T>(argc, argv);
