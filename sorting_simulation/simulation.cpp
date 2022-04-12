@@ -112,7 +112,7 @@ void FillColumns(vector<unique_ptr<data_t[]>> &columns, const idx_t &count, stri
 			}
 		} else if (datagen == "uniqueN") {
 			const T max_val = numeric_limits<T>::max();
-			const T unique_vals = 1 << 7; // 128
+			const T unique_vals = 128;
 			const T gap = max_val / unique_vals;
 			for (idx_t i = 0; i < count; i++) {
 				T r = rand();
@@ -128,8 +128,8 @@ void FillColumns(vector<unique_ptr<data_t[]>> &columns, const idx_t &count, stri
 			const double min = numeric_limits<T>::min();
 			const double max = numeric_limits<T>::max();
 
-			const idx_t unique_vals = 1 << 7;
-			const double dist_power = 10;
+			const idx_t unique_vals = 128;
+			const double dist_power = 5;
 
 			// Generate possible values
 			vector<T> candidate_vals;
@@ -1065,80 +1065,80 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	case 1: {
 		auto row_data_ptr = (NormalizedRowOrderEntry1<T> *)row_data;
 		if (method == "pdq_static") {
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+			sort(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry1<T>>(columns * sizeof(T));
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+			sort(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 2: {
 		auto row_data_ptr = (NormalizedRowOrderEntry2<T> *)row_data;
 		if (method == "pdq_static") {
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+			sort(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry2<T>>(columns * sizeof(T));
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+			sort(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 3: {
 		auto row_data_ptr = (NormalizedRowOrderEntry3<T> *)row_data;
 		if (method == "pdq_static") {
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+			sort(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry3<T>>(columns * sizeof(T));
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+			sort(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 4: {
 		auto row_data_ptr = (NormalizedRowOrderEntry4<T> *)row_data;
 		if (method == "pdq_static") {
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+			sort(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry4<T>>(columns * sizeof(T));
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+			sort(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 5: {
 		auto row_data_ptr = (NormalizedRowOrderEntry5<T> *)row_data;
 		if (method == "pdq_static") {
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+			sort(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry5<T>>(columns * sizeof(T));
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+			sort(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 6: {
 		auto row_data_ptr = (NormalizedRowOrderEntry6<T> *)row_data;
 		if (method == "pdq_static") {
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+			sort(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry6<T>>(columns * sizeof(T));
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+			sort(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 7: {
 		auto row_data_ptr = (NormalizedRowOrderEntry7<T> *)row_data;
 		if (method == "pdq_static") {
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+			sort(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry7<T>>(columns * sizeof(T));
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+			sort(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
 	case 8: {
 		auto row_data_ptr = (NormalizedRowOrderEntry8<T> *)row_data;
 		if (method == "pdq_static") {
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+			sort(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry8<T>>(columns * sizeof(T));
-			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+			sort(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1152,42 +1152,42 @@ void SortRowBranched(data_ptr_t row_data, const idx_t &count, const idx_t &colum
 	switch (columns) {
 	case 1: {
 		auto row_data_ptr = (BranchedRowOrderEntry1<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 2: {
 		auto row_data_ptr = (BranchedRowOrderEntry2<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 3: {
 		auto row_data_ptr = (BranchedRowOrderEntry3<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 4: {
 		auto row_data_ptr = (BranchedRowOrderEntry4<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 5: {
 		auto row_data_ptr = (BranchedRowOrderEntry5<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 6: {
 		auto row_data_ptr = (BranchedRowOrderEntry6<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 7: {
 		auto row_data_ptr = (BranchedRowOrderEntry7<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 8: {
 		auto row_data_ptr = (BranchedRowOrderEntry8<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	default:
@@ -1227,49 +1227,49 @@ void SortRowBranchedDynamic(data_ptr_t row_data, const idx_t &count, const idx_t
 	case 1: {
 		auto row_data_ptr = (BranchedRowOrderEntry1<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry1<T>, T>(columns);
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		sort(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 2: {
 		auto row_data_ptr = (BranchedRowOrderEntry2<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry2<T>, T>(columns);
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		sort(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 3: {
 		auto row_data_ptr = (BranchedRowOrderEntry3<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry3<T>, T>(columns);
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		sort(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 4: {
 		auto row_data_ptr = (BranchedRowOrderEntry4<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry4<T>, T>(columns);
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		sort(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 5: {
 		auto row_data_ptr = (BranchedRowOrderEntry5<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry5<T>, T>(columns);
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		sort(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 6: {
 		auto row_data_ptr = (BranchedRowOrderEntry6<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry6<T>, T>(columns);
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		sort(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 7: {
 		auto row_data_ptr = (BranchedRowOrderEntry7<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry7<T>, T>(columns);
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		sort(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 8: {
 		auto row_data_ptr = (BranchedRowOrderEntry8<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry8<T>, T>(columns);
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
+		sort(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	default:
@@ -1282,42 +1282,42 @@ void SortRowBranchless(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	switch (columns) {
 	case 1: {
 		auto row_data_ptr = (BranchlessRowOrderEntry1<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 2: {
 		auto row_data_ptr = (BranchlessRowOrderEntry2<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 3: {
 		auto row_data_ptr = (BranchlessRowOrderEntry3<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 4: {
 		auto row_data_ptr = (BranchlessRowOrderEntry4<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 5: {
 		auto row_data_ptr = (BranchlessRowOrderEntry5<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 6: {
 		auto row_data_ptr = (BranchlessRowOrderEntry6<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 7: {
 		auto row_data_ptr = (BranchlessRowOrderEntry7<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 8: {
 		auto row_data_ptr = (BranchlessRowOrderEntry8<T> *)row_data;
-		pdqsort_branchless(row_data_ptr, row_data_ptr + count);
+		sort(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	default:
@@ -1361,19 +1361,16 @@ void SortColumn(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_t[]>> &
 	const idx_t num_cols = cols.size();
 	if (num_cols == 1) {
 		const auto &col = cols[0];
-		pdqsort_branchless(
-		    row_ids, row_ids + count,
-		    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
+		sort(row_ids, row_ids + count,
+		     [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
 	} else if (method == "col" || method == "col_all") {
-		pdqsort_branchless(row_ids, row_ids + count,
-		                   [&cols, &num_cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
-			                   return CompareColumnarBranch<T>(cols, cols, lhs, rhs, num_cols);
-		                   });
+		sort(row_ids, row_ids + count, [&cols, &num_cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
+			return CompareColumnarBranch<T>(cols, cols, lhs, rhs, num_cols);
+		});
 	} else if (method == "col_branchless") {
-		pdqsort_branchless(row_ids, row_ids + count,
-		                   [&cols, &num_cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
-			                   return CompareColumnarBranchless<T>(cols, cols, lhs, rhs, num_cols);
-		                   });
+		sort(row_ids, row_ids + count, [&cols, &num_cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
+			return CompareColumnarBranchless<T>(cols, cols, lhs, rhs, num_cols);
+		});
 	} else {
 		assert(false);
 	}
@@ -1398,9 +1395,8 @@ void SortColumnSubsort(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_
 	}
 	if (cols.size() == 1) {
 		const auto &col = cols[0];
-		pdqsort_branchless(
-		    row_ids, row_ids + count,
-		    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
+		sort(row_ids, row_ids + count,
+		     [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
 		return;
 	}
 	unique_ptr<bool[]> ties_ptr;
@@ -1409,9 +1405,8 @@ void SortColumnSubsort(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_
 		const auto &col = cols[col_idx];
 		if (!ties) {
 			// This is the first sort
-			pdqsort_branchless(
-			    row_ids, row_ids + count,
-			    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
+			sort(row_ids, row_ids + count,
+			     [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
 			// Initialize ties array
 			ties_ptr = unique_ptr<bool[]>(new bool[count]);
 			ties = ties_ptr.get();
@@ -1432,9 +1427,9 @@ void SortColumnSubsort(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_
 						break;
 					}
 				}
-				pdqsort_branchless(
-				    row_ids + i, row_ids + j + 1,
-				    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
+				sort(row_ids + i, row_ids + j + 1, [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool {
+					return col[lhs] < col[rhs];
+				});
 				i = j;
 			}
 		}
@@ -1461,36 +1456,29 @@ template <class ROW, class T>
 void SortRowSubsortPDQ(ROW *row_data_ptr, const idx_t &count, const idx_t &col_idx) {
 	switch (col_idx) {
 	case 0:
-		return pdqsort_branchless(row_data_ptr, row_data_ptr + count,
-		                          [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col1 < rhs.col1; });
+		return sort(row_data_ptr, row_data_ptr + count,
+		            [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col1 < rhs.col1; });
 	case 1:
-		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
-			return *(&lhs.col1 + 1) < *(&rhs.col1 + 1);
-		});
+		return sort(row_data_ptr, row_data_ptr + count,
+		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 1) < *(&rhs.col1 + 1); });
 	case 2:
-		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
-			return *(&lhs.col1 + 2) < *(&rhs.col1 + 2);
-		});
+		return sort(row_data_ptr, row_data_ptr + count,
+		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 2) < *(&rhs.col1 + 2); });
 	case 3:
-		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
-			return *(&lhs.col1 + 3) < *(&rhs.col1 + 3);
-		});
+		return sort(row_data_ptr, row_data_ptr + count,
+		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 3) < *(&rhs.col1 + 3); });
 	case 4:
-		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
-			return *(&lhs.col1 + 4) < *(&rhs.col1 + 4);
-		});
+		return sort(row_data_ptr, row_data_ptr + count,
+		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 4) < *(&rhs.col1 + 4); });
 	case 5:
-		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
-			return *(&lhs.col1 + 5) < *(&rhs.col1 + 5);
-		});
+		return sort(row_data_ptr, row_data_ptr + count,
+		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 5) < *(&rhs.col1 + 5); });
 	case 6:
-		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
-			return *(&lhs.col1 + 6) < *(&rhs.col1 + 6);
-		});
+		return sort(row_data_ptr, row_data_ptr + count,
+		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 6) < *(&rhs.col1 + 6); });
 	case 7:
-		return pdqsort_branchless(row_data_ptr, row_data_ptr + count, [](const ROW &lhs, const ROW &rhs) -> bool {
-			return *(&lhs.col1 + 7) < *(&rhs.col1 + 7);
-		});
+		return sort(row_data_ptr, row_data_ptr + count,
+		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 7) < *(&rhs.col1 + 7); });
 	default:
 		assert(false);
 	}
@@ -1957,7 +1945,7 @@ template <class T>
 string SimulateSort(idx_t count, idx_t columns, string distribution) {
 	ostringstream result;
 	result << SimulateSortInternal<T>(count, columns, "radix", distribution) << endl;
-	// result << SimulateSortInternal<T>(count, columns, "pdq_dynamic", distribution) << endl;
+	result << SimulateSortInternal<T>(count, columns, "pdq_dynamic", distribution) << endl;
 	result << SimulateSortInternal<T>(count, columns, "pdq_static", distribution) << endl;
 	return result.str();
 }
@@ -2865,16 +2853,18 @@ void Main(int argc, char *argv[]) {
 	if (argc == 1) {
 		// VerifyReOrder();
 		// VerifySort();
-		const idx_t row = 21;
+		const idx_t row = 24;
 		const idx_t col = 4;
 		const idx_t rep = 1;
-		// SimulateReOrder<T>(row, col, rep);
-		SimulateComparator<T>(row, col, rep);
+
+		// SimulateComparator<T>(row, col, rep);
 		SimulateSort<T>(row, col, rep);
+		// SimulateFastMemcpy();
+		// SimulateFastMemcmp();
+
+		// SimulateReOrder<T>(row, col, rep);
 		// SimulateKeyMerge<T>(row, col, rep);
 		// SimulatePayloadMerge<T>(row, col, rep);
-		SimulateFastMemcpy();
-		SimulateFastMemcmp();
 		// SimulateEndToEnd<T>(3, 32, (1 << 24), rep);
 	} else {
 		ParseArgs<T>(argc, argv);
