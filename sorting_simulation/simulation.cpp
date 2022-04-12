@@ -2853,14 +2853,14 @@ void Main(int argc, char *argv[]) {
 	if (argc == 1) {
 		// VerifyReOrder();
 		// VerifySort();
-		const idx_t row = 24;
+		const idx_t row = 25;
 		const idx_t col = 4;
-		const idx_t rep = 1;
+		const idx_t rep = 5;
 
-		// SimulateComparator<T>(row, col, rep);
+		SimulateComparator<T>(row, col, rep);
 		SimulateSort<T>(row, col, rep);
-		// SimulateFastMemcpy();
-		// SimulateFastMemcmp();
+		SimulateFastMemcpy();
+		SimulateFastMemcmp();
 
 		// SimulateReOrder<T>(row, col, rep);
 		// SimulateKeyMerge<T>(row, col, rep);
