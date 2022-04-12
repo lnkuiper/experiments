@@ -44,17 +44,18 @@ def query(key_columns, payload_columns, table):
     return f'SELECT {agg_cols} FROM (SELECT {select_cols} FROM {table} ORDER BY {order_clause});'
 
 # increase the amount of payload columns
-key_columns = ['cs_quantity', 'cs_item_sk']
-for i in range(1, len(columns) + 1):
-    payload_columns = columns[:i]
-    with open(f'sql/payload{i}.sql', 'w+') as f:
-        print(query(key_columns, payload_columns, table), file=f)
-    with open(f'pandas/payload{i}.sql', 'w+') as f:
-        print(','.join(payload_columns), file=f)
-        print(','.join(key_columns), file=f)
+#key_columns = ['cs_quantity', 'cs_item_sk']
+#for i in range(1, len(columns) + 1):
+#    payload_columns = columns[:i]
+#    with open(f'sql/payload{i}.sql', 'w+') as f:
+#        print(query(key_columns, payload_columns, table), file=f)
+#    with open(f'pandas/payload{i}.sql', 'w+') as f:
+#        print(','.join(payload_columns), file=f)
+#        print(','.join(key_columns), file=f)
 
 # increase the amount of sorting columns
-payload_columns = columns
+key_columns = ['cs_warehouse_sk', 'cs_ship_mode_sk', 'cs_promo_sk', 'cs_quantity']
+payload_columns = ['cs_item_sk']
 for i in range(1, 5):
     key_columns = columns[:i]
     with open(f'sql/sorting{i}.sql', 'w+') as f:
@@ -62,3 +63,4 @@ for i in range(1, 5):
     with open(f'pandas/sorting{i}.sql', 'w+') as f:
         print(','.join(payload_columns), file=f)
         print(','.join(key_columns), file=f)
+
