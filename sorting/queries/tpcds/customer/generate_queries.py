@@ -50,7 +50,7 @@ def query(key_columns, payload_columns, table):
 #        print(','.join(payload_columns), file=f)
 #        print(','.join(key_columns), file=f)
 
-key_columns = ['c_last_name', 'c_first_name']   
+key_columns = ['c_first_name', 'c_last_name']   
 payload_columns = ['c_customer_sk']
 with open('sql/sort_strings.sql', 'w+') as f:
     print(query(key_columns, payload_columns, table), file=f)
