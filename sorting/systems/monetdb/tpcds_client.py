@@ -47,7 +47,8 @@ def run(query_folder, results_folder):
 
 def main():
     sf = os.environ['SF']
-    run('../../queries/tpcds/catalog_sales/sql/', f'../../results/monetdb/tpcds/sf{sf}/catalog_sales/')
+    if int(sf) != 300:
+        run('../../queries/tpcds/catalog_sales/sql/', f'../../results/monetdb/tpcds/sf{sf}/catalog_sales/')
     run('../../queries/tpcds/customer/sql/', f'../../results/monetdb/tpcds/sf{sf}/customer/')
 
 if __name__ == '__main__':
