@@ -33,7 +33,7 @@ def run(con, query_folder, results_folder):
 def main():
     sf = os.environ['SF']
     con = duckdb.connect(f'tpcds_sf{sf}.db', read_only=True)
-    con.execute("PRAGMA disable_optimizer;")
+    con.execute('PRAGMA threads=16')
     if int(sf) != 300:
         run(con, '../../queries/tpcds/catalog_sales/sql/', f'../../results/duckdb/tpcds/sf{sf}/catalog_sales/')
     run(con, '../../queries/tpcds/customer/sql/', f'../../results/duckdb/tpcds/sf{sf}/customer/')

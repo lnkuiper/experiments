@@ -21,6 +21,9 @@ for sys in */ ; do
   if [ "$sys" == "clickhouse/" ]; then
     continue
   fi
+  if [ "$sys" == "umbra/" ]; then
+    continue
+  fi
   echo "$sys"
   cd $sys
   FILE=${PATHVAR}/results/${sys}/randints.sql
