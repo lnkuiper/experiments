@@ -35,9 +35,10 @@ def run(con, query_folder, results_folder, threads=False):
 
 def main():
     con = Client(host = 'localhost', port = '9000')
-    con.execute('set max_threads=16;')
-    run(con, '../../queries/randints/clickhouse/', '../../results/clickhouse/randints/')
-    run(con, '../../queries/randints/clickhouse/threads/', '../../results/clickhouse/randints_threads/', True)
+    #con.execute('set max_threads=16;')
+    con.execute('set optimize_trivial_count_query=0;')
+    run(con, '../../queries/randints/sql/', '../../results/clickhouse/randints/')
+    #run(con, '../../queries/randints/clickhouse/threads/', '../../results/clickhouse/randints_threads/', True)
 
 if __name__ == '__main__':
     main()

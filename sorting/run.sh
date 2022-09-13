@@ -18,9 +18,9 @@ for sys in */ ; do
   if [ "$sys" == "sqlite3/" ]; then
     continue
   fi
-  if [ "$sys" == "clickhouse/" ]; then
-    continue
-  fi
+  #if [ "$sys" == "clickhouse/" ]; then
+  #  continue
+  #fi
   if [ "$sys" == "umbra/" ]; then
     continue
   fi
