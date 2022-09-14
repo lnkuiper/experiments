@@ -35,7 +35,7 @@ def main():
     sf = os.environ['SF']
     con = Client(host = 'localhost', port = '9000')
     #con.execute('set max_threads=16;')
-    con.execute('set optimize_trivial_count_query=0;')
+    #con.execute('set optimize_trivial_count_query=0;')
     if int(sf) != 300:
         run(con, '../../queries/tpcds/catalog_sales/sql/', f'../../results/clickhouse/tpcds/sf{sf}/catalog_sales/')
     run(con, '../../queries/tpcds/customer/sql/', f'../../results/clickhouse/tpcds/sf{sf}/customer/')

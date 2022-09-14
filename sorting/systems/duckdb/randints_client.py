@@ -32,9 +32,9 @@ def run(con, query_folder, results_folder):
 
 def main():
     con = duckdb.connect('randints.db', read_only=True)
-    con.execute("PRAGMA threads=16;")
+    #con.execute("PRAGMA threads=16;")
     run(con, '../../queries/randints/sql/', '../../results/duckdb/randints/')
-    run(con, '../../queries/randints/duckdb_threads/', '../../results/duckdb/randints_threads/')
+    #run(con, '../../queries/randints/duckdb_threads/', '../../results/duckdb/randints_threads/')
 
 if __name__ == '__main__':
     main()

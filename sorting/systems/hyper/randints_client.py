@@ -29,8 +29,9 @@ def run(con, query_folder, results_folder):
         open(results_folder + qname, 'w+')
 
 def main():
-    con = '| psql -U raasveld -p 7484 -h localhost mydb'
+    con = '| docker exec -i hyper-container psql -U raasveld -p 7484 -h localhost mydb'
     run(con, '../../queries/randints/sql/', '../../results/hyper/randints/')
 
 if __name__ == '__main__':
     main()
+

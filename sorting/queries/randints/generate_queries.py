@@ -1,5 +1,5 @@
 def query(table):
-    return f'SELECT count(i) FROM (SELECT i FROM {table} ORDER BY i) sq;'
+    return f'SELECT count(i) FROM (SELECT i FROM {table} ORDER BY i offset 1) sq;'
 
 def threads_query(threads, table):
     return f'PRAGMA threads={threads}; ' + query(table)

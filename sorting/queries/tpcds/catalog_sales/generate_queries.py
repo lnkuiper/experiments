@@ -41,7 +41,7 @@ def query(key_columns, payload_columns, table):
     agg_cols = ', '.join([f'count({c})' for c in payload_columns])
     select_cols = ', '.join(payload_columns)
     order_clause = ', '.join(key_columns)
-    return f'SELECT {agg_cols} FROM (SELECT {select_cols} FROM {table} ORDER BY {order_clause}) sq;'
+    return f'SELECT {agg_cols} FROM (SELECT {select_cols} FROM {table} ORDER BY {order_clause} offset 1) sq;'
 
 # increase the amount of payload columns
 #key_columns = ['cs_quantity', 'cs_item_sk']
