@@ -1,21 +1,20 @@
-import psycopg2
+from clickhouse_driver import Client
 import os
-import re
 import subprocess
 import time
 from tqdm import tqdm
 
-def run(con, query_folder, results_folder):
+def run(con, query_folder, results_folder, threads=False):
     qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
     qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
     for qname in tqdm(qnames):
-        # skip .keep file
-        if not qname.endswith('.sql'):
-            continue
-
         # skip if already done
         if (os.path.isfile(results_folder + qname)):
             continue
+
+        if threads:
+            t = int(qname.split('.sql')[0])
+            con.execute(f'set max_threads={t};')
 
         # read the query
         with open(query_folder + qname, 'r') as f:
@@ -35,13 +34,11 @@ def run(con, query_folder, results_folder):
         open(results_folder + qname, 'w+')
 
 def main():
-    sf = os.environ['SF']
-    con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5432)
-    cur = con.cursor()
-    #cur.execute("SET debug.disableoptimizer=1;")
-    run(cur, '../../queries/tpcds/catalog_sales/sql/', f'../../results/umbra/tpcds/sf{sf}/catalog_sales/')
-    run(cur, '../../queries/tpcds/customer/sql/', f'../../results/umbra/tpcds/sf{sf}/customer/')
+    con = Client(host = 'localhost', port = '9000')
+    #con.execute('set max_threads=16;')
+    #con.execute('set optimize_trivial_count_query=0;')
+    run(con, '../../queries/randfloats/sql/', '../../results/clickhouse/randfloats/')
+    #run(con, '../../queries/randints/clickhouse/threads/', '../../results/clickhouse/randints_threads/', True)
 
 if __name__ == '__main__':
     main()
-

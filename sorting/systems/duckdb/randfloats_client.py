@@ -1,4 +1,4 @@
-import psycopg2
+import duckdb
 import os
 import re
 import subprocess
@@ -9,10 +9,6 @@ def run(con, query_folder, results_folder):
     qnames = [q for q in os.listdir(query_folder) if q.endswith('.sql')]
     qnames = sorted(qnames, key=lambda s: (s[0], len(s), s))
     for qname in tqdm(qnames):
-        # skip .keep file
-        if not qname.endswith('.sql'):
-            continue
-
         # skip if already done
         if (os.path.isfile(results_folder + qname)):
             continue
@@ -35,13 +31,10 @@ def run(con, query_folder, results_folder):
         open(results_folder + qname, 'w+')
 
 def main():
-    sf = os.environ['SF']
-    con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5432)
-    cur = con.cursor()
-    #cur.execute("SET debug.disableoptimizer=1;")
-    run(cur, '../../queries/tpcds/catalog_sales/sql/', f'../../results/umbra/tpcds/sf{sf}/catalog_sales/')
-    run(cur, '../../queries/tpcds/customer/sql/', f'../../results/umbra/tpcds/sf{sf}/customer/')
+    con = duckdb.connect('randfloats.db', read_only=True)
+    #con.execute("PRAGMA threads=16;")
+    run(con, '../../queries/randfloats/sql/', '../../results/duckdb/randfloats/')
+    #run(con, '../../queries/randints/duckdb_threads/', '../../results/duckdb/randints_threads/')
 
 if __name__ == '__main__':
     main()
-

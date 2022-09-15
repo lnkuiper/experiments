@@ -1,0 +1,12 @@
+COPY INTO floats100_asc FROM '/sorting_data/randfloats/data/100asc.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO floats100_desc FROM '/sorting_data/randfloats/data/100desc.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO floats10 FROM '/sorting_data/randfloats/data/10.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO floats20 FROM '/sorting_data/randfloats/data/20.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO floats30 FROM '/sorting_data/randfloats/data/30.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO floats40 FROM '/sorting_data/randfloats/data/40.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO floats50 FROM '/sorting_data/randfloats/data/50.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO floats60 FROM '/sorting_data/randfloats/data/60.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO floats70 FROM '/sorting_data/randfloats/data/70.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO floats80 FROM '/sorting_data/randfloats/data/80.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO floats90 FROM '/sorting_data/randfloats/data/90.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';
+COPY INTO floats100 FROM '/sorting_data/randfloats/data/100.csv' USING DELIMITERS ',', E'\n', '"' NULL AS '';

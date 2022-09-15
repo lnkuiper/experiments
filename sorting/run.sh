@@ -40,6 +40,14 @@ for sys in */ ; do
     ./load_randints.sh && python3 randints_client.py && touch "$FILE"
     ./stop.sh
   fi
+  FILE=${PATHVAR}/results/${sys}/randfloats.sql
+  if ! test -f "$FILE"; then
+    echo "$sys randints"
+    ./stop.sh
+    ./start.sh
+    ./load_randfloats.sh && python3 randfloats_client.py && touch "$FILE"
+    ./stop.sh
+  fi
   for sf in "${sfs[@]}"; do
     FILE=${PATHVAR}/results/${sys}/tpcds_sf${sf}.sql
     if ! test -f "$FILE"; then

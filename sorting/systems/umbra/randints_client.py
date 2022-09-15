@@ -37,7 +37,7 @@ def run(con, query_folder, results_folder):
 def main():
     con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5432)
     cur = con.cursor()
-    cur.execute("SET debug.disableoptimizer=1;")
+    #cur.execute("SET debug.disableoptimizer=1;")
     run(cur, '../../queries/randints/sql/', '../../results/umbra/randints/')
 
 if __name__ == '__main__':

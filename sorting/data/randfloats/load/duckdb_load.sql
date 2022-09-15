@@ -1,0 +1,12 @@
+COPY floats100_asc FROM 'PATHVAR/data/randfloats/data/100asc.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY floats100_desc FROM 'PATHVAR/data/randfloats/data/100desc.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY floats10 FROM 'PATHVAR/data/randfloats/data/10.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY floats20 FROM 'PATHVAR/data/randfloats/data/20.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY floats30 FROM 'PATHVAR/data/randfloats/data/30.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY floats40 FROM 'PATHVAR/data/randfloats/data/40.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY floats50 FROM 'PATHVAR/data/randfloats/data/50.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY floats60 FROM 'PATHVAR/data/randfloats/data/60.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY floats70 FROM 'PATHVAR/data/randfloats/data/70.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY floats80 FROM 'PATHVAR/data/randfloats/data/80.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY floats90 FROM 'PATHVAR/data/randfloats/data/90.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');
+COPY floats100 FROM 'PATHVAR/data/randfloats/data/100.csv' (FORMAT 'csv', quote '"', header 0, delimiter ',');

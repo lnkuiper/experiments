@@ -35,12 +35,10 @@ def run(con, query_folder, results_folder):
         open(results_folder + qname, 'w+')
 
 def main():
-    sf = os.environ['SF']
     con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5432)
     cur = con.cursor()
     #cur.execute("SET debug.disableoptimizer=1;")
-    run(cur, '../../queries/tpcds/catalog_sales/sql/', f'../../results/umbra/tpcds/sf{sf}/catalog_sales/')
-    run(cur, '../../queries/tpcds/customer/sql/', f'../../results/umbra/tpcds/sf{sf}/customer/')
+    run(cur, '../../queries/randfloats/sql/', '../../results/umbra/randfloats/')
 
 if __name__ == '__main__':
     main()
