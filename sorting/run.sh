@@ -15,12 +15,12 @@ for sys in */ ; do
   if [ "$sys" == "clickhouse/" ]; then
     continue
   fi
-  #if [ "$sys" == "umbra/" ]; then
-  #  continue
-  #fi
-  if [ "$sys" == "duckdb/" ]; then
+  if [ "$sys" == "umbra/" ]; then
     continue
   fi
+  #if [ "$sys" == "duckdb/" ]; then
+  #  continue
+  #fi
   if [ "$sys" == "monetdb/" ]; then
     continue
   fi
