@@ -9,25 +9,25 @@ sfs=(
 )
 
 for sys in */ ; do
-  #if [ "$sys" == "hyper/" ]; then
-  #  continue
-  #fi
-  if [ "$sys" == "pandas/" ]; then
-    continue
-  fi
-  if [ "$sys" == "sqlite3/" ]; then
+  if [ "$sys" == "hyper/" ]; then
     continue
   fi
   if [ "$sys" == "clickhouse/" ]; then
     continue
   fi
-  if [ "$sys" == "umbra/" ]; then
-    continue
-  fi
+  #if [ "$sys" == "umbra/" ]; then
+  #  continue
+  #fi
   if [ "$sys" == "duckdb/" ]; then
     continue
   fi
   if [ "$sys" == "monetdb/" ]; then
+    continue
+  fi
+  if [ "$sys" == "pandas/" ]; then
+    continue
+  fi
+  if [ "$sys" == "sqlite3/" ]; then
     continue
   fi
   echo "$sys"
