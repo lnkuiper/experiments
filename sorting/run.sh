@@ -9,21 +9,21 @@ sfs=(
 )
 
 for sys in */ ; do
-  if [ "$sys" == "hyper/" ]; then
-    continue
-  fi
-  if [ "$sys" == "clickhouse/" ]; then
-    continue
-  fi
-  if [ "$sys" == "umbra/" ]; then
-    continue
-  fi
+  #if [ "$sys" == "hyper/" ]; then
+  #  continue
+  #fi
+  #if [ "$sys" == "clickhouse/" ]; then
+  #  continue
+  #fi
+  #if [ "$sys" == "umbra/" ]; then
+  #  continue
+  #fi
   #if [ "$sys" == "duckdb/" ]; then
   #  continue
   #fi
-  if [ "$sys" == "monetdb/" ]; then
-    continue
-  fi
+  #if [ "$sys" == "monetdb/" ]; then
+  #  continue
+  #fi
   if [ "$sys" == "pandas/" ]; then
     continue
   fi
@@ -42,7 +42,7 @@ for sys in */ ; do
   fi
   FILE=${PATHVAR}/results/${sys}/randfloats.sql
   if ! test -f "$FILE"; then
-    echo "$sys randints"
+    echo "$sys randfloats"
     ./stop.sh
     ./start.sh
     ./load_randfloats.sh && python3 randfloats_client.py && touch "$FILE"
