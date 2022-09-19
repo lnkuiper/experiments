@@ -2862,10 +2862,10 @@ void Main(int argc, char *argv[]) {
 		const idx_t col = 4;
 		const idx_t rep = 5;
 
-		SimulateComparator<T>(row, col, rep);
+		// SimulateComparator<T>(row, col, rep);
 		SimulateSort<T>(row, col, rep);
-		SimulateFastMemcpy();
-		SimulateFastMemcmp();
+		// SimulateFastMemcpy();
+		// SimulateFastMemcmp();
 
 		// SimulateReOrder<T>(row, col, rep);
 		// SimulateKeyMerge<T>(row, col, rep);
