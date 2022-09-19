@@ -37,6 +37,11 @@ typedef uint8_t data_t;
 typedef data_t *data_ptr_t;
 typedef uint64_t idx_t;
 
+// template <typename... Args>
+// void sort(Args &&...args) {
+// 	pdqsort_branchless(forward<Args>(args)...);
+// }
+
 //===--------------------------------------------------------------------===//
 // General
 //===--------------------------------------------------------------------===//
@@ -1065,7 +1070,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	case 1: {
 		auto row_data_ptr = (NormalizedRowOrderEntry1<T> *)row_data;
 		if (method == "pdq_static") {
-			sort(row_data_ptr, row_data_ptr + count);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry1<T>>(columns * sizeof(T));
 			sort(row_data_ptr, row_data_ptr + count, comp);
@@ -1075,7 +1080,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	case 2: {
 		auto row_data_ptr = (NormalizedRowOrderEntry2<T> *)row_data;
 		if (method == "pdq_static") {
-			sort(row_data_ptr, row_data_ptr + count);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry2<T>>(columns * sizeof(T));
 			sort(row_data_ptr, row_data_ptr + count, comp);
@@ -1085,7 +1090,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	case 3: {
 		auto row_data_ptr = (NormalizedRowOrderEntry3<T> *)row_data;
 		if (method == "pdq_static") {
-			sort(row_data_ptr, row_data_ptr + count);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry3<T>>(columns * sizeof(T));
 			sort(row_data_ptr, row_data_ptr + count, comp);
@@ -1095,7 +1100,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	case 4: {
 		auto row_data_ptr = (NormalizedRowOrderEntry4<T> *)row_data;
 		if (method == "pdq_static") {
-			sort(row_data_ptr, row_data_ptr + count);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry4<T>>(columns * sizeof(T));
 			sort(row_data_ptr, row_data_ptr + count, comp);
@@ -1105,7 +1110,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	case 5: {
 		auto row_data_ptr = (NormalizedRowOrderEntry5<T> *)row_data;
 		if (method == "pdq_static") {
-			sort(row_data_ptr, row_data_ptr + count);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry5<T>>(columns * sizeof(T));
 			sort(row_data_ptr, row_data_ptr + count, comp);
@@ -1115,7 +1120,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	case 6: {
 		auto row_data_ptr = (NormalizedRowOrderEntry6<T> *)row_data;
 		if (method == "pdq_static") {
-			sort(row_data_ptr, row_data_ptr + count);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry6<T>>(columns * sizeof(T));
 			sort(row_data_ptr, row_data_ptr + count, comp);
@@ -1125,7 +1130,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	case 7: {
 		auto row_data_ptr = (NormalizedRowOrderEntry7<T> *)row_data;
 		if (method == "pdq_static") {
-			sort(row_data_ptr, row_data_ptr + count);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry7<T>>(columns * sizeof(T));
 			sort(row_data_ptr, row_data_ptr + count, comp);
@@ -1135,7 +1140,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	case 8: {
 		auto row_data_ptr = (NormalizedRowOrderEntry8<T> *)row_data;
 		if (method == "pdq_static") {
-			sort(row_data_ptr, row_data_ptr + count);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry8<T>>(columns * sizeof(T));
 			sort(row_data_ptr, row_data_ptr + count, comp);
