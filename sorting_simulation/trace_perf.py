@@ -54,7 +54,6 @@ def main():
                 create_csv_header(f)
                 for category in categories:
                     args = f' {sim} {category} {count} {columns} {dist}'
-                    print(args)
                     trace(args)
                     append_run(category, count, columns, dist, f)
 
