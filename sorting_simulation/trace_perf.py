@@ -12,7 +12,7 @@ EXPORT_CMD = 'perf script -F time,event > perf.export'
 
 
 def create_csv_header(csv):
-    print("category,count,columns,time,event,count", file=csv)
+    print("category,count,columns,distribution,time,event,count", file=csv)
     csv.flush()
 
 
@@ -20,10 +20,10 @@ def trace(args):
     subprocess.run(RECORD_CMD + args, shell=True, capture_output=False)
 
 
-def append_run(category, count, columns, csv):
+def append_run(category, count, columns, distribution, csv):
     subprocess.run(EXPORT_CMD, shell=True, capture_output=True)
 
-    prefix = f'{category},{count},{columns}'
+    prefix = f'{category},{count},{columns},{distribution}'
     with open('perf.export', 'r') as f:
         for line in f.readlines():
             split_line = line.split(':')
@@ -46,14 +46,17 @@ def main():
         # ('reorder', rows, payload_cols, ['row', 'col']),
         # ('merge_payload', rows, payload_cols, ['row', 'col'])
     ]
+    distributions = ['powerlaw']  # 'random', 'uniqueN',
     for sim, count, columns, categories in configurations:
-        fname = f'results/perf_output/trace_{sim}.csv'
-        with open(fname, 'w+') as f:
-            create_csv_header(f)
-            for category in categories:
-                args = f' {sim} {category} {count} {columns}'
-                trace(args)
-                append_run(category, count, columns, f)
+        for dist in distributions:
+            fname = f'results/perf_output/trace_{sim}_{dist}.csv'
+            with open(fname, 'w+') as f:
+                create_csv_header(f)
+                for category in categories:
+                    args = f' {sim} {category} {count} {columns} {dist}'
+                    print(args)
+                    trace(args)
+                    append_run(category, count, columns, dist, f)
 
 
 if __name__ == '__main__':
