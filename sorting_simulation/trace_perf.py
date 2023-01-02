@@ -6,8 +6,8 @@ import re
 
 
 # In the report, each mention of either 'branch-misses' or 'L1-dcache-load-misses' means 10k more branch/l1-dcache misses at that timestamp
-INTERVAL = 10000
-RECORD_CMD = f'perf record -e branch-misses,L1-dcache-load-misses -c {INTERVAL} -ag -- ./simulation '
+INTERVAL = 20000
+RECORD_CMD = f'perf record -e branch-misses,L1-dcache-load-misses -c {INTERVAL} -- ./simulation '
 EXPORT_CMD = 'perf script -F time,event > perf.export'
 
 
@@ -39,8 +39,8 @@ def main():
     key_cols = 3
     payload_cols = 1 << 5
     configurations = [
-        ('comparator', rows, key_cols, [
-         'col_all', 'col_ss', 'col_branchless', 'row_all', 'row_all_branchless', 'row_iter', 'row_norm']),
+        # ('comparator', rows, key_cols, [
+        #  'col_all', 'col_ss', 'col_branchless', 'row_all', 'row_all_branchless', 'row_iter', 'row_norm']),
         ('sort', rows, key_cols, ['pdq_static', 'radix']),
         # ('merge_key', rows, key_cols, ['row_all', 'row_all_branchless', 'row_norm', 'col_branch', 'col_branchless']),
         # ('reorder', rows, payload_cols, ['row', 'col']),
