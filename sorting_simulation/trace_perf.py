@@ -46,7 +46,7 @@ def main():
         # ('reorder', rows, payload_cols, ['row', 'col']),
         # ('merge_payload', rows, payload_cols, ['row', 'col'])
     ]
-    distributions = ['powerlaw']  # 'random', 'uniqueN',
+    distributions = ['powerlaw', 'random', 'uniqueN']
     for sim, count, columns, categories in configurations:
         for dist in distributions:
             fname = f'results/perf_output/trace_{sim}_{dist}.csv'
