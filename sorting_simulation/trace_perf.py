@@ -5,12 +5,14 @@ import subprocess
 import re
 
 
-EXPORT_CMD = 'perf script --ns > perf.export'
-RECORD_CMD = 'perf record -e cache-misses,branch-misses -F 250 ./simulation '
+# In the report, each mention of either 'branch-misses' or 'L1-dcache-load-misses' means 10k more branch/l1-dcache misses at that timestamp
+INTERVAL = 10000
+RECORD_CMD = f'perf record -e branch-misses,L1-dcache-load-misses -c {INTERVAL} -ag -- ./simulation '
+EXPORT_CMD = 'perf script -F time,event > perf.export'
 
 
 def create_csv_header(csv):
-    print("category|count|columns|cmd|pid|time|counter|event", file=csv)
+    print("category,count,columns,time,event,count", file=csv)
     csv.flush()
 
 
@@ -21,10 +23,13 @@ def trace(args):
 def append_run(category, count, columns, csv):
     subprocess.run(EXPORT_CMD, shell=True, capture_output=True)
 
+    prefix = f'{category},{count},{columns}'
     with open('perf.export', 'r') as f:
-        export = '\n'.join([f'{category}|{count}|{columns}|' + '|'.join(re.split(' +', line)[1:6]) for line in f.readlines()])
+        for line in f.readlines():
+            split_line = line.split(':')
+            print(
+                f'{prefix},{split_line[0]},{split_line[1].strip(),{INTERVAL}}', file=csv)
 
-    print(export, file=csv)
     os.remove('perf.data')
     os.remove('perf.export')
 
@@ -34,11 +39,12 @@ def main():
     key_cols = 3
     payload_cols = 1 << 5
     configurations = [
-        #('comparator', rows, key_cols, ['col_all', 'col_ss', 'col_branchless', 'row_all', 'row_all_branchless', 'row_iter', 'row_norm']),
-        #('sort', rows, key_cols, ['pdq_static', 'radix']),
-        ('merge_key', rows, key_cols, ['row_all', 'row_all_branchless', 'row_norm', 'col_branch', 'col_branchless']),
-        #('reorder', rows, payload_cols, ['row', 'col']),
-        #('merge_payload', rows, payload_cols, ['row', 'col'])
+        ('comparator', rows, key_cols, [
+         'col_all', 'col_ss', 'col_branchless', 'row_all', 'row_all_branchless', 'row_iter', 'row_norm']),
+        ('sort', rows, key_cols, ['pdq_static', 'radix']),
+        # ('merge_key', rows, key_cols, ['row_all', 'row_all_branchless', 'row_norm', 'col_branch', 'col_branchless']),
+        # ('reorder', rows, payload_cols, ['row', 'col']),
+        # ('merge_payload', rows, payload_cols, ['row', 'col'])
     ]
     for sim, count, columns, categories in configurations:
         fname = f'results/perf_output/trace_{sim}.csv'
