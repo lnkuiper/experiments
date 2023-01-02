@@ -1,2 +1,3 @@
 trec-duckdb/db
 .ipynb_checkpoints
+.DS_Store
