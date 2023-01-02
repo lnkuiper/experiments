@@ -28,7 +28,7 @@ def append_run(category, count, columns, distribution, csv):
         for line in f.readlines():
             split_line = line.split(':')
             print(
-                f'{prefix},{split_line[0]},{split_line[1].strip(),{INTERVAL}}', file=csv)
+                f'{prefix},{split_line[0]},{split_line[1].strip()},{INTERVAL}', file=csv)
 
     os.remove('perf.data')
     os.remove('perf.export')
