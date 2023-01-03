@@ -1244,7 +1244,7 @@ public:
 		auto fptr = dlsym(nullptr, "CompareIntegersLT");
 		assert(fptr);
 		lt_comp = (comp_fun)fptr;
-		fptr = dlsym(handle, "CompareIntegersEQ");
+		fptr = dlsym(nullptr, "CompareIntegersEQ");
 		assert(fptr);
 		eq_comp = (comp_fun)fptr;
 	}
@@ -2913,7 +2913,7 @@ void Main(int argc, char *argv[]) {
 		const idx_t rep = 5;
 
 		SimulateComparator<T>(row, col, rep);
-		// SimulateSort<T>(row, col, rep);
+		SimulateSort<T>(row, col, rep);
 		// SimulateFastMemcpy();
 		// SimulateFastMemcmp();
 

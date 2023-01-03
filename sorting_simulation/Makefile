@@ -1,5 +1,5 @@
 build:
-	c++ -ldl -Wl --export-dynamic -std=c++20 -o simulation -O3 simulation.cpp
+	c++ -ldl -Wl,-export-dynamic -std=c++20 -o simulation -O3 simulation.cpp
 trace:
 	c++ -std=c++20 -o simulation -O3 -D TRACE simulation.cpp
 
