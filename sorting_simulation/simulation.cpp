@@ -37,10 +37,7 @@ typedef uint8_t data_t;
 typedef data_t *data_ptr_t;
 typedef uint64_t idx_t;
 
-// template <typename... Args>
-// void sort(Args &&...args) {
-// 	pdqsort_branchless(forward<Args>(args)...);
-// }
+#define GLOBAL_SORT sort
 
 //===--------------------------------------------------------------------===//
 // General
@@ -1095,7 +1092,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry1<T>>(columns * sizeof(T));
-			sort(row_data_ptr, row_data_ptr + count, comp);
+			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1105,7 +1102,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry2<T>>(columns * sizeof(T));
-			sort(row_data_ptr, row_data_ptr + count, comp);
+			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1115,7 +1112,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry3<T>>(columns * sizeof(T));
-			sort(row_data_ptr, row_data_ptr + count, comp);
+			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1125,7 +1122,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry4<T>>(columns * sizeof(T));
-			sort(row_data_ptr, row_data_ptr + count, comp);
+			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1135,7 +1132,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry5<T>>(columns * sizeof(T));
-			sort(row_data_ptr, row_data_ptr + count, comp);
+			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1145,7 +1142,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry6<T>>(columns * sizeof(T));
-			sort(row_data_ptr, row_data_ptr + count, comp);
+			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1155,7 +1152,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry7<T>>(columns * sizeof(T));
-			sort(row_data_ptr, row_data_ptr + count, comp);
+			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1165,7 +1162,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry8<T>>(columns * sizeof(T));
-			sort(row_data_ptr, row_data_ptr + count, comp);
+			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1179,42 +1176,42 @@ void SortRowBranched(data_ptr_t row_data, const idx_t &count, const idx_t &colum
 	switch (columns) {
 	case 1: {
 		auto row_data_ptr = (BranchedRowOrderEntry1<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 2: {
 		auto row_data_ptr = (BranchedRowOrderEntry2<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 3: {
 		auto row_data_ptr = (BranchedRowOrderEntry3<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 4: {
 		auto row_data_ptr = (BranchedRowOrderEntry4<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 5: {
 		auto row_data_ptr = (BranchedRowOrderEntry5<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 6: {
 		auto row_data_ptr = (BranchedRowOrderEntry6<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 7: {
 		auto row_data_ptr = (BranchedRowOrderEntry7<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 8: {
 		auto row_data_ptr = (BranchedRowOrderEntry8<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	default:
@@ -1254,49 +1251,49 @@ void SortRowBranchedDynamic(data_ptr_t row_data, const idx_t &count, const idx_t
 	case 1: {
 		auto row_data_ptr = (BranchedRowOrderEntry1<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry1<T>, T>(columns);
-		sort(row_data_ptr, row_data_ptr + count, comp);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 2: {
 		auto row_data_ptr = (BranchedRowOrderEntry2<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry2<T>, T>(columns);
-		sort(row_data_ptr, row_data_ptr + count, comp);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 3: {
 		auto row_data_ptr = (BranchedRowOrderEntry3<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry3<T>, T>(columns);
-		sort(row_data_ptr, row_data_ptr + count, comp);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 4: {
 		auto row_data_ptr = (BranchedRowOrderEntry4<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry4<T>, T>(columns);
-		sort(row_data_ptr, row_data_ptr + count, comp);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 5: {
 		auto row_data_ptr = (BranchedRowOrderEntry5<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry5<T>, T>(columns);
-		sort(row_data_ptr, row_data_ptr + count, comp);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 6: {
 		auto row_data_ptr = (BranchedRowOrderEntry6<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry6<T>, T>(columns);
-		sort(row_data_ptr, row_data_ptr + count, comp);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 7: {
 		auto row_data_ptr = (BranchedRowOrderEntry7<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry7<T>, T>(columns);
-		sort(row_data_ptr, row_data_ptr + count, comp);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	case 8: {
 		auto row_data_ptr = (BranchedRowOrderEntry8<T> *)row_data;
 		const auto comp = BranchedKeyComparatorDynamic<BranchedRowOrderEntry8<T>, T>(columns);
-		sort(row_data_ptr, row_data_ptr + count, comp);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
 		break;
 	}
 	default:
@@ -1309,42 +1306,42 @@ void SortRowBranchless(data_ptr_t row_data, const idx_t &count, const idx_t &col
 	switch (columns) {
 	case 1: {
 		auto row_data_ptr = (BranchlessRowOrderEntry1<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 2: {
 		auto row_data_ptr = (BranchlessRowOrderEntry2<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 3: {
 		auto row_data_ptr = (BranchlessRowOrderEntry3<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 4: {
 		auto row_data_ptr = (BranchlessRowOrderEntry4<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 5: {
 		auto row_data_ptr = (BranchlessRowOrderEntry5<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 6: {
 		auto row_data_ptr = (BranchlessRowOrderEntry6<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 7: {
 		auto row_data_ptr = (BranchlessRowOrderEntry7<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	case 8: {
 		auto row_data_ptr = (BranchlessRowOrderEntry8<T> *)row_data;
-		sort(row_data_ptr, row_data_ptr + count);
+		GLOBAL_SORT(row_data_ptr, row_data_ptr + count);
 		break;
 	}
 	default:
@@ -1388,14 +1385,14 @@ void SortColumn(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_t[]>> &
 	const idx_t num_cols = cols.size();
 	if (num_cols == 1) {
 		const auto &col = cols[0];
-		sort(row_ids, row_ids + count,
-		     [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
+		GLOBAL_SORT(row_ids, row_ids + count,
+		            [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
 	} else if (method == "col" || method == "col_all") {
-		sort(row_ids, row_ids + count, [&cols, &num_cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
+		GLOBAL_SORT(row_ids, row_ids + count, [&cols, &num_cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
 			return CompareColumnarBranch<T>(cols, cols, lhs, rhs, num_cols);
 		});
 	} else if (method == "col_branchless") {
-		sort(row_ids, row_ids + count, [&cols, &num_cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
+		GLOBAL_SORT(row_ids, row_ids + count, [&cols, &num_cols](const uint32_t &lhs, const uint32_t &rhs) -> bool {
 			return CompareColumnarBranchless<T>(cols, cols, lhs, rhs, num_cols);
 		});
 	} else {
@@ -1422,8 +1419,8 @@ void SortColumnSubsort(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_
 	}
 	if (cols.size() == 1) {
 		const auto &col = cols[0];
-		sort(row_ids, row_ids + count,
-		     [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
+		GLOBAL_SORT(row_ids, row_ids + count,
+		            [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
 		return;
 	}
 	unique_ptr<bool[]> ties_ptr;
@@ -1432,8 +1429,9 @@ void SortColumnSubsort(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_
 		const auto &col = cols[col_idx];
 		if (!ties) {
 			// This is the first sort
-			sort(row_ids, row_ids + count,
-			     [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
+			GLOBAL_SORT(row_ids, row_ids + count, [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool {
+				return col[lhs] < col[rhs];
+			});
 			// Initialize ties array
 			ties_ptr = unique_ptr<bool[]>(new bool[count]);
 			ties = ties_ptr.get();
@@ -1454,9 +1452,9 @@ void SortColumnSubsort(unique_ptr<data_t[]> &row_id_col, vector<unique_ptr<data_
 						break;
 					}
 				}
-				sort(row_ids + i, row_ids + j + 1, [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool {
-					return col[lhs] < col[rhs];
-				});
+				GLOBAL_SORT(
+				    row_ids + i, row_ids + j + 1,
+				    [&row_ids, &col](const uint32_t &lhs, const uint32_t &rhs) -> bool { return col[lhs] < col[rhs]; });
 				i = j;
 			}
 		}
@@ -1483,29 +1481,29 @@ template <class ROW, class T>
 void SortRowSubsortPDQ(ROW *row_data_ptr, const idx_t &count, const idx_t &col_idx) {
 	switch (col_idx) {
 	case 0:
-		return sort(row_data_ptr, row_data_ptr + count,
-		            [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col1 < rhs.col1; });
+		return GLOBAL_SORT(row_data_ptr, row_data_ptr + count,
+		                   [](const ROW &lhs, const ROW &rhs) -> bool { return lhs.col1 < rhs.col1; });
 	case 1:
-		return sort(row_data_ptr, row_data_ptr + count,
-		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 1) < *(&rhs.col1 + 1); });
+		return GLOBAL_SORT(row_data_ptr, row_data_ptr + count,
+		                   [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 1) < *(&rhs.col1 + 1); });
 	case 2:
-		return sort(row_data_ptr, row_data_ptr + count,
-		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 2) < *(&rhs.col1 + 2); });
+		return GLOBAL_SORT(row_data_ptr, row_data_ptr + count,
+		                   [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 2) < *(&rhs.col1 + 2); });
 	case 3:
-		return sort(row_data_ptr, row_data_ptr + count,
-		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 3) < *(&rhs.col1 + 3); });
+		return GLOBAL_SORT(row_data_ptr, row_data_ptr + count,
+		                   [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 3) < *(&rhs.col1 + 3); });
 	case 4:
-		return sort(row_data_ptr, row_data_ptr + count,
-		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 4) < *(&rhs.col1 + 4); });
+		return GLOBAL_SORT(row_data_ptr, row_data_ptr + count,
+		                   [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 4) < *(&rhs.col1 + 4); });
 	case 5:
-		return sort(row_data_ptr, row_data_ptr + count,
-		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 5) < *(&rhs.col1 + 5); });
+		return GLOBAL_SORT(row_data_ptr, row_data_ptr + count,
+		                   [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 5) < *(&rhs.col1 + 5); });
 	case 6:
-		return sort(row_data_ptr, row_data_ptr + count,
-		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 6) < *(&rhs.col1 + 6); });
+		return GLOBAL_SORT(row_data_ptr, row_data_ptr + count,
+		                   [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 6) < *(&rhs.col1 + 6); });
 	case 7:
-		return sort(row_data_ptr, row_data_ptr + count,
-		            [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 7) < *(&rhs.col1 + 7); });
+		return GLOBAL_SORT(row_data_ptr, row_data_ptr + count,
+		                   [](const ROW &lhs, const ROW &rhs) -> bool { return *(&lhs.col1 + 7) < *(&rhs.col1 + 7); });
 	default:
 		assert(false);
 	}
