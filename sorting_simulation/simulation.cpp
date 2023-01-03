@@ -1726,7 +1726,9 @@ void SimulateComparator(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateComparator" << endl;
 	ofstream results_file("results/comparator.csv", ios::trunc);
 	results_file << CreateComparatorCSVHeader() << endl;
-	const vector<string> distributions = {"random", "uniqueN", "powerlaw", "correlated"};
+	const vector<string> distributions = {"random",        "uniqueN",       "powerlaw",      "correlated0.1",
+	                                      "correlated0.2", "correlated0.3", "correlated0.4", "correlated0.5",
+	                                      "correlated0.6", "correlated0.7", "correlated0.8", "correlated0.9"};
 	for (idx_t r = 10; r < row_max; r += 2) {
 		for (idx_t c = 1; c < col_max + 1; c++) {
 			for (idx_t d = 0; d < distributions.size(); d++) {
@@ -1993,7 +1995,9 @@ void SimulateSort(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateSort" << endl;
 	ofstream results_file("results/sort.csv", ios::trunc);
 	results_file << CreateSortCSVHeader() << endl;
-	const vector<string> distributions = {"random", "uniqueN", "powerlaw", "correlated"};
+	const vector<string> distributions = {"random",        "uniqueN",       "powerlaw",      "correlated0.1",
+	                                      "correlated0.2", "correlated0.3", "correlated0.4", "correlated0.5",
+	                                      "correlated0.6", "correlated0.7", "correlated0.8", "correlated0.9"};
 	for (idx_t r = 10; r < row_max; r += 2) {
 		for (idx_t c = 1; c < col_max + 1; c++) {
 			for (idx_t d = 0; d < distributions.size(); d++) {
@@ -2895,7 +2899,7 @@ void Main(int argc, char *argv[]) {
 		const idx_t col = 4;
 		const idx_t rep = 5;
 
-		// SimulateComparator<T>(row, col, rep);
+		SimulateComparator<T>(row, col, rep);
 		SimulateSort<T>(row, col, rep);
 		// SimulateFastMemcpy();
 		// SimulateFastMemcmp();
