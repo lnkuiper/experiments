@@ -6,6 +6,7 @@
 #include <chrono>
 #include <compare>
 #include <cstring>
+#include <dlfcn.h>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -1221,10 +1222,19 @@ void SortRowBranched(data_ptr_t row_data, const idx_t &count, const idx_t &colum
 	}
 }
 
+bool CompareIntegers(const uint32_t &lhs, const uint32_t &rhs) {
+	return lhs < rhs;
+}
+
+typedef bool (*comp_fun)(const uint32_t &lhs, const uint32_t &rhs);
+
 template <class ROW, class T>
 struct BranchedKeyComparatorDynamic {
 public:
 	BranchedKeyComparatorDynamic(const idx_t &columns) : columns(columns) {
+		auto handle = dlopen("simulation", RTLD_LAZY);
+		auto fptr = dlsym(handle, "CompareIntegers");
+		comp = (comp_fun)fptr;
 	}
 
 	inline bool operator()(const ROW &lhs, const ROW &rhs) const {
@@ -1245,6 +1255,7 @@ public:
 
 private:
 	const idx_t columns;
+	comp_fun comp;
 };
 
 template <class T>
@@ -1705,7 +1716,7 @@ string SimulateComparator(idx_t count, idx_t columns, string distribution) {
 	result << SimulateRowComparator<T>(count, columns, "row_all", distribution) << endl;
 	result << SimulateRowComparator<T>(count, columns, "row_iter", distribution) << endl;
 	result << SimulateRowComparator<T>(count, columns, "row_all_dynamic", distribution) << endl;
-	// result << SimulateRowComparator<T>(count, columns, "row_norm") << endl;
+	result << SimulateRowComparator<T>(count, columns, "row_norm") << endl;
 	result << SimulateRowComparator<T>(count, columns, "row_all_branchless", distribution) << endl;
 	return result.str();
 }
