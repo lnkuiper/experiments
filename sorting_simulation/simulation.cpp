@@ -1239,9 +1239,9 @@ template <class ROW, class T>
 struct BranchedKeyComparatorDynamic {
 public:
 	BranchedKeyComparatorDynamic(const idx_t &columns) : columns(columns) {
-		auto handle = dlopen(nullptr, RTLD_LAZY);
-		assert(handle);
-		auto fptr = dlsym(handle, "CompareIntegersLT");
+		// auto handle = dlopen(nullptr, RTLD_LAZY);
+		// assert(handle);
+		auto fptr = dlsym(nullptr, "CompareIntegersLT");
 		assert(fptr);
 		lt_comp = (comp_fun)fptr;
 		fptr = dlsym(handle, "CompareIntegersEQ");
