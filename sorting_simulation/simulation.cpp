@@ -1240,9 +1240,12 @@ struct BranchedKeyComparatorDynamic {
 public:
 	BranchedKeyComparatorDynamic(const idx_t &columns) : columns(columns) {
 		auto handle = dlopen(nullptr, RTLD_LAZY);
+		assert(handle);
 		auto fptr = dlsym(handle, "CompareIntegersLT");
+		assert(fptr);
 		lt_comp = (comp_fun)fptr;
 		fptr = dlsym(handle, "CompareIntegersEQ");
+		assert(fptr);
 		eq_comp = (comp_fun)fptr;
 	}
 
