@@ -1,3 +1,4 @@
+#include "comparators.hpp"
 #include "fast_mem.hpp"
 #include "pdqsort.h"
 
@@ -1222,19 +1223,17 @@ void SortRowBranched(data_ptr_t row_data, const idx_t &count, const idx_t &colum
 	}
 }
 
-bool CompareIntegers(const uint32_t &lhs, const uint32_t &rhs) {
-	return lhs < rhs;
-}
-
 typedef bool (*comp_fun)(const uint32_t &lhs, const uint32_t &rhs);
 
 template <class ROW, class T>
 struct BranchedKeyComparatorDynamic {
 public:
 	BranchedKeyComparatorDynamic(const idx_t &columns) : columns(columns) {
-		auto handle = dlopen("simulation", RTLD_LAZY);
-		auto fptr = dlsym(handle, "CompareIntegers");
-		comp = (comp_fun)fptr;
+		auto handle = dlopen(nullptr, RTLD_LAZY);
+		auto fptr = dlsym(handle, "CompareIntegersLT");
+		lt_comp = (comp_fun)fptr;
+		fptr = dlsym(handle, "CompareIntegersEQ");
+		eq_comp = (comp_fun)fptr;
 	}
 
 	inline bool operator()(const ROW &lhs, const ROW &rhs) const {
@@ -1242,11 +1241,11 @@ public:
 		auto r_ptr = Ptr(rhs);
 		idx_t i;
 		for (i = 0; i < columns - 1; i++) {
-			if (l_ptr[i] != r_ptr[i]) {
+			if (!eq_comp(l_ptr[i], r_ptr[i])) {
 				break;
 			}
 		}
-		return l_ptr[i] < r_ptr[i];
+		return lt_comp(l_ptr[i], r_ptr[i]);
 	}
 
 	inline T *Ptr(const ROW &a) const {
@@ -1255,7 +1254,8 @@ public:
 
 private:
 	const idx_t columns;
-	comp_fun comp;
+	comp_fun lt_comp;
+	comp_fun eq_comp;
 };
 
 template <class T>
@@ -1716,7 +1716,7 @@ string SimulateComparator(idx_t count, idx_t columns, string distribution) {
 	result << SimulateRowComparator<T>(count, columns, "row_all", distribution) << endl;
 	result << SimulateRowComparator<T>(count, columns, "row_iter", distribution) << endl;
 	result << SimulateRowComparator<T>(count, columns, "row_all_dynamic", distribution) << endl;
-	result << SimulateRowComparator<T>(count, columns, "row_norm") << endl;
+	// result << SimulateRowComparator<T>(count, columns, "row_norm", distribution) << endl;
 	result << SimulateRowComparator<T>(count, columns, "row_all_branchless", distribution) << endl;
 	return result.str();
 }
@@ -1726,11 +1726,10 @@ void SimulateComparator(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateComparator" << endl;
 	ofstream results_file("results/comparator.csv", ios::trunc);
 	results_file << CreateComparatorCSVHeader() << endl;
-	const vector<string> distributions = {"random",        "uniqueN",       "powerlaw",      "correlated0.1",
-	                                      "correlated0.2", "correlated0.3", "correlated0.4", "correlated0.5",
-	                                      "correlated0.6", "correlated0.7", "correlated0.8", "correlated0.9"};
+	const vector<string> distributions = {"random",        "powerlaw",      "correlated0.1", "correlated0.3",
+	                                      "correlated0.5", "correlated0.7", "correlated0.9"};
 	for (idx_t r = 10; r < row_max; r += 2) {
-		for (idx_t c = 1; c < col_max + 1; c++) {
+		for (idx_t c = 1; c < col_max + 1; c *= 2) {
 			for (idx_t d = 0; d < distributions.size(); d++) {
 				for (idx_t i = 0; i < iterations; i++) {
 					results_file << SimulateComparator<T>(1 << r, c, distributions[d]);
@@ -1995,11 +1994,10 @@ void SimulateSort(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateSort" << endl;
 	ofstream results_file("results/sort.csv", ios::trunc);
 	results_file << CreateSortCSVHeader() << endl;
-	const vector<string> distributions = {"random",        "uniqueN",       "powerlaw",      "correlated0.1",
-	                                      "correlated0.2", "correlated0.3", "correlated0.4", "correlated0.5",
-	                                      "correlated0.6", "correlated0.7", "correlated0.8", "correlated0.9"};
+	const vector<string> distributions = {"random",        "powerlaw",      "correlated0.1", "correlated0.3",
+	                                      "correlated0.5", "correlated0.7", "correlated0.9"};
 	for (idx_t r = 10; r < row_max; r += 2) {
-		for (idx_t c = 1; c < col_max + 1; c++) {
+		for (idx_t c = 1; c < col_max + 1; c *= 2) {
 			for (idx_t d = 0; d < distributions.size(); d++) {
 				for (idx_t i = 0; i < iterations; i++) {
 					results_file << SimulateSort<T>(1 << r, c, distributions[d]);
@@ -2895,12 +2893,12 @@ void Main(int argc, char *argv[]) {
 	if (argc == 1) {
 		// VerifyReOrder();
 		// VerifySort();
-		const idx_t row = 25;
+		const idx_t row = 21;
 		const idx_t col = 4;
 		const idx_t rep = 5;
 
 		SimulateComparator<T>(row, col, rep);
-		SimulateSort<T>(row, col, rep);
+		// SimulateSort<T>(row, col, rep);
 		// SimulateFastMemcpy();
 		// SimulateFastMemcmp();
 
