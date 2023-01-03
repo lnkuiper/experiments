@@ -1,4 +1,3 @@
-#include "comparators.hpp"
 #include "fast_mem.hpp"
 #include "pdqsort.h"
 
@@ -1221,6 +1220,17 @@ void SortRowBranched(data_ptr_t row_data, const idx_t &count, const idx_t &colum
 	default:
 		assert(false);
 	}
+}
+
+extern "C" {
+
+bool CompareIntegersLT(const uint32_t &lhs, const uint32_t &rhs) {
+	return lhs < rhs;
+}
+
+bool CompareIntegersEQ(const uint32_t &lhs, const uint32_t &rhs) {
+	return lhs == rhs;
+}
 }
 
 typedef bool (*comp_fun)(const uint32_t &lhs, const uint32_t &rhs);
@@ -2890,10 +2900,12 @@ void ParseArgs(int argc, char *argv[]) {
 
 template <class T>
 void Main(int argc, char *argv[]) {
+	assert(CompareIntegersEQ(5, 5));
+	assert(CompareIntegersLT(4, 5));
 	if (argc == 1) {
 		// VerifyReOrder();
 		// VerifySort();
-		const idx_t row = 21;
+		const idx_t row = 25;
 		const idx_t col = 4;
 		const idx_t rep = 5;
 
