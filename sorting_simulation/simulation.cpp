@@ -144,7 +144,9 @@ void FillColumns(vector<unique_ptr<data_t[]>> &columns, const idx_t &count, stri
 			for (idx_t i = 0; i < count; i++) {
 				col_ptr[i] = candidate_vals[GetRandomIndex(unique_vals, dist_power)];
 			}
-		} else if (datagen == "correlated") {
+		} else if (datagen.rfind("correlated", 0) == 0) {
+			const double probability = stod(datagen.c_str() + 10);
+
 			const double min = numeric_limits<T>::min();
 			const double max = numeric_limits<T>::max();
 
@@ -160,7 +162,7 @@ void FillColumns(vector<unique_ptr<data_t[]>> &columns, const idx_t &count, stri
 			// Generate data
 			for (idx_t i = 0; i < count; i++) {
 				double r = RandU();
-				if (column == 0 || r < 0.5) {
+				if (column == 0 || r < probability) {
 					col_ptr[i] = candidate_vals[i % unique_vals];
 				} else {
 					col_ptr[i] = candidate_vals[GetRandomIndex(unique_vals, 0)];
