@@ -1713,7 +1713,7 @@ void SimulateComparator(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateComparator" << endl;
 	ofstream results_file("results/comparator.csv", ios::trunc);
 	results_file << CreateComparatorCSVHeader() << endl;
-	const vector<string> distributions = {"random", "uniqueN", "powerlaw"};
+	const vector<string> distributions = {"random", "uniqueN", "powerlaw", "correlated"};
 	for (idx_t r = 10; r < row_max; r += 2) {
 		for (idx_t c = 1; c < col_max + 1; c++) {
 			for (idx_t d = 0; d < distributions.size(); d++) {
@@ -1980,7 +1980,7 @@ void SimulateSort(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateSort" << endl;
 	ofstream results_file("results/sort.csv", ios::trunc);
 	results_file << CreateSortCSVHeader() << endl;
-	const vector<string> distributions = {"random", "uniqueN", "powerlaw"};
+	const vector<string> distributions = {"random", "uniqueN", "powerlaw", "correlated"};
 	for (idx_t r = 10; r < row_max; r += 2) {
 		for (idx_t c = 1; c < col_max + 1; c++) {
 			for (idx_t d = 0; d < distributions.size(); d++) {
