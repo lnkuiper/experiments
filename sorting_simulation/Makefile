@@ -1,7 +1,7 @@
 build:
-	c++ -ldl -Wl,-export-dynamic -std=c++20 -o simulation -O3 simulation.cpp
+	c++ -Wl,-export-dynamic -ldl -std=c++20 -o simulation -O3 simulation.cpp
 trace:
-	c++ -std=c++20 -o simulation -O3 -D TRACE simulation.cpp
+	c++ -Wl,-export-dynamic -ldl -std=c++20 -o simulation -O3 -D TRACE simulation.cpp
 
 debug:
 	c++ -std=c++20 -o simulation -g -fno-omit-frame-pointer -fsanitize=address simulation.cpp

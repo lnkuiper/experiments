@@ -46,7 +46,7 @@ def main():
         # ('reorder', rows, payload_cols, ['row', 'col']),
         # ('merge_payload', rows, payload_cols, ['row', 'col'])
     ]
-    distributions = ['random' 'correlated0.1',
+    distributions = ['random', 'correlated0.1',
                      'correlated0.5', 'correlated0.9']
     for sim, count, columns, categories in configurations:
         for dist in distributions:
