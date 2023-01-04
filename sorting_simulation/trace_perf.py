@@ -36,18 +36,18 @@ def append_run(category, count, columns, distribution, csv):
 
 def main():
     rows = 1 << 24
-    key_cols = 3
+    key_cols = 4
     payload_cols = 1 << 5
     configurations = [
-         ('comparator', rows, key_cols, [
-          'col_all', 'col_ss', 'col_branchless', 'row_all', 'row_all_branchless', 'row_iter', 'row_norm']),
-        #('sort', rows, key_cols, ['pdq_static', 'radix']),
+        ('comparator', rows, key_cols, [
+            'col_all', 'col_ss', 'col_branchless', 'row_all', 'row_all_branchless', 'row_iter', 'row_norm']),
+        # ('sort', rows, key_cols, ['pdq_static', 'radix']),
         # ('merge_key', rows, key_cols, ['row_all', 'row_all_branchless', 'row_norm', 'col_branch', 'col_branchless']),
         # ('reorder', rows, payload_cols, ['row', 'col']),
         # ('merge_payload', rows, payload_cols, ['row', 'col'])
     ]
-    distributions = ['powerlaw', 'random', 'uniqueN', 'correlated0.1', 'correlated0.2', 'correlated0.3',
-                     'correlated0.4', 'correlated0.5', 'correlated0.6', 'correlated0.7', 'correlated0.8', 'correlated0.9']
+    distributions = ['random' 'correlated0.1',
+                     'correlated0.5', 'correlated0.9']
     for sim, count, columns, categories in configurations:
         for dist in distributions:
             fname = f'results/perf_output/trace_{sim}_{dist}.csv'

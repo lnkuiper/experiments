@@ -1095,7 +1095,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry1<T>>(columns * sizeof(T));
-			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1105,7 +1105,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry2<T>>(columns * sizeof(T));
-			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1115,7 +1115,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry3<T>>(columns * sizeof(T));
-			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1125,7 +1125,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry4<T>>(columns * sizeof(T));
-			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1135,7 +1135,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry5<T>>(columns * sizeof(T));
-			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1145,7 +1145,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry6<T>>(columns * sizeof(T));
-			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1155,7 +1155,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry7<T>>(columns * sizeof(T));
-			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1165,7 +1165,7 @@ void SortRowNormalized(data_ptr_t row_data, const idx_t &count, const idx_t &col
 			pdqsort_branchless(row_data_ptr, row_data_ptr + count);
 		} else {
 			auto comp = NormalizedKeyComparator<NormalizedRowOrderEntry8<T>>(columns * sizeof(T));
-			GLOBAL_SORT(row_data_ptr, row_data_ptr + count, comp);
+			pdqsort_branchless(row_data_ptr, row_data_ptr + count, comp);
 		}
 		break;
 	}
@@ -1739,9 +1739,8 @@ void SimulateComparator(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateComparator" << endl;
 	ofstream results_file("results/comparator.csv", ios::trunc);
 	results_file << CreateComparatorCSVHeader() << endl;
-	const vector<string> distributions = {"random",        "powerlaw",      "correlated0.1", "correlated0.3",
-	                                      "correlated0.5", "correlated0.7", "correlated0.9"};
-	for (idx_t r = 10; r < row_max; r += 2) {
+	const vector<string> distributions = {"random", "powerlaw", "correlated0.1", "correlated0.5", "correlated0.9"};
+	for (idx_t r = 12; r < row_max; r += 4) {
 		for (idx_t c = 1; c < col_max + 1; c *= 2) {
 			for (idx_t d = 0; d < distributions.size(); d++) {
 				for (idx_t i = 0; i < iterations; i++) {
@@ -2007,9 +2006,8 @@ void SimulateSort(idx_t row_max, idx_t col_max, idx_t iterations) {
 	cout << "SimulateSort" << endl;
 	ofstream results_file("results/sort.csv", ios::trunc);
 	results_file << CreateSortCSVHeader() << endl;
-	const vector<string> distributions = {"random",        "powerlaw",      "correlated0.1", "correlated0.3",
-	                                      "correlated0.5", "correlated0.7", "correlated0.9"};
-	for (idx_t r = 10; r < row_max; r += 2) {
+	const vector<string> distributions = {"random", "powerlaw", "correlated0.1", "correlated0.5", "correlated0.9"};
+	for (idx_t r = 12; r < row_max; r += 4) {
 		for (idx_t c = 1; c < col_max + 1; c *= 2) {
 			for (idx_t d = 0; d < distributions.size(); d++) {
 				for (idx_t i = 0; i < iterations; i++) {
