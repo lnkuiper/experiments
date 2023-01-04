@@ -41,7 +41,7 @@ def main():
     configurations = [
         ('comparator', rows, key_cols, [
             'col_all', 'col_ss', 'col_branchless', 'row_all', 'row_all_branchless', 'row_iter', 'row_norm']),
-        # ('sort', rows, key_cols, ['pdq_static', 'radix']),
+        ('sort', rows, key_cols, ['pdq_static', 'pdq_dynamic', 'radix']),
         # ('merge_key', rows, key_cols, ['row_all', 'row_all_branchless', 'row_norm', 'col_branch', 'col_branchless']),
         # ('reorder', rows, payload_cols, ['row', 'col']),
         # ('merge_payload', rows, payload_cols, ['row', 'col'])
