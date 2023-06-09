@@ -1,15 +1,16 @@
-import duckdb
 import lorem
 import math
 import numpy as np
 import os
 import pandas as pd
 import random
+import sys
+import tqdm
 
 
-DATA_DIR = 'data'
-SOURCE_DATA_DIR = f'{DATA_DIR}/source'    
-GROUPS_DATA_DIR = f'{DATA_DIR}/groups'
+SCRIPTS_DIR = os.path.dirname(__file__)
+sys.path.append(f'{SCRIPTS_DIR}/..')
+from benchmark.util.util import *
 
 
 def create_distinct_string_data(con, name, min_strlen, max_strlen, count):
@@ -76,8 +77,10 @@ def generate_source_data():
         ('huge', 32, 63, int(1e6)),
     ]
 
-    for param in string_params:
+    print('Generating string data ...')
+    for param in tqdm.tqdm(string_params):
         create_distinct_string_data(con, *param)
+    print('Done.')
 
     integral_params = [
         ('tinyint', 100),
@@ -86,8 +89,10 @@ def generate_source_data():
         ('bigint', int(1e8)),
     ]
 
-    for param in integral_params:
+    print('Generating integral data ...')
+    for param in tqdm.tqdm(integral_params):
         create_distinct_integral_data(con, *param)
+    print('Done.')
 
 
 def generate_unique_groups(group_cols, group_count):
@@ -158,33 +163,17 @@ def generate_group_data():
         os.mkdir(GROUPS_DATA_DIR)
 
     con = duckdb.connect()
+    config = load_config(con)
+    configs = permute_dicts(config)
 
-    total_count = int(1e8)
-    for type_ in ['integer', 'bigint']:
-        type_dir_name = GROUPS_DATA_DIR + '/' + type_
-        if not os.path.exists(type_dir_name):
-            os.mkdir(type_dir_name)
-            
-        for column_count in [1, 2, 4, 8, 16]:
-            column_dir_name = type_dir_name + f'/columns={column_count}'
-            if not os.path.exists(column_dir_name):
-                os.mkdir(column_dir_name)
-                
-            group_cols = [(type_, 0) for _ in range(column_count)]
-            
-            for power in [1, 5, 10, 15, 20]:
-                power_dir_name = column_dir_name + f'/power={power}'
-                if not os.path.exists(power_dir_name):
-                    os.mkdir(power_dir_name)
-                
-                # From 1k to 100M groups
-                for gce in range(3, 9):
-                    group_count = 10 ** gce
-                    file_name = power_dir_name + f'/{group_count}.csv'
-                    if os.path.exists(file_name):
-                        continue
-                    
-                    generate_dataset(con, file_name, group_cols, group_count, total_count, power, False)
+    print('Generating group data ...')
+    for c in tqdm.tqdm(configs):
+        name = conf_to_str(c)
+        file_name = f'{GROUPS_DATA_DIR}/{name}.csv'
+        if not os.path.exists(file_name):
+            group_cols = [(c['type'], 0) for _ in range(c['column_count'])]
+            generate_dataset(con, file_name, group_cols, c['group_count'], c['total_count'], c['power'], False)
+    print('Done.')
 
 
 def main():
