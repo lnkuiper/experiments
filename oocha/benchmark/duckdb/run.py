@@ -21,7 +21,8 @@ def run_query(con, config, threads):
 def insert_result(con, config, threads, time):
 	con.execute(f"""
 		INSERT INTO {RESULTS_TABLE_NAME} VALUES
-		({config['total_count']}, '{config['type']}', {config['column_count']}, {config['power']}, {config['group_count']}, {threads}, {time})
+		({config['total_count']}, '{config['type']}', {config['column_count']}, {config['power']}, {config['group_count']}, {threads}, {time});
+		CHECKPOINT;
 	""")
 
 
