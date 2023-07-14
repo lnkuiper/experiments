@@ -27,7 +27,7 @@ def insert_result(con, config, threads, time):
 
 
 def benchmark_groups(results_con, benchmark_con, config):
-    for threads in [1, 2, 4, 8]:
+    for threads in [5, 10, 20, 40]:
     	repetitions = get_repetition_count(results_con, config, threads)
     	for _ in range(repetitions):
     		time = run_query(benchmark_con, config, threads)
