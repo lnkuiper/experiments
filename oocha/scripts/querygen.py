@@ -52,7 +52,7 @@ ALL_COLUMNS = [
 def generate_query(grouping, wide):
     selected_columns = ALL_COLUMNS if wide else grouping
     subquery = f"""SELECT DISTINCT ON ({', '.join(grouping)}) {', '.join(selected_columns)} FROM lineitem"""
-    return f"""SELECT {', '.join([f'count({c})' for c in selected_columns])} FROM ({subquery}) sq;\n"""
+    return f"""SELECT {', '.join([f'count({c})' for c in selected_columns])} FROM ({subquery}) sq\n"""
 
 
 def main():

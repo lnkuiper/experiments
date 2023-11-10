@@ -19,8 +19,14 @@ def generate_sf(sf):
     csv = get_csv_path(sf)
     if not os.path.exists(csv):
         con = duckdb.connect(TEMPORARY_DB)
+        
+        print(f'Generating SF{sf} ...')
         con.execute(f"""CALL dbgen(sf={sf});""")
+        print(f'Generating SF{sf} done.')
+        con.execute("""PRAGMA enable_progress_bar;""")
+        print(f'Copying SF{sf} to file ...')
         con.execute(f"""COPY lineitem TO '{DATA_DIR}/lineitem_sf{sf}.csv';""")
+        print(f'Copying SF{sf} to file done.')
         con.close()
 
         os.remove(TEMPORARY_DB)

@@ -18,19 +18,26 @@ RESULTS_DIR = f'{BASE_DIR}/results'
 REPETITIONS = 5
 RESULTS_TABLE_NAME = 'results'
 RESULTS_TABLE_COLS = [
+    'sf USMALLINT',
     'grouping VARCHAR',
     'wide BOOLEAN',
     'runtime DOUBLE'
 ]
 
-SCALE_FACTORS = [1] #, 10, 100]
+# up to sf128
+SCALE_FACTORS = [1 << i for i in range(2)]
 
 SCHEMA_DIR = f'{BASE_DIR}/schema'
 
 
-def get_schema():
-    with open(f'{SCHEMA_DIR}/schema.sql', 'r') as f:
-        return f.read()
+def get_schema(sf, clickhouse=False):
+    if clickhouse:
+        with open(f'{SCHEMA_DIR}/clickhouse_schema.sql', 'r') as f:
+            schema = f.read()
+    else:
+        with open(f'{SCHEMA_DIR}/schema.sql', 'r') as f:
+            schema = f.read()
+    return schema.replace('lineitem', f'lineitem{sf}')
 
 
 def get_csv_path(sf):
@@ -56,27 +63,29 @@ def get_results_con(name):
     return con
 
 
-def get_repetition_count(con, grouping, wide):
-    repetitions = con.execute(f"""SELECT count(*) FROM {RESULTS_TABLE_NAME} WHERE grouping = '{grouping}' AND wide = {wide};""").fetchall()[0][0]
+def get_repetition_count(con, sf, grouping, wide):
+    repetitions = con.execute(f"""SELECT count(*) FROM {RESULTS_TABLE_NAME} WHERE sf = {sf} AND grouping = '{grouping}' AND wide = {wide};""").fetchall()[0][0]
     return REPETITIONS - repetitions
 
 
-def insert_result(con, grouping, wide, runtime):
-    con.execute(f"""INSERT INTO {RESULTS_TABLE_NAME} VALUES ('{grouping}', {wide}, {runtime});""")
+def insert_result(con, sf, grouping, wide, runtime):
+    con.execute(f"""INSERT INTO {RESULTS_TABLE_NAME} VALUES ({sf}, '{grouping}', {wide}, {runtime});""")
 
 
-def run_query(con, grouping, wide, query, fun, *args):
-    repetitions = get_repetition_count(con, grouping, wide)
+def run_query(con, sf, grouping, wide, query, fun, *args):
+    repetitions = get_repetition_count(con, sf, grouping, wide)
     for _ in range(repetitions):
         before = time.time()
         fun(query, *args)
         runtime = time.time() - before
-        insert_result(con, grouping, wide, runtime)
+        insert_result(con, sf, grouping, wide, runtime)
 
 
-def run_benchmark(name, fun, *args):
+def run_benchmark(name, sf, fun, *args):
+    print(f'Running {name} SF{sf} ...')
     con = get_results_con(name)
     queries = get_queries()
     for grouping, wide, query in tqdm.tqdm(queries):
-        run_query(con, grouping, wide, query, fun, *args)
+        run_query(con, sf, grouping, wide, query.replace('lineitem', f'lineitem{sf}'), fun, *args)
     con.close()
+    print(f'Running {name} SF{sf} done.')
