@@ -8,25 +8,17 @@ from util.util import *
 
 
 def main():
-    con = duckdb.connect(f'{SYSTEM_DIR}/data.db')
+    for sf in SCALE_FACTORS:
+        print(f'Loading SF{sf} into DuckDB ...')
+        con = duckdb.connect(f'{SYSTEM_DIR}/sf{sf}.db')
+        con.execute(get_schema())
 
-    config = load_config(con)
-    configs = permute_dicts(config)
-
-    print('Ingesting group data into DuckDB ...')
-    for c in tqdm.tqdm(configs):
-        name = conf_to_str(c)
-        file_name = f'{GROUPS_DATA_DIR}/{name}.csv'
-
-        con.execute(f"SELECT count(*) FROM information_schema.tables WHERE table_name = '{name}'")
-        if con.fetchall()[0][0] == 0:
-            con.execute(f"""
-                START TRANSACTION;
-                CREATE TABLE "{name}" ({', '.join([f'c{cc} {c["type"]}' for cc in range(c['column_count'])])});
-                COPY "{name}" FROM '{file_name}';
-                COMMIT;
-                """)
-    print('Done.')
+        if con.execute("""SELECT count(*) FROM lineitem;""").fetchall()[0][0] == 0:
+            con.execute("""PRAGMA enable_progress_bar;""")
+            con.execute(f"""COPY lineitem FROM '{get_csv_path(sf)}' (HEADER TRUE);""")
+            
+        con.close()
+        print('Done.')
 
 
 if __name__ == '__main__':

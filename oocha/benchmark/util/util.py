@@ -5,65 +5,78 @@ import time
 import tqdm
 
 
-BASE_DIR = os.path.dirname(__file__) + '/../..'
+BASE_DIR = f'{os.path.dirname(__file__)}/../..'
+
+QUERIES_DIR = f'{BASE_DIR}/queries'
+THIN_QUERIES_DIR = f'{QUERIES_DIR}/thin'
+WIDE_QUERIES_DIR = f'{QUERIES_DIR}/wide'
+
 DATA_DIR = f'{BASE_DIR}/data'
-SOURCE_DATA_DIR = f'{DATA_DIR}/source'
-GROUPS_DATA_DIR = f'{DATA_DIR}/groups'
+
 RESULTS_DIR = f'{BASE_DIR}/results'
 
 REPETITIONS = 5
 RESULTS_TABLE_NAME = 'results'
 RESULTS_TABLE_COLS = [
-    'total_count UBIGINT',
-    'type VARCHAR',
-    'column_count USMALLINT',
-    'power USMALLINT',
-    'group_count UBIGINT',
-    'threads USMALLINT',
-    'time DOUBLE'
+    'grouping VARCHAR',
+    'wide BOOLEAN',
+    'runtime DOUBLE'
 ]
 
+SCALE_FACTORS = [1] #, 10, 100]
 
-def load_config(con):
-    return con.execute(f"SELECT config FROM '{BASE_DIR}/config.json' AS config").fetchall()[0][0]
-
-
-def permute_dicts_internal(config, dicts, key):
-    result = []
-    for val in config[key]:
-        for d in dicts:
-            d_copy = copy.deepcopy(d)
-            d_copy[key] = val
-            result.append(d_copy)
-    return result
+SCHEMA_DIR = f'{BASE_DIR}/schema'
 
 
-def permute_dicts(config):
-    configs = [{}]
-    for key in config:
-        configs = permute_dicts_internal(config, configs, key)
-    return configs
+def get_schema():
+    with open(f'{SCHEMA_DIR}/schema.sql', 'r') as f:
+        return f.read()
 
 
-def conf_to_str(conf):
-    return str(conf).replace(' ','').replace("'", '`')
+def get_csv_path(sf):
+    return f'{DATA_DIR}/lineitem_sf{sf}.csv'
 
 
-def get_repetition_count(con, config, threads):
-    repetitions = con.execute(f"""
-        SELECT count(*)
-        FROM {RESULTS_TABLE_NAME}
-        WHERE total_count = {config['total_count']}
-          AND type = '{config['type']}'
-          AND column_count = {config['column_count']}
-          AND power = {config['power']}
-          AND group_count = {config['group_count']}
-          AND threads = {threads}
-    """).fetchall()[0][0]
-    return REPETITIONS - repetitions
+def get_queries():
+    queries = []
+    for wide in [True, False]:
+        source_dir = WIDE_QUERIES_DIR if wide else THIN_QUERIES_DIR
+        for file_name in os.listdir(source_dir):
+            file_path = f'{THIN_QUERIES_DIR}/{file_name}'
+            with open(file_path, 'r') as f:
+                queries.append((file_name.split('.')[0], wide, f.read()))
+    return queries
 
 
 def get_results_con(name):
     if not os.path.exists(RESULTS_DIR):
         os.mkdir(RESULTS_DIR)
-    return duckdb.connect(f'{RESULTS_DIR}/{name}.db')
+    con = duckdb.connect(f'{RESULTS_DIR}/{name}.db')
+    con.execute(f"""CREATE TABLE IF NOT EXISTS {RESULTS_TABLE_NAME} ({', '.join(RESULTS_TABLE_COLS)});""")
+    return con
+
+
+def get_repetition_count(con, grouping, wide):
+    repetitions = con.execute(f"""SELECT count(*) FROM {RESULTS_TABLE_NAME} WHERE grouping = '{grouping}' AND wide = {wide};""").fetchall()[0][0]
+    return REPETITIONS - repetitions
+
+
+def insert_result(con, grouping, wide, runtime):
+    con.execute(f"""INSERT INTO {RESULTS_TABLE_NAME} VALUES ('{grouping}', {wide}, {runtime});""")
+
+
+def run_query(con, grouping, wide, query, fun, *args):
+    repetitions = get_repetition_count(con, grouping, wide)
+    for _ in range(repetitions):
+        before = time.time()
+        fun(query, *args)
+        runtime = time.time() - before
+        insert_result(con, grouping, wide, runtime)
+
+
+def run_benchmark(name, fun, *args):
+    con = get_results_con(name)
+    queries = get_queries()
+    for grouping, wide, query in tqdm.tqdm(queries):
+        run_query(con, grouping, wide, query, fun, *args)
+    con.close()
