@@ -49,7 +49,7 @@ def get_queries():
     for wide in [True, False]:
         source_dir = WIDE_QUERIES_DIR if wide else THIN_QUERIES_DIR
         for file_name in os.listdir(source_dir):
-            file_path = f'{THIN_QUERIES_DIR}/{file_name}'
+            file_path = f'{source_dir}/{file_name}'
             with open(file_path, 'r') as f:
                 queries.append((file_name.split('.')[0], wide, f.read()))
     return queries
@@ -81,11 +81,12 @@ def run_query(con, sf, grouping, wide, query, fun, *args):
         insert_result(con, sf, grouping, wide, runtime)
 
 
-def run_benchmark(name, sf, fun, *args):
-    print(f'Running {name} SF{sf} ...')
-    con = get_results_con(name)
-    queries = get_queries()
-    for grouping, wide, query in tqdm.tqdm(queries):
-        run_query(con, sf, grouping, wide, query.replace('lineitem', f'lineitem{sf}'), fun, *args)
-    con.close()
-    print(f'Running {name} SF{sf} done.')
+def run_benchmark(name, fun, *args):
+    for sf in SCALE_FACTORS:
+        print(f'Running {name} SF{sf} ...')
+        con = get_results_con(name)
+        queries = get_queries()
+        for grouping, wide, query in tqdm.tqdm(queries):
+            run_query(con, sf, grouping, wide, query.replace('lineitem', f'lineitem{sf}'), fun, *args)
+        con.close()
+        print(f'Running {name} SF{sf} done.')

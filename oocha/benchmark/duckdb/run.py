@@ -13,8 +13,7 @@ def run_query(query, con):
 
 def main():
     con = duckdb.connect(f'{SYSTEM_DIR}/data.db', read_only=True)
-    for sf in SCALE_FACTORS:
-        run_benchmark('duckdb', sf, run_query, con)
+    run_benchmark('duckdb', run_query, con)
 
 
 if __name__ == '__main__':
