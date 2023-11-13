@@ -10,7 +10,6 @@ from benchmark.util.util import *
 
 GROUPINGS = [
     ['l_returnflag', 'l_linestatus'], # 4 rows
-    ['l_shipinstruct'], # 4 rows
     ['l_shipmode'], # 7 rows
     ['l_suppkey'], # 0.17%
     ['l_suppkey', 'l_returnflag', 'l_linestatus'], # 0.66%
@@ -43,16 +42,15 @@ ALL_COLUMNS = [
     'l_shipdate',
     'l_commitdate',
     'l_receiptdate',
-    'l_shipinstruct',
+    # 'l_shipinstruct',
     'l_shipmode',
-    'l_comment'
+    # 'l_comment'
 ]
 
 
 def generate_query(grouping, wide):
     selected_columns = ALL_COLUMNS if wide else grouping
-    subquery = f"""SELECT DISTINCT ON ({', '.join(grouping)}) {', '.join(selected_columns)} FROM lineitem"""
-    return f"""SELECT {', '.join([f'count({c})' for c in selected_columns])} FROM ({subquery}) sq\n"""
+    return f"""SELECT {', '.join(grouping)}{', ' if wide else ''}{', '.join([f'any_value({c}) AS {c}' for c in selected_columns if c not in grouping])} FROM lineitem GROUP BY {', '.join(grouping)} OFFSET offset\n"""
 
 
 def main():
