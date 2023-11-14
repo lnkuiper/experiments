@@ -1,7 +1,7 @@
 import os
 import sys
-import clickhouse_connect
 import subprocess
+from databend_py import Client
 
 
 SYSTEM_DIR = os.path.dirname(__file__)
@@ -10,19 +10,22 @@ from util.util import *
 
 
 def run_query(query, client):
-    return client.query(query).result_rows
+    _, results = client.execute(query)
+    return results
 
 
 def main():
-    server = subprocess.Popen(f'{SYSTEM_DIR}/clickhouse/clickhouse server'.split(' '))
+    meta_server = subprocess.Popen(f'{SYSTEM_DIR}/databend/bin/databend-meta --single'.split(' '))
+    query_server = subprocess.Popen(f'{SYSTEM_DIR}/databend/bin/databend-meta --single'.split(' '))
     time.sleep(10)
     try:
-        client = clickhouse_connect.get_client()
-        run_benchmark('clickhouse', run_query, client)
+        client = Client(database='default', host='localhost', port=8124, user='root', password='root', secure=False)
+        run_benchmark('databend', run_query, client)
     except Exception as e:
         my_exception = e
     finally:
-        server.terminate()
+        query_server.terminate()
+        meta_server.terminate()
     raise my_exception
 
 

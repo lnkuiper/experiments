@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+from databend_py import Client
 
 
 SYSTEM_DIR = os.path.dirname(__file__)
@@ -13,13 +14,14 @@ def main():
     query_server = subprocess.Popen(f'{SYSTEM_DIR}/databend/bin/databend-meta --single'.split(' '))
     time.sleep(10)
     try:
-        client = clickhouse_connect.get_client()
+        client = Client(database='default', host='localhost', port=8124, user='root', password='root', secure=False)
         for sf in SCALE_FACTORS:
-            client.query(get_schema(sf))
-            if client.query(f"""SELECT count(*) FROM lineitem{sf}""").result_rows[0][0] == 0:
-                print(f'Loading clickhouse SF{sf} ...')
-                insert_file(client, f'lineitem{sf}', get_csv_path(sf))
-                print(f'Loading clickhouse SF{sf} done.')
+            client.execute(f"""{get_schema(sf)}""")
+            _, results = client.execute(f"""SELECT count(*) FROM lineitem{sf}""")
+            if results[0][0] == 0:
+                print(f'Loading databend SF{sf} ...')
+                client.execute(f"""COPY INTO lineitem{sf} FROM '{get_csv_path(sf)}'""")
+                print(f'Loading databend SF{sf} done.')
     except Exception as e:
         my_exception = e
     finally:
