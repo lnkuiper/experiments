@@ -1,6 +1,7 @@
 import os
 import sys
 import psycopg2
+import subprocess
 
 
 SYSTEM_DIR = os.path.dirname(__file__)
@@ -14,10 +15,17 @@ def run_query(query, cur):
 
 
 def main():
-    con = psycopg2.connect(database="mydb", host="localhost", user="postgres", password="mysecretpassword", port=5432)
-    cur = con.cursor()
-    run_benchmark('umbra', run_query, cur)
-
+    server = subprocess.Popen(f'/umbra/bin/server --address 0.0.0.0 {db_path}'.split(' '))
+    time.sleep(10)
+    try:
+        con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5432)
+        cur = con.cursor()
+        run_benchmark('umbra', run_query, cur)
+    except Exception as e:
+        my_exception = e
+    finally:
+        server.terminate()
+    raise my_exception
 
 if __name__ == '__main__':
     main()
