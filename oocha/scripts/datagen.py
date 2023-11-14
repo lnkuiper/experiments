@@ -24,6 +24,8 @@ def generate_sf(sf):
         con.execute(f"""CALL dbgen(sf={sf});""")
         print(f'Generating SF{sf} done.')
         con.execute("""PRAGMA enable_progress_bar;""")
+        con.execute("""PRAGMA memory_limit='2GB';""")
+        con.execute("""SET preserve_insertion_order=false""")
         print(f'Copying SF{sf} to file ...')
         con.execute(f"""COPY lineitem TO '{DATA_DIR}/lineitem_sf{sf}.csv';""")
         print(f'Copying SF{sf} to file done.')

@@ -1,6 +1,7 @@
 import os
 import sys
 import clickhouse_connect
+import subprocess
 
 
 SYSTEM_DIR = os.path.dirname(__file__)
@@ -13,8 +14,16 @@ def run_query(query, client):
 
 
 def main():
-    client = clickhouse_connect.get_client()
-    run_benchmark('clickhouse', run_query, client)
+    server = subprocess.Popen(f'{SYSTEM_DIR}/clickhouse/clickhouse server'.split(' '))
+    time.sleep(10)
+    try:
+        client = clickhouse_connect.get_client()
+        run_benchmark('clickhouse', run_query, client)
+    except Exception as e:
+        my_exception = e
+    finally:
+        server.terminate()
+    raise my_exception
 
 
 if __name__ == '__main__':

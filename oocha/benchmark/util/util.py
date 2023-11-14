@@ -24,8 +24,8 @@ RESULTS_TABLE_COLS = [
     'runtime DOUBLE'
 ]
 
-# up to sf128
-SCALE_FACTORS = [1 << i for i in range(2)]
+# 9 for up to sf256
+SCALE_FACTORS = [1 << i for i in range(9)]
 
 SCHEMA_DIR = f'{BASE_DIR}/schema'
 

@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 
 
 SYSTEM_DIR = os.path.dirname(__file__)
@@ -8,15 +9,23 @@ from util.util import *
 
 
 def main():
-    con = duckdb.connect(f'{SYSTEM_DIR}/data.db')
-    con.execute("""PRAGMA enable_progress_bar;""")
-    con.execute("""SET preserve_insertion_order=false;""")
-    for sf in SCALE_FACTORS:
-        con.execute(get_schema(sf))
-        if con.execute(f"""SELECT count(*) FROM lineitem{sf};""").fetchall()[0][0] == 0:
-            print(f'Loading duckdb SF{sf} ...')
-            con.execute(f"""COPY lineitem{sf} FROM '{get_csv_path(sf)}' (HEADER TRUE);""")
-            print(f'Loading duckdb SF{sf} done.')
+    meta_server = subprocess.Popen(f'{SYSTEM_DIR}/databend/bin/databend-meta --single'.split(' '))
+    query_server = subprocess.Popen(f'{SYSTEM_DIR}/databend/bin/databend-meta --single'.split(' '))
+    time.sleep(10)
+    try:
+        client = clickhouse_connect.get_client()
+        for sf in SCALE_FACTORS:
+            client.query(get_schema(sf, True))
+            if client.query(f"""SELECT count(*) FROM lineitem{sf}""").result_rows[0][0] == 0:
+                print(f'Loading clickhouse SF{sf} ...')
+                insert_file(client, f'lineitem{sf}', get_csv_path(sf))
+                print(f'Loading clickhouse SF{sf} done.')
+    except Exception as e:
+        my_exception = e
+    finally:
+        query_server.terminate()
+        meta_server.terminate()
+    raise my_exception
 
 
 if __name__ == '__main__':

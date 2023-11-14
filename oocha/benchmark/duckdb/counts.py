@@ -28,7 +28,7 @@ def main():
             q = f"""SELECT count(*) FROM ({query.replace('lineitem', f'lineitem{sf}').replace('OFFSET offset', '')}) sq"""
             d[grouping][sf] = con.execute(q).fetchall()[0][0]
         print(f'Counting SF{sf} done.')
-    print(d)
+        print(d)
 
 
 if __name__ == '__main__':
