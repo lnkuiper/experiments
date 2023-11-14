@@ -20,7 +20,7 @@ def main():
             _, results = client.execute(f"""SELECT count(*) FROM lineitem{sf}""")
             if results[0][0] == 0:
                 print(f'Loading databend SF{sf} ...')
-                client.execute(f"""COPY INTO lineitem{sf} FROM '{get_csv_path(sf)}'""")
+                client.execute(f"""COPY INTO lineitem{sf} FROM '{get_csv_path(sf)}' format csv csv_header = 1 csv_delimitor = ','""")
                 print(f'Loading databend SF{sf} done.')
     except Exception as e:
         my_exception = e

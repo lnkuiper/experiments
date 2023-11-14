@@ -7,12 +7,10 @@ sys.path.append(f'{SYSTEM_DIR}/..')
 from util.util import *
 
 
-def run_query(query, con):
-    return con.execute(query).fetchall()
-
-
 def main():
     data_con = duckdb.connect(f'{SYSTEM_DIR}/data.db', read_only=True)
+    data_con.execute("""SET preserve_insertion_order=false;""")
+    data_con.execute("""SET memory_limit='20GB';""")
 
     # get the 'thin' queries
     queries = get_queries(thin_only=True)
