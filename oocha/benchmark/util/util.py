@@ -29,12 +29,10 @@ SCALE_FACTORS = [1 << i for i in range(9)]
 
 SCHEMA_DIR = f'{BASE_DIR}/schema'
 
-COUNTS = {'l_orderkey-l_suppkey': {1: 5999989, 2: 11996779}, 'l_suppkey-l_partkey-l_shipmode': {1: 3684267, 2: 7372577}, 'l_returnflag-l_linestatus': {1: 4, 2: 4}, 'l_orderkey': {1: 1500000, 2: 3000000}, 'l_suppkey-l_returnflag-l_linestatus': {1: 39806, 2: 79568}, 'l_suppkey-l_partkey-l_shipinstruct': {1: 2710396, 2: 5423676}, 'l_suppkey-l_partkey-l_returnflag-l_linestatus': {1: 2167877, 2: 4336381}, 'l_suppkey': {1: 10000, 2: 20000}, 'l_partkey': {1: 200000, 2: 400000}, 'l_suppkey-l_partkey-l_orderkey': {1: 6001204, 2: 11997981}, 'l_partkey-l_returnflag-l_linestatus': {1: 634993, 2: 1269566}, 'l_suppkey-l_partkey': {1: 799541, 2: 1599085}, 'l_shipmode': {1: 7, 2: 7}, 'l_suppkey-l_partkey-l_shipinstruct-l_shipmode': {1: 5270225, 2: 10548748}, 'l_orderkey-l_returnflag-l_linestatus': {1: 2091229, 2: 4182363}, 'l_orderkey-l_partkey': {1: 6001169, 2: 11997938}}
 
-
-def get_schema(sf, clickhouse=False):
-    if clickhouse:
-        with open(f'{SCHEMA_DIR}/clickhouse_schema.sql', 'r') as f:
+def get_schema(sf, system=None):
+    if system:
+        with open(f'{SCHEMA_DIR}/{system}_schema.sql', 'r') as f:
             schema = f.read()
     else:
         with open(f'{SCHEMA_DIR}/schema.sql', 'r') as f:
@@ -46,9 +44,10 @@ def get_csv_path(sf):
     return f'{DATA_DIR}/lineitem_sf{sf}.csv'
 
 
-def get_queries():
+def get_queries(thin_only=False):
+    wides = [False] if thin_only else [False, True]
     queries = []
-    for wide in [False, True]:
+    for wide in wides:
         source_dir = WIDE_QUERIES_DIR if wide else THIN_QUERIES_DIR
         for file_name in os.listdir(source_dir):
             file_path = f'{source_dir}/{file_name}'
@@ -85,11 +84,13 @@ def run_query(con, sf, grouping, wide, query, fun, *args):
 
 
 def run_benchmark(name, fun, *args):
+    results_con = get_results_con(name)
+    counts_con = duckdb.connect(f'{QUERIES_DIR}/counts.db')
     for sf in SCALE_FACTORS:
         print(f'Running {name} SF{sf} ...')
-        con = get_results_con(name)
         queries = get_queries()
         for grouping, wide, query in tqdm.tqdm(queries):
-            run_query(con, sf, grouping, wide, query.replace('lineitem', f'lineitem{sf}').replace('offset', f'{COUNTS[grouping][sf] - 1}'), fun, *args)
-        con.close()
+            count = counts_con.execute(f"""SELECT c FROM counts WHERE grouping = '{grouping}' AND sf = {sf};""").fetchall()[0][0]
+            run_query(results_con, sf, grouping, wide, query.replace('lineitem', f'lineitem{sf}').replace('offset', f'{count - 1}'), fun, *args)
         print(f'Running {name} SF{sf} done.')
+    results_con.close()

@@ -1,5 +1,3 @@
-*.parquet
 *.csv
-benchmark/duckdb/*.db*
 __pycache__
 *.sql

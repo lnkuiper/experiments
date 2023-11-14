@@ -12,23 +12,20 @@ def run_query(query, con):
 
 
 def main():
-    con = duckdb.connect(f'{SYSTEM_DIR}/data.db', read_only=True)
+    data_con = duckdb.connect(f'{SYSTEM_DIR}/data.db', read_only=True)
 
     # get the 'thin' queries
-    queries = get_queries()
-    queries = queries[int(len(queries) / 2):]
-
-    d = {}
-    for grouping, _, _ in queries:
-        d[grouping] = {}
+    queries = get_queries(thin_only=True)
     
+    counts_con = duckdb.connect(f'{QUERIES_DIR}/counts.db')
+    counts_con.execute("""CREATE TABLE IF NOT EXISTS counts (grouping VARCHAR, sf USMALLINT, c UBIGINT);""")
     for sf in SCALE_FACTORS:
         print(f'Counting SF{sf} ...')
         for grouping, _, query in tqdm.tqdm(queries):
-            q = f"""SELECT count(*) FROM ({query.replace('lineitem', f'lineitem{sf}').replace('OFFSET offset', '')}) sq"""
-            d[grouping][sf] = con.execute(q).fetchall()[0][0]
+            if counts_con.execute(f"""SELECT count(*) FROM counts WHERE grouping = '{grouping}' AND sf = {sf};""").fetchall()[0][0] == 0:
+                count = data_con.execute(f"""SELECT count(*) FROM ({query.replace('lineitem', f'lineitem{sf}').replace('OFFSET offset', '')}) sq;""").fetchall()[0][0]
+                counts_con.execute(f"""INSERT INTO counts VALUES ('{grouping}', {sf}, {count});""")
         print(f'Counting SF{sf} done.')
-        print(d)
 
 
 if __name__ == '__main__':
