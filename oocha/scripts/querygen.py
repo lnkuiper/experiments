@@ -16,7 +16,7 @@ GROUPINGS = [
     ['l_partkey'], # 3.33%
     ['l_partkey', 'l_returnflag', 'l_linestatus'], # 10.58%
     ['l_suppkey', 'l_partkey'], # 13.33%
-    ['l_orderkey'], # 25%
+    ['l_orderkey'], # 25.00%
     ['l_orderkey', 'l_returnflag', 'l_linestatus'], # 34.87%
     ['l_suppkey', 'l_partkey', 'l_returnflag', 'l_linestatus'], # 36.17%
     ['l_suppkey', 'l_partkey', 'l_shipinstruct'], # 45.34%

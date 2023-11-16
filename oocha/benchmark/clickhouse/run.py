@@ -14,7 +14,7 @@ def run_query(query, client):
 
 
 def main():
-    server = subprocess.Popen(f'{SYSTEM_DIR}/clickhouse/clickhouse server'.split(' '))
+    server = subprocess.Popen(f'{SYSTEM_DIR}/clickhouse/clickhouse server'.split(' '), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     time.sleep(10)
     try:
         client = clickhouse_connect.get_client()
