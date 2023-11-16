@@ -1,6 +1,5 @@
 import os
 import sys
-import subprocess
 from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 
 
