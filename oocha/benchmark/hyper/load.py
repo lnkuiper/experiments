@@ -15,21 +15,15 @@ def main():
     process_parameters = {"default_database_version": "2"}
     with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, hyper_path=hyper_path, parameters=process_parameters) as hyper:
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
-            try:            
-                for sf in SCALE_FACTORS:
-                    con.execute_query("""START TRANSACTION;""")
-                    con.execute_query(get_schema(sf, system='hyper'))
-                    con.execute_query(f"""SELECT count(*) FROM lineitem{sf};""")
-                    if con.fetchall()[0][0] == 0:
-                        print(f'Loading hyper SF{sf} ...')
-                        con.execute_query(f"""COPY lineitem{sf} FROM '{get_csv_path(sf)}' (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""")
-                        print(f'Loading hyper SF{sf} done.')
-                    con.execute_query("""COMMIT;""")
-            except Exception as e:
-                my_exception = e
-            finally:
-                server.terminate()
-            raise my_exception
+            for sf in SCALE_FACTORS:
+                con.execute_query("""START TRANSACTION;""")
+                con.execute_query(get_schema(sf, system='hyper'))
+                con.execute_query(f"""SELECT count(*) FROM lineitem{sf};""")
+                if con.fetchall()[0][0] == 0:
+                    print(f'Loading hyper SF{sf} ...')
+                    con.execute_query(f"""COPY lineitem{sf} FROM '{get_csv_path(sf)}' (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""")
+                    print(f'Loading hyper SF{sf} done.')
+                con.execute_query("""COMMIT;""")
 
 
 if __name__ == '__main__':
