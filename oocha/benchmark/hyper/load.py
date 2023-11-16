@@ -19,11 +19,11 @@ def main():
                 con.execute_query("""START TRANSACTION;""").close()
                 con.execute_query(get_schema(sf)).close()
                 rows = con.execute_list_query(query=f"""SELECT count(*) FROM lineitem{sf};""")
-               if res[0][0] == 0:
+                if rows[0][0] == 0:
                    print(f'Loading hyper SF{sf} ...')
                    con.execute_query(f"""COPY lineitem{sf} FROM '{get_csv_path(sf)}' (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""").close()
                    print(f'Loading hyper SF{sf} done.')
-               con.execute_query("""COMMIT;""").close()
+                con.execute_query("""COMMIT;""").close()
 
 
 if __name__ == '__main__':
