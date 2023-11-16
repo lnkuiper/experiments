@@ -13,7 +13,7 @@ def main():
     db_path = f'{SYSTEM_DIR}/mydb'
     if not os.path.exists(db_path):
         subprocess.run(f'umbra/bin/sql --createdb {db_path} create-role.sql')
-    server = subprocess.Popen(f'/umbra/bin/server --address 0.0.0.0 {db_path}'.split(' '))
+    server = subprocess.Popen(f'/umbra/bin/server --address 0.0.0.0 {db_path}'.split(' '), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     time.sleep(10)
     try:
         con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5432)

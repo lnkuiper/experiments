@@ -15,7 +15,7 @@ def run_query(query, cur):
 
 
 def main():
-    server = subprocess.Popen(f'/umbra/bin/server --address 0.0.0.0 {db_path}'.split(' '))
+    server = subprocess.Popen(f'/umbra/bin/server --address 0.0.0.0 {db_path}'.split(' '), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     time.sleep(10)
     try:
         con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5432)

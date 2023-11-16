@@ -15,7 +15,7 @@ def run_query(query, cur):
 
 
 def main():
-    server = subprocess.Popen(f'{SYSTEM_DIR}/hyper/hyperd --database ./hyper/mydb --log-dir . --skip-license --init-user raasveld --listen-connection tab.tcp://localhost:7484,tab.domain:///tmp/LD/domain/.s.PGSQL.7484 --no-password run'.split(' '))
+    server = subprocess.Popen(f'{SYSTEM_DIR}/hyper/hyperd --database ./hyper/mydb --log-dir . --skip-license --init-user raasveld --listen-connection tab.tcp://localhost:7484,tab.domain:///tmp/LD/domain/.s.PGSQL.7484 --no-password run'.split(' '), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     time.sleep(10)
     try:
         con = psycopg2.connect(database=f"{SYSTEM_DIR}/hyper/mydb", host="localhost", user="raasveld", password="", port=7484)
