@@ -15,10 +15,12 @@ def run_query(query, cur):
 
 
 def main():
-    server = subprocess.Popen(f'/umbra/bin/server --address 0.0.0.0 {db_path}'.split(' '), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    #db_path = f'{SYSTEM_DIR}/mydb.umbra'
+    db_path = '/data/umbra/mydb.umbra'
+    server = subprocess.Popen(f'{SYSTEM_DIR}/umbra/bin/server -address=127.0.0.1 -port=5433 {db_path}'.split(' '), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     time.sleep(10)
     try:
-        con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5432)
+        con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5433)
         cur = con.cursor()
         run_benchmark('umbra', run_query, cur)
     except Exception as e:

@@ -82,16 +82,18 @@ def timeout_fun(fun, query, *args):
 
 def run_query(con, sf, grouping, wide, query, fun, *args):
     repetitions = get_repetition_count(con, sf, grouping, wide)
-    timeout = False
+    error = 1
     for _ in range(repetitions):
-        if timeout:
-            runtime = -1
+        if error < 0:
+            runtime = error
         else:
             try:
                 runtime = timeout_fun(fun, query, *args)
             except TimeoutError:
                 runtime = -1
-            timeout = runtime == -1
+            except Exception:
+                runtime = -2
+            error = runtime
         insert_result(con, sf, grouping, wide, runtime)
 
 

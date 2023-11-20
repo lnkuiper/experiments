@@ -14,6 +14,7 @@ def run_query(query, client):
 
 
 def main():
+    os.chdir('/data')
     server = subprocess.Popen(f'{SYSTEM_DIR}/clickhouse/clickhouse server'.split(' '), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     time.sleep(10)
     try:
