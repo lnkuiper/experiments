@@ -3,7 +3,7 @@ import duckdb
 import os
 import time
 import tqdm
-
+from timeout_decorator import timeout, TimeoutError
 
 BASE_DIR = f'{os.path.dirname(__file__)}/../..'
 
@@ -72,14 +72,26 @@ def get_repetition_count(con, sf, grouping, wide):
 def insert_result(con, sf, grouping, wide, runtime):
     con.execute(f"""INSERT INTO {RESULTS_TABLE_NAME} VALUES ({sf}, '{grouping}', {wide}, {runtime});""")
 
+@timeout(600)
+def timeout_fun(fun, query, *args):
+    before = time.time()
+    res = fun(query, *args)
+    runtime = time.time() - before
+    del res
+    return runtime
 
 def run_query(con, sf, grouping, wide, query, fun, *args):
     repetitions = get_repetition_count(con, sf, grouping, wide)
+    timeout = False
     for _ in range(repetitions):
-        before = time.time()
-        res = fun(query, *args)
-        runtime = time.time() - before
-        del res
+        if timeout:
+            runtime = -1
+        else:
+            try:
+                runtime = timeout_fun(fun, query, *args)
+            except TimeoutError:
+                runtime = -1
+            timeout = runtime == -1
         insert_result(con, sf, grouping, wide, runtime)
 
 
