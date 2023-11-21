@@ -11,7 +11,7 @@ from util.util import *
 
 
 def main():
-    os.chdir('/data')
+    os.chdir('/data/clickhouse')
     server = subprocess.Popen(f'{SYSTEM_DIR}/clickhouse/clickhouse server'.split(' '), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     time.sleep(10)
     try:

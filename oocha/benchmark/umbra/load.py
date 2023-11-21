@@ -21,17 +21,18 @@ def main():
         con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5433)
         cur = con.cursor()
         for sf in SCALE_FACTORS:
-            #cur.execute("""START TRANSACTION;""")
             cur.execute(get_schema(sf))
             cur.execute(f"""SELECT count(*) FROM lineitem{sf};""")
             if cur.fetchall()[0][0] == 0:
                 print(f'Loading umbra SF{sf} ...')
                 cur.execute(f"""COPY lineitem{sf} FROM '{get_csv_path(sf)}' (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""")
                 print(f'Loading umbra SF{sf} done.')
-            #cur.execute("""COMMIT""")
+            cur.execute("""COMMIT;""")
+            cur.execute("""START TRANSACTION;""")
     except Exception as e:
         my_exception = e
     finally:
+        cur.execute("""COMMIT;""")
         server.terminate()
     raise my_exception
 
