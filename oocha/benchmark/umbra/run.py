@@ -22,6 +22,7 @@ def main():
     try:
         con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5433)
         cur = con.cursor()
+        cur.execute("""ROLLBACK;""");
         run_benchmark('umbra', run_query, cur)
     except Exception as e:
         my_exception = e

@@ -91,7 +91,7 @@ def run_query(con, sf, grouping, wide, query, fun, *args):
                 runtime = timeout_fun(fun, query, *args)
             except TimeoutError:
                 runtime = -1
-            except Exception:
+            except Exception as e:
                 runtime = -2
             error = runtime
         insert_result(con, sf, grouping, wide, runtime)
