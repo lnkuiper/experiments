@@ -55,7 +55,7 @@ def get_queries(thin_only=False):
                 queries.append((file_name.split('.')[0], wide, f.read()))
     if not thin_only:
         with open(f'{QUERIES_DIR}/all.sql', 'r') as f:
-            queries.append('all', False, f.read())
+            queries.append(('all', False, f.read()))
     return queries
 
 
@@ -108,7 +108,7 @@ def run_benchmark(name, fun, *args):
         queries = get_queries()
         for grouping, wide, query in tqdm.tqdm(queries):
             grouping_q = 'l_suppkey-l_partkey-l_orderkey' if grouping == 'all' else grouping
-            count = counts_con.execute(f"""SELECT c FROM counts WHERE grouping = '{grouping}' AND sf = {sf};""").fetchall()[0][0]
+            count = counts_con.execute(f"""SELECT c FROM counts WHERE grouping = '{grouping_q}' AND sf = {sf};""").fetchall()[0][0]
             run_query(results_con, sf, grouping, wide, query.replace('lineitem', f'lineitem{sf}').replace('offset', f'{count - 1}'), fun, *args)
         print(f'Running {name} SF{sf} done.')
     results_con.close()
