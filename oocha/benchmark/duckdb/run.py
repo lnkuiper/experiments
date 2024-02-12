@@ -12,7 +12,6 @@ def run_query(query, con):
 
 
 def main():
-    #con = duckdb.connect(f'{SYSTEM_DIR}/data.db', read_only=True)
     con = duckdb.connect(f'/data/data.db', read_only=True)
     con.execute("""SET preserve_insertion_order=false""")
     con.execute("""SET memory_limit='20GB'""")
