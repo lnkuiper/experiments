@@ -11,8 +11,8 @@ from util.util import *
 THREAD_COUNTS = [1, 4]
 EVICTION_POLICY_REPETITIONS = 10
 POLLING_INTERVAL = 0.5
-POLICY = 'all'
-#POLICY = 'persistent_temporary'
+#POLICY = 'all'
+POLICY = 'persistent_temporary'
 #POLICY = 'temporary_persistent'
 
 
