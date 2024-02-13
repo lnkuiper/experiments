@@ -12,8 +12,8 @@ THREAD_COUNTS = [1] #, 4]
 EVICTION_POLICY_REPETITIONS = 10
 POLLING_INTERVAL = 0.5
 #POLICY = 'all'
-POLICY = 'persistent_temporary'
-#POLICY = 'temporary_persistent'
+#POLICY = 'persistent_temporary'
+POLICY = 'temporary_persistent'
 
 
 def run_query_loop(con):
@@ -28,7 +28,7 @@ def main():
         db_path = '/data/data.db'
         con = duckdb.connect(db_path, read_only=True)
         con.execute("""SET preserve_insertion_order=false""")
-        con.execute(f"""SET memory_limit='{4.5 * THREAD_COUNT}GB'""") # 3.5 GB per concurrent reader
+        con.execute(f"""SET memory_limit='{3.5 * THREAD_COUNT}GB'""") # 3.5 GB per concurrent reader
         con.execute(f"""SET threads={4 * THREAD_COUNT}""") # 4 threads per concurrent reader
     
         eviction_policy_db_path = f'{SYSTEM_DIR}/eviction_policy.db'
