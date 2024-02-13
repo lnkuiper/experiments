@@ -11,9 +11,9 @@ from util.util import *
 THREAD_COUNTS = [1, 4]
 EVICTION_POLICY_REPETITIONS = 10
 POLLING_INTERVAL = 0.5
-#POLICY = 'all'
+POLICY = 'all'
 #POLICY = 'persistent_temporary'
-POLICY = 'temporary_persistent'
+#POLICY = 'temporary_persistent'
 
 
 def run_query_loop(con):
