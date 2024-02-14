@@ -11,9 +11,9 @@ from util.util import *
 THREAD_COUNTS = [1] #, 4]
 EVICTION_POLICY_REPETITIONS = 10
 POLLING_INTERVAL = 0.5
-#POLICY = 'all'
+POLICY = 'all'
 #POLICY = 'persistent_temporary'
-POLICY = 'temporary_persistent'
+#POLICY = 'temporary_persistent'
 
 
 def run_query_loop(con):
@@ -28,7 +28,7 @@ def main():
         db_path = '/data/data.db'
         con = duckdb.connect(db_path, read_only=True)
         con.execute("""SET preserve_insertion_order=false""")
-        con.execute(f"""SET memory_limit='{4 * THREAD_COUNT}GB'""") # 3.5 GB per concurrent reader
+        con.execute(f"""SET memory_limit='{3.5 * THREAD_COUNT}GB'""") # 3.5 GB per concurrent reader
         con.execute(f"""SET threads={4 * THREAD_COUNT}""") # 4 threads per concurrent reader
     
         eviction_policy_db_path = f'{SYSTEM_DIR}/eviction_policy.db'
@@ -40,11 +40,16 @@ def main():
         for i in range(THREAD_COUNT):
             threads.append(Thread(target=run_query_loop, args=(con,)))
         
+        tmp_dir_path = db_path + '.tmp'
         before = time.time()
         for thread in threads:
             thread.start()
         while True:
-            results_con.execute(f"""INSERT INTO results.results SELECT '{POLICY}', {time.time() - before}, {THREAD_COUNT}, * FROM duckdb_memory() WHERE tag = 'BASE_TABLE' OR tag = 'HASH_TABLE'""")
+            if os.path.exists(tmp_dir_path):
+                temporary_storage_bytes = sum(os.path.getsize(f) for f in os.listdir(tmp_dir_path) if os.path.isfile(f))
+            else:
+                temporary_storage_bytes = 0
+            results_con.execute(f"""INSERT INTO results.results SELECT '{POLICY}', {time.time() - before}, {THREAD_COUNT}, tag, memory_usage_bytes, {temporary_storage_bytes} FROM duckdb_memory() WHERE tag = 'BASE_TABLE' OR tag = 'HASH_TABLE'""")
             at_least_one_alive = False
             for thread in threads:
                 if thread.is_alive():
