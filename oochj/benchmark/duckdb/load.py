@@ -12,9 +12,9 @@ def main():
     # db_path = '/data/duckdb/mydb.duckdb'
     if os.path.exists(db_path):
         os.remove(db_path)
-    con = duckdb.connect(db_path, read_only=True)
+    con = duckdb.connect(db_path)
     con.execute("SET preserve_insertion_order=false;")
-    # con.execute("SET allocator_background_threads=true;")
+    con.execute("SET allocator_background_threads=true;")
     for sf in SCALE_FACTORS:
         con.execute(f"CREATE OR REPLACE SCHEMA sf{sf};")
         con.execute(f"USE sf{sf};")

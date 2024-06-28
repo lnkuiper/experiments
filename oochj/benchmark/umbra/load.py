@@ -10,8 +10,8 @@ from util.util import *
 
 
 def main():
-    #db_path = f'{SYSTEM_DIR}/mydb.umbra'
-    db_path = '/data/umbra/mydb.umbra'
+    db_path = f'{SYSTEM_DIR}/mydb.umbra'
+    #db_path = '/data/umbra/mydb.umbra'
     if os.path.exists(db_path):
         os.remove(db_path)
 
@@ -20,12 +20,13 @@ def main():
     server = subprocess.Popen(f'{SYSTEM_DIR}/umbra/bin/server -address=127.0.0.1 -port=5433 {db_path}'.split(' '), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     time.sleep(10)
 
+    my_exception = None
     try:
         con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5433)
         cur = con.cursor()
         for sf in SCALE_FACTORS:
             cur.execute(f"CREATE SCHEMA sf{sf};")
-            cur.execute(f"USE sf{sf};")
+            cur.execute(f"SET search_path=sf{sf};")
             print(f'Loading umbra SF{sf} ...')
             cur.execute(get_schema(sf))
             cur.execute(get_load(sf))
@@ -37,7 +38,8 @@ def main():
     finally:
         cur.execute("COMMIT;")
         server.terminate()
-    raise my_exception
+        if my_exception:
+            raise my_exception
 
 
 if __name__ == '__main__':

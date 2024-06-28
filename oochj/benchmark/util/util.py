@@ -12,9 +12,9 @@ DATA_DIR = f'{BASE_DIR}/data'
 RESULTS_DIR = f'{BASE_DIR}/results'
 
 # SCALE_FACTORS = [32, 64, 128, 256]
-SCALE_FACTORS = [1, 2]
+SCALE_FACTORS = [32]
 
-REPETITIONS = 5
+REPETITIONS = 1
 RESULTS_TABLE_NAME = 'results'
 RESULTS_TABLE_COLS = [
     'sf USMALLINT',
@@ -39,7 +39,7 @@ def get_queries():
         file_path = f'{QUERIES_DIR}/{file_name}'
         with open(file_path, 'r') as f:
             queries.append((int(file_name.split('.')[0]), f.read()))
-    return queries
+    return sorted(queries)
 
 
 def get_results_con(name):
@@ -79,8 +79,8 @@ def run_query(con, sf, q, query, fun, *args):
             except TimeoutError:
                 t = -1
             except Exception as e:
-                raise e
                 t = -2
+                raise e
             error = t
         insert_result(con, sf, q, t)
 

@@ -1,1 +1,7 @@
 umbra
+*.umbra
+*.data
+*.sample
+*.pages
+*.wal
+*.lock

@@ -77,9 +77,10 @@ def generate_sf(sf):
     con.close()
     os.remove('temp.db')
 
-    with open(f"{output}/load.sql", 'rw') as f:
-        f.write(f.read().replace('header 1', 'header TRUE'))
-
+    with open(f"{output}/load.sql", 'r') as f:
+        header_true = f.read().replace('header 1', 'header TRUE')
+    with open(f"{output}/load.sql", 'w') as f:
+        f.write(header_true)
 
 def main():
     if not os.path.exists(DATA_DIR):

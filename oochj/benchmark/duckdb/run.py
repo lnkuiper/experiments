@@ -16,12 +16,12 @@ def query_fun(query, con):
 
 
 def main():
-    db_path = f'{SYSTEM_DIR}/data.db'
-    # db_path = '/data/data.db'
+    db_path = f'{SYSTEM_DIR}/mydb.duckdb'
+    # db_path = '/data/mydb.duckdb'
     con = duckdb.connect(db_path, read_only=True)
 
     con.execute("SET preserve_insertion_order=false;")
-    # con.execute("SET allocator_background_threads=true;")
+    con.execute("SET allocator_background_threads=true;")
 
     run_benchmark('duckdb', schema_fun, query_fun, con)
 

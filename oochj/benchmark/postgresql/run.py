@@ -18,7 +18,7 @@ def query_fun(query, cur):
 
 
 def main():
-    con = psycopg2.connect(database="mydb", host="localhost", user="", password="", port=5432)
+    con = psycopg2.connect(database="mydb", host="localhost", user="ubuntu", password="secret", port=5432)
     cur = con.cursor()
 
     cur.execute("SET default_tablespace=mytablespace;")

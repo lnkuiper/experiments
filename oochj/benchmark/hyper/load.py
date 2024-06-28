@@ -21,10 +21,12 @@ def main():
             for sf in SCALE_FACTORS:
                 con.execute_query("START TRANSACTION;").close()
                 con.execute_query(f"CREATE SCHEMA sf{sf};").close()
-                con.execute_query(f"USE sf{sf};").close()
+                con.execute_query(f"SET search_path=sf{sf};").close()
                 print(f'Loading hyper SF{sf} ...')
-                con.execute(get_schema(sf)).close()
-                con.execute(get_load(sf)).close()
+                for q in get_schema(sf).split(';'):
+                    con.execute_query(f"{q};").close()
+                for q in get_load(sf).split(';'):
+                    con.execute_query(f"{q};").close()
                 print(f'Loading hyper SF{sf} done.')
                 con.execute_query("COMMIT;").close()
 
