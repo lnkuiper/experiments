@@ -22,15 +22,15 @@ TABLES = [
 ]
 
 
-def task(id, sf, total_steps, step_start, step_end):
-    temporary_db = f'temp{id}.db'
+def task(arg_dict):
+    temporary_db = f"temp{arg_dict.get('id')}.db"
     if os.path.exists(temporary_db):
         os.remove(temporary_db)
     con = duckdb.connect(temporary_db)
     con.execute("SET threads=1;")
     con.execute("SET memory_limit='1gb';")
-    for step in range(step_start, step_end):
-        con.execute(f'CALL dbgen(sf={sf}, children={total_steps}, step={step});')
+    for step in range(arg_dict.get('step_start'), arg_dict.get('step_end')):
+        con.execute(f"CALL dbgen(sf={arg_dict.get('sf')}, children={arg_dict.get('total_steps')}, step={step});")
     con.close()
 
 def generate_sf(sf):
@@ -38,18 +38,20 @@ def generate_sf(sf):
     total_steps = int((sf + cpu_count - 1) / cpu_count) * cpu_count
     steps_per_cpu = int(total_steps / cpu_count)
 
-    pool = [None for _ in range(cpu_count)]
+    tasks = []
     step = 0
     for i in range(cpu_count):
-        pool[i] = multiprocessing.Process(
-            target=task,
-            args=(i, sf, total_steps, step, step + steps_per_cpu,)
-        )
-        pool[i].start()
+        tasks.append({
+            'id': i,
+            'sf': sf,
+            'total_steps': total_steps,
+            'step_start': step,
+            'step_end': step + steps_per_cpu,
+        })
         step += steps_per_cpu
 
-    for i in range(cpu_count):
-        pool[i].join()
+    with multiprocessing.Pool(cpu_count) as p:
+        p.map(task, tasks)
 
     temporary_db = 'temp.db'
     if os.path.exists(temporary_db):

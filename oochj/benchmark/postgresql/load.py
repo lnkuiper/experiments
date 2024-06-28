@@ -29,10 +29,10 @@ def main():
         cur.execute("START TRANSACTION;")
         cur.execute(f"CREATE SCHEMA sf{sf};")
         cur.execute(f"SET search_path=sf{sf};")
-        print(f'Loading postgres SF{sf} ...')
+        print(f'Loading postgresql SF{sf} ...')
         cur.execute(get_schema(sf))
         cur.execute(get_load(sf))
-        print(f'Loading postgres SF{sf} done.')
+        print(f'Loading postgresql SF{sf} done.')
         cur.execute("COMMIT;")
 
 
