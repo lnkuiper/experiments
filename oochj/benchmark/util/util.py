@@ -12,9 +12,9 @@ DATA_DIR = f'{BASE_DIR}/data'
 RESULTS_DIR = f'{BASE_DIR}/results'
 
 # SCALE_FACTORS = [32, 64, 128, 256]
-SCALE_FACTORS = [32]
+SCALE_FACTORS = [64]
 
-REPETITIONS = 1
+REPETITIONS = 5
 RESULTS_TABLE_NAME = 'results'
 RESULTS_TABLE_COLS = [
     'sf USMALLINT',
@@ -80,7 +80,6 @@ def run_query(con, sf, q, query, fun, *args):
                 t = -1
             except Exception as e:
                 t = -2
-                raise e
             error = t
         insert_result(con, sf, q, t)
 

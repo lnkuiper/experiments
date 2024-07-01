@@ -1,7 +1,7 @@
-umbra
+umbra*
 *.umbra
 *.data
 *.sample
 *.pages
-*.wal
+*.wal*
 *.lock
