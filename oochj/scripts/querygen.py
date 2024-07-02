@@ -127,8 +127,11 @@ QUERY_DEFINITIONS = [{
         'name': 'orders',
         'alias': 'o',
         'columns_except': [
-            'o_orderkey',
-            'o_comment',
+            'o_custkey',
+            'o_orderstatus',
+            'o_totalprice',
+            'o_orderdate',
+            'o_shippriority'
         ]
     }, {
         'name': 'partsupp',
