@@ -74,14 +74,15 @@ QUERY_DEFINITIONS = [{
         ]
     }, {
         'name': 'orders',
-            'alias': 'o',
-            'columns': [
-                'o_custkey',
-                'o_orderstatus',
-                'o_totalprice',
-                'o_orderdate',
-                'o_shippriority'
-            ]
+        'alias': 'o',
+        'columns': [
+            'o_orderstatus',
+            'o_totalprice',
+            'o_orderdate',
+            'o_orderpriority',
+            'o_clerk',
+            'o_shippriority',
+        ]
     }],
     'conditions': [
         'l.l_orderkey = o.o_orderkey'
@@ -98,16 +99,17 @@ QUERY_DEFINITIONS = [{
         'name': 'orders',
         'alias': 'o1',
         'columns': [
-            'o_custkey',
             'o_orderstatus',
             'o_totalprice',
+            'o_orderdate',
+            'o_orderpriority',
         ]
     }, {
         'name': 'orders',
         'alias': 'o2',
         'columns': [
-            'o_orderdate',
-            'o_shippriority'
+            'o_clerk',
+            'o_shippriority',
         ]
     }],
     'conditions': [
@@ -128,19 +130,19 @@ QUERY_DEFINITIONS = [{
         'name': 'orders',
         'alias': 'o',
         'columns': [
-            'o_custkey',
             'o_orderstatus',
             'o_totalprice',
             'o_orderdate',
-            'o_shippriority'
+            'o_orderpriority',
+            'o_clerk',
+            'o_shippriority',
         ]
     }, {
         'name': 'partsupp',
         'alias': 'ps',
-        'columns_except': [
-            'ps_partkey',
-            'ps_suppkey',
-            'ps_comment',
+        'columns': [
+            'ps_availqty',
+            'ps_supplycost',
         ]
     }],
     'conditions': [
@@ -162,24 +164,24 @@ QUERY_DEFINITIONS = [{
         'name': 'orders',
         'alias': 'o1',
         'columns': [
-            'o_custkey',
             'o_orderstatus',
             'o_totalprice',
+            'o_orderdate',
+            'o_orderpriority',
         ]
     }, {
         'name': 'orders',
         'alias': 'o2',
         'columns': [
-            'o_orderdate',
-            'o_shippriority'
+            'o_clerk',
+            'o_shippriority',
         ]
     }, {
         'name': 'partsupp',
         'alias': 'ps',
-        'columns_except': [
-            'ps_partkey',
-            'ps_suppkey',
-            'ps_comment',
+        'columns': [
+            'ps_availqty',
+            'ps_supplycost',
         ]
     }],
     'conditions': [
@@ -202,16 +204,17 @@ QUERY_DEFINITIONS = [{
         'name': 'orders',
         'alias': 'o1',
         'columns': [
-            'o_custkey',
             'o_orderstatus',
             'o_totalprice',
+            'o_orderdate',
+            'o_orderpriority',
         ]
     }, {
         'name': 'orders',
         'alias': 'o2',
         'columns': [
-            'o_orderdate',
-            'o_shippriority'
+            'o_clerk',
+            'o_shippriority',
         ]
     }, {
         'name': 'partsupp',
