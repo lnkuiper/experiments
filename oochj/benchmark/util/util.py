@@ -90,10 +90,13 @@ def run_query(name, sf, q, query, fun, *args):
 
 def run_benchmark(name, schema_fun, query_fun, *args):
     for sf in SCALE_FACTORS:
-        counts_con = duckdb.connect(f'{BASE_DIR}/benchmark/duckdb/mydb.duckdb', read_only=True)
-        counts_con.execute(f"USE sf{sf};")
-        count = counts_con.execute("SELECT count(*) FROM lineitem;").fetchall()[0][0]
-        counts_con.close()
+        counts = {
+            32: 192000551,
+            64: 384016850,
+            128: 768046938,
+            256: 1536002440,
+        }
+        count = counts.get(sf)
 
         schema_fun(sf, *args)
         queries = get_queries()
