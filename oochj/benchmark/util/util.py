@@ -50,13 +50,17 @@ def get_results_con(name):
     return con
 
 
-def get_repetition_count(con, sf, q):
+def get_repetition_count(name, sf, q):
+    con = results_con = get_results_con(name)
     repetitions = con.execute(f"SELECT count(*) FROM {RESULTS_TABLE_NAME} WHERE sf = {sf} AND q = {q};").fetchall()[0][0]
+    con.close()
     return REPETITIONS - repetitions
 
 
-def insert_result(con, sf, q, t):
+def insert_result(name, sf, q, t):
+    con = get_results_con(name)
     con.execute(f"INSERT INTO {RESULTS_TABLE_NAME} VALUES ({sf}, {q}, {t});")
+    con.close()
 
 
 @timeout(600)
@@ -67,8 +71,8 @@ def timeout_fun(fun, query, *args):
     del res
     return t
 
-def run_query(con, sf, q, query, fun, *args):
-    repetitions = get_repetition_count(con, sf, q)
+def run_query(name, sf, q, query, fun, *args):
+    repetitions = get_repetition_count(name, sf, q)
     error = 1
     for _ in range(repetitions):
         if error < 0:
@@ -81,11 +85,10 @@ def run_query(con, sf, q, query, fun, *args):
             except Exception as e:
                 t = -2
             error = t
-        insert_result(con, sf, q, t)
+        insert_result(name, sf, q, t)
 
 
 def run_benchmark(name, schema_fun, query_fun, *args):
-    results_con = get_results_con(name)
     for sf in SCALE_FACTORS:
         counts_con = duckdb.connect(f'{BASE_DIR}/benchmark/duckdb/mydb.duckdb', read_only=True)
         counts_con.execute(f"USE sf{sf};")
@@ -96,7 +99,5 @@ def run_benchmark(name, schema_fun, query_fun, *args):
         queries = get_queries()
         print(f'Running {name} SF{sf} ...')
         for q, query in tqdm.tqdm(queries):
-            run_query(results_con, sf, q, query.replace('%OFFSET%', f'{count - 1}'), query_fun, *args)
+            run_query(name, sf, q, query.replace('%OFFSET%', f'{count - 1}'), query_fun, *args)
         print(f'Running {name} SF{sf} done.')
-
-    results_con.close()
