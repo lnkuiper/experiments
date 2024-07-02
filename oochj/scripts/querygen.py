@@ -71,8 +71,6 @@ QUERY_DEFINITIONS = [{
         'alias': 'l',
         'columns': [
             'l_orderkey',
-            'l_partkey',
-            'l_suppkey'
         ]
     }, {
         'name': 'orders',
@@ -113,7 +111,38 @@ QUERY_DEFINITIONS = [{
     }],
     'conditions': [
         'l.l_orderkey = o1.o_orderkey',
-        'l.l_orderkey = o2.o_orderkey',
+        'o1.o_orderkey = o2.o_orderkey',
+    ]
+}, {
+    'description': 'LARGE JOIN AND SMALL JOIN',
+    'tables': [{
+        'name': 'lineitem',
+        'alias': 'l',
+        'columns': [
+            'l_orderkey',
+            'l_partkey',
+            'l_suppkey',
+        ]
+    }, {
+        'name': 'orders',
+        'alias': 'o',
+        'columns_except': [
+            'o_orderkey',
+            'o_comment',
+        ]
+    }, {
+        'name': 'partsupp',
+        'alias': 'ps',
+        'columns_except': [
+            'ps_partkey',
+            'ps_suppkey',
+            'ps_comment',
+        ]
+    }],
+    'conditions': [
+        'l.l_orderkey = o.o_orderkey',
+        'l.l_partkey = ps.ps_partkey',
+        'l.l_suppkey = ps.ps_suppkey',
     ]
 }, {
     'description': 'DOUBLE MEDIUM JOIN AND SMALL JOIN',
@@ -151,12 +180,12 @@ QUERY_DEFINITIONS = [{
     }],
     'conditions': [
         'l.l_orderkey = o1.o_orderkey',
-        'l.l_orderkey = o2.o_orderkey',
+        'o1.o_orderkey = o2.o_orderkey',
         'l.l_partkey = ps.ps_partkey',
         'l.l_suppkey = ps.ps_suppkey',
     ]
 }, {
-    'description': 'LARGE JOIN AND SMALL JOIN',
+    'description': 'DOUBLE MEDIUM AND DOUBLE SMALL JOIN',
     'tables': [{
         'name': 'lineitem',
         'alias': 'l',
@@ -167,42 +196,18 @@ QUERY_DEFINITIONS = [{
         ]
     }, {
         'name': 'orders',
-        'alias': 'o',
-        'columns_except': [
-            'o_orderkey',
-            'o_comment',
-        ]
-    }, {
-        'name': 'partsupp',
-        'alias': 'ps',
-        'columns_except': [
-            'ps_partkey',
-            'ps_suppkey',
-            'ps_comment',
-        ]
-    }],
-    'conditions': [
-        'l.l_orderkey = o.o_orderkey',
-        'l.l_partkey = ps.ps_partkey',
-        'l.l_suppkey = ps.ps_suppkey',
-    ]
-}, {
-    'description': 'LARGE JOIN AND DOUBLE SMALL JOIN',
-    'tables': [{
-        'name': 'lineitem',
-        'alias': 'l',
+        'alias': 'o1',
         'columns': [
-            'l_orderkey',
-            'l_partkey',
-            'l_suppkey',
+            'o_custkey',
+            'o_orderstatus',
+            'o_totalprice',
         ]
     }, {
         'name': 'orders',
-        'alias': 'o',
-        'columns_except': [
-            'o_orderkey',
-            'o_clerk',
-            'o_comment',
+        'alias': 'o2',
+        'columns': [
+            'o_orderdate',
+            'o_shippriority'
         ]
     }, {
         'name': 'partsupp',
@@ -218,11 +223,12 @@ QUERY_DEFINITIONS = [{
         ]
     }],
     'conditions': [
-        'l.l_orderkey = o.o_orderkey',
+        'l.l_orderkey = o1.o_orderkey',
+        'o1.o_orderkey = o2.o_orderkey',
         'l.l_partkey = ps1.ps_partkey',
         'l.l_suppkey = ps1.ps_suppkey',
-        'l.l_partkey = ps2.ps_partkey',
-        'l.l_suppkey = ps2.ps_suppkey',
+        'ps1.l_partkey = ps2.ps_partkey',
+        'ps1.l_suppkey = ps2.ps_suppkey',
     ]
 }]
 
