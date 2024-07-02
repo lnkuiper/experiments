@@ -227,8 +227,8 @@ QUERY_DEFINITIONS = [{
         'o1.o_orderkey = o2.o_orderkey',
         'l.l_partkey = ps1.ps_partkey',
         'l.l_suppkey = ps1.ps_suppkey',
-        'ps1.l_partkey = ps2.ps_partkey',
-        'ps1.l_suppkey = ps2.ps_suppkey',
+        'ps1.ps_partkey = ps2.ps_partkey',
+        'ps1.ps_suppkey = ps2.ps_suppkey',
     ]
 }]
 
@@ -259,7 +259,8 @@ FROM
 WHERE
     {'\nAND '.join([c for c in where_list])}
 OFFSET
-    %OFFSET%;"""
+    %OFFSET%;
+"""
 
 
 def main():
