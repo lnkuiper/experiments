@@ -75,9 +75,12 @@ QUERY_DEFINITIONS = [{
     }, {
         'name': 'orders',
             'alias': 'o',
-            'columns_except': [
-                'o_orderkey',
-                'o_comment',
+            'columns': [
+                'o_custkey',
+                'o_orderstatus',
+                'o_totalprice',
+                'o_orderdate',
+                'o_shippriority'
             ]
     }],
     'conditions': [
@@ -98,14 +101,12 @@ QUERY_DEFINITIONS = [{
             'o_custkey',
             'o_orderstatus',
             'o_totalprice',
-            'o_orderpriority',
         ]
     }, {
         'name': 'orders',
         'alias': 'o2',
         'columns': [
             'o_orderdate',
-            'o_clerk',
             'o_shippriority'
         ]
     }],
@@ -126,7 +127,7 @@ QUERY_DEFINITIONS = [{
     }, {
         'name': 'orders',
         'alias': 'o',
-        'columns_except': [
+        'columns': [
             'o_custkey',
             'o_orderstatus',
             'o_totalprice',
