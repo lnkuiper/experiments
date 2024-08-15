@@ -87,6 +87,9 @@ def main():
         os.mkdir(DATA_DIR)
 
     for sf in SCALE_FACTORS:
+        output = f'{DATA_DIR}/sf{sf}'
+        if os.path.exists(output):
+            continue
         print(f'Generating SF{sf} ...')
         generate_sf(sf)
         print(f'Generating SF{sf} done.')

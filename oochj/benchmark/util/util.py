@@ -18,6 +18,7 @@ RESULTS_TABLE_NAME = 'results'
 RESULTS_TABLE_COLS = [
     'sf USMALLINT',
     'q UTINYINT',
+    'thin BOOLEAN',
     't DOUBLE',
 ]
 
@@ -49,16 +50,16 @@ def get_results_con(name):
     return con
 
 
-def get_repetition_count(name, sf, q):
+def get_repetition_count(name, sf, q, thin):
     con = results_con = get_results_con(name)
-    repetitions = con.execute(f"SELECT count(*) FROM {RESULTS_TABLE_NAME} WHERE sf = {sf} AND q = {q};").fetchall()[0][0]
+    repetitions = con.execute(f"SELECT count(*) FROM {RESULTS_TABLE_NAME} WHERE sf = {sf} AND q = {q} AND thin = {thin};").fetchall()[0][0]
     con.close()
     return REPETITIONS - repetitions
 
 
-def insert_result(name, sf, q, t):
+def insert_result(name, sf, q, thin, t):
     con = get_results_con(name)
-    con.execute(f"INSERT INTO {RESULTS_TABLE_NAME} VALUES ({sf}, {q}, {t});")
+    con.execute(f"INSERT INTO {RESULTS_TABLE_NAME} VALUES ({sf}, {q}, {thin}, {t});")
     con.close()
 
 
@@ -70,8 +71,12 @@ def timeout_fun(fun, query, *args):
     del res
     return t
 
-def run_query(name, sf, q, query, fun, *args):
-    repetitions = get_repetition_count(name, sf, q)
+def run_query(name, sf, q, query, thin, fun, *args):
+    if thin:
+        query = f'SELECT count(*) FROM ({query});'
+    else:
+        query = f'{query};'
+    repetitions = get_repetition_count(name, sf, q, thin)
     error = 1
     for _ in range(repetitions):
         if error < 0:
@@ -84,7 +89,7 @@ def run_query(name, sf, q, query, fun, *args):
             except Exception as e:
                 t = -2
             error = t
-        insert_result(name, sf, q, t)
+        insert_result(name, sf, q, thin, t)
 
 
 def run_benchmark(name, schema_fun, query_fun, *args):
@@ -106,5 +111,7 @@ def run_benchmark(name, schema_fun, query_fun, *args):
         queries = get_queries()
         print(f'Running {name} SF{sf} ...')
         for q, query in tqdm.tqdm(queries):
-            run_query(name, sf, q, query.replace('%OFFSET%', f'{count - 1}'), query_fun, *args)
+            offset_query = query.replace('%OFFSET%', f'{count - 1}')
+            run_query(name, sf, q, True, offset_query, query_fun, *args)
+            run_query(name, sf, q, False, offset_query, query_fun, *args)
         print(f'Running {name} SF{sf} done.')

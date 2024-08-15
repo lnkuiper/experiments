@@ -266,7 +266,7 @@ FROM
 WHERE
     {'\nAND '.join([c for c in where_list])}
 OFFSET
-    %OFFSET%;
+    %OFFSET%
 """
 
 
