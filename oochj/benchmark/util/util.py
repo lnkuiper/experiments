@@ -11,8 +11,7 @@ QUERIES_DIR = f'{BASE_DIR}/queries'
 DATA_DIR = f'{BASE_DIR}/data'
 RESULTS_DIR = f'{BASE_DIR}/results'
 
-SCALE_FACTORS = [32, 64, 128]
-#SCALE_FACTORS = [256]
+SCALE_FACTORS = [1, 2, 4, 8, 16, 32, 64, 128, 256]
 
 REPETITIONS = 1
 RESULTS_TABLE_NAME = 'results'
@@ -91,6 +90,11 @@ def run_query(name, sf, q, query, fun, *args):
 def run_benchmark(name, schema_fun, query_fun, *args):
     for sf in SCALE_FACTORS:
         counts = {
+            1: 6001215,
+            2: 11997996,
+            4: 23996604,
+            8: 47989007,
+            16: 95988640,
             32: 192000551,
             64: 384016850,
             128: 768046938,
