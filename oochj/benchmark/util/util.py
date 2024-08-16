@@ -1,4 +1,5 @@
 import copy
+import ctypes
 import duckdb
 import os
 import time
@@ -57,10 +58,16 @@ def get_repetition_count(name, sf, q, thin):
     return REPETITIONS - repetitions
 
 
-def insert_result(name, sf, q, thin, t):
-    con = get_results_con(name)
+def insert_result(con, name, sf, q, thin, t):
     con.execute(f"INSERT INTO {RESULTS_TABLE_NAME} VALUES ({sf}, {q}, {thin}, {t});")
-    con.close()
+
+
+def trim_memory():
+    try:
+        libc = ctypes.CDLL("libc.so.6")
+        libc.malloc_trim(0)
+    except:
+        None
 
 
 @timeout(600)
@@ -71,7 +78,7 @@ def timeout_fun(fun, query, *args):
     del res
     return t
 
-def run_query(name, sf, q, query, thin, fun, *args):
+def run_query(name, result_con, sf, q, thin, query, fun, *args):
     if thin:
         query = f'SELECT count(*) FROM ({query});'
     else:
@@ -89,10 +96,11 @@ def run_query(name, sf, q, query, thin, fun, *args):
             except Exception as e:
                 t = -2
             error = t
-        insert_result(name, sf, q, thin, t)
+        insert_result(result_con, name, sf, q, thin, t)
 
 
 def run_benchmark(name, schema_fun, query_fun, *args):
+    result_con = get_results_con(name)
     for sf in SCALE_FACTORS:
         counts = {
             1: 6001215,
@@ -112,6 +120,6 @@ def run_benchmark(name, schema_fun, query_fun, *args):
         print(f'Running {name} SF{sf} ...')
         for q, query in tqdm.tqdm(queries):
             offset_query = query.replace('%OFFSET%', f'{count - 1}')
-            run_query(name, sf, q, True, offset_query, query_fun, *args)
-            run_query(name, sf, q, False, offset_query, query_fun, *args)
+            run_query(name, result_con, sf, q, True, offset_query, query_fun, *args)
+            run_query(name, result_con, sf, q, False, offset_query, query_fun, *args)
         print(f'Running {name} SF{sf} done.')
