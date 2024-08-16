@@ -12,7 +12,7 @@ QUERIES_DIR = f'{BASE_DIR}/queries'
 DATA_DIR = f'{BASE_DIR}/data'
 RESULTS_DIR = f'{BASE_DIR}/results'
 
-SCALE_FACTORS = [1, 2, 4, 8, 16, 32, 64, 128]
+SCALE_FACTORS = [1, 2, 4, 8, 16, 32, 64, 128, 256]
 
 REPETITIONS = 5
 RESULTS_TABLE_NAME = 'results'
@@ -51,10 +51,8 @@ def get_results_con(name):
     return con
 
 
-def get_repetition_count(name, sf, q, thin):
-    con = results_con = get_results_con(name)
+def get_repetition_count(con, name, sf, q, thin):
     repetitions = con.execute(f"SELECT count(*) FROM {RESULTS_TABLE_NAME} WHERE sf = {sf} AND q = {q} AND thin = {thin};").fetchall()[0][0]
-    con.close()
     return REPETITIONS - repetitions
 
 
@@ -76,6 +74,7 @@ def timeout_fun(fun, query, *args):
     res = fun(query, *args)
     t = time.time() - before
     del res
+    time.sleep(1)
     return t
 
 def run_query(name, result_con, sf, q, thin, query, fun, *args):
@@ -83,7 +82,7 @@ def run_query(name, result_con, sf, q, thin, query, fun, *args):
         query = f'SELECT count(*) FROM ({query});'
     else:
         query = f'{query};'
-    repetitions = get_repetition_count(name, sf, q, thin)
+    repetitions = get_repetition_count(result_con, name, sf, q, thin)
     error = 1
     for _ in range(repetitions):
         if error < 0:
@@ -100,7 +99,10 @@ def run_query(name, result_con, sf, q, thin, query, fun, *args):
 
 
 def run_benchmark(name, schema_fun, query_fun, *args):
+    duckdb.sql("SET threads=1;")
     result_con = get_results_con(name)
+    result_con.execute("SET threads=1;")
+    result_con.execute("SET memory_limit='50mb';")
     for sf in SCALE_FACTORS:
         counts = {
             1: 6001215,

@@ -8,7 +8,7 @@ from util.util import *
 
 
 def schema_fun(sf, con):
-    con.execute(f"USE sf{sf};")
+    return con.execute(f"USE sf{sf};").fetchall()
 
 
 def query_fun(query, con):
@@ -22,7 +22,7 @@ def main():
 
     con.execute("SET preserve_insertion_order=false;")
     con.execute("SET allocator_background_threads=true;")
-    con.execute("SET memory_limit='25GiB';")
+    con.execute("SET memory_limit='24GiB';")
 
     run_benchmark('duckdb', schema_fun, query_fun, con)
 
