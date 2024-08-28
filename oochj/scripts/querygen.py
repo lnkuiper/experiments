@@ -258,7 +258,8 @@ def generate_query(query_definition):
                 if column not in table_definition.get('columns_except'):
                     select_list.append(f"{alias}.{column}")
 
-    return f"""-- {query_definition.get('description')}
+    return f"""
+-- {query_definition.get('description')}
 SELECT
 {',\n'.join(['    ' + s for s in select_list])}
 FROM

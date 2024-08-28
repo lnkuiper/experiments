@@ -64,9 +64,11 @@ def generate_sf(sf):
 
     for i in range(cpu_count):
         con.execute(f"ATTACH 'temp{i}.db' AS temp{i} (READ_ONLY);")
-    for table in TABLES:
-        con.execute(f"INSERT INTO {table} {' UNION ALL '.join(['SELECT * FROM temp' + str(i) + '.' + table for i in range(cpu_count)])};")
-    for i in range(cpu_count):
+        con.execute("START TRANSACTION;")
+        for table in TABLES:
+            con.execute(f"INSERT INTO {table} SELECT * FROM temp{i}.{table};")
+        con.execute("COMMIT;")
+        con.execute(f"DETACH temp{i};")
         os.remove(f'temp{i}.db')
 
     output = f'{DATA_DIR}/sf{sf}'
@@ -75,7 +77,7 @@ def generate_sf(sf):
     con.execute(f"EXPORT DATABASE '{output}';")
 
     con.close()
-    os.remove('temp.db')
+    os.remove(temporary_db)
 
     with open(f"{output}/load.sql", 'r') as f:
         header_true = f.read().replace('header 1', 'header TRUE')
