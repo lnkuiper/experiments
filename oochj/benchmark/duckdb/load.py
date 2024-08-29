@@ -18,10 +18,12 @@ def main():
     for sf in SCALE_FACTORS:
         con.execute(f"CREATE OR REPLACE SCHEMA sf{sf};")
         con.execute(f"USE sf{sf};")
-        print(f'Loading duckdb SF{sf} ...')
+        print(f'Loading duckdb SF{sf} ...', flush=True)
+        con.execute("START TRANSACTION;")
         con.execute(get_schema(sf))
         con.execute(get_load(sf))
-        print(f'Loading duckdb SF{sf} done.')
+        con.execute("COMMIT;")
+        print(f'Loading duckdb SF{sf} done.', flush=True)
 
 
 if __name__ == '__main__':

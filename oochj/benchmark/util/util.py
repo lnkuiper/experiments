@@ -1,5 +1,4 @@
 import copy
-import ctypes
 import duckdb
 import os
 import time
@@ -59,22 +58,12 @@ def get_repetition_count(con, name, sf, q, thin):
 def insert_result(con, name, sf, q, thin, t):
     con.execute(f"INSERT INTO {RESULTS_TABLE_NAME} VALUES ({sf}, {q}, {thin}, {t});")
 
-
-def trim_memory():
-    try:
-        libc = ctypes.CDLL("libc.so.6")
-        libc.malloc_trim(0)
-    except:
-        None
-
-
 @timeout(600)
 def timeout_fun(fun, query, *args):
     before = time.time()
     res = fun(query, *args)
     t = time.time() - before
     del res
-    time.sleep(1)
     return t
 
 def run_query(name, result_con, sf, q, thin, query, fun, *args):
