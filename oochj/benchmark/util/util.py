@@ -58,15 +58,16 @@ def get_repetition_count(con, name, sf, q, thin):
 def insert_result(con, name, sf, q, thin, t):
     con.execute(f"INSERT INTO {RESULTS_TABLE_NAME} VALUES ({sf}, {q}, {thin}, {t});")
 
+
 @timeout(600)
 def timeout_fun(fun, query, *args):
     before = time.time()
     res = fun(query, *args)
     t = time.time() - before
-    del res
-    return t
+    return t, res
 
-def run_query(name, result_con, sf, q, thin, query, fun, *args):
+
+def run_query(name, result_con, sf, q, thin, query, query_fun, close_fun, *args):
     if thin:
         query = f'SELECT count(*) FROM ({query});'
     else:
@@ -74,20 +75,24 @@ def run_query(name, result_con, sf, q, thin, query, fun, *args):
     repetitions = get_repetition_count(result_con, name, sf, q, thin)
     error = 1
     for _ in range(repetitions):
+        t = 0
+        res = None
         if error < 0:
             t = error
         else:
             try:
-                t = timeout_fun(fun, query, *args)
+                t, res = timeout_fun(query_fun, query, *args)
             except TimeoutError:
                 t = -1
             except Exception as e:
                 t = -2
             error = t
+        if res:
+            close_fun(res)
         insert_result(result_con, name, sf, q, thin, t)
 
 
-def run_benchmark(name, schema_fun, query_fun, *args):
+def run_benchmark(name, schema_fun, query_fun, close_fun, *args):
     duckdb.sql("SET threads=1;")
     result_con = get_results_con(name)
     result_con.execute("SET threads=1;")
@@ -111,7 +116,7 @@ def run_benchmark(name, schema_fun, query_fun, *args):
         print(f'Running {name} SF{sf} ...')
         for q, query in tqdm.tqdm(queries):
             offset_query = query.replace('%OFFSET%', f'{count - 1}')
-            run_query(name, result_con, sf, q, True, offset_query, query_fun, *args)
-            if q != '6':
-                run_query(name, result_con, sf, q, False, offset_query, query_fun, *args)
+            run_query(name, result_con, sf, q, True, offset_query, query_fun, close_fun, *args)
+            if q != 6:
+                run_query(name, result_con, sf, q, False, offset_query, query_fun, close_fun, *args)
         print(f'Running {name} SF{sf} done.')

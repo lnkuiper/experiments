@@ -18,6 +18,10 @@ def query_fun(query, cur):
     return cur.fetchall()
 
 
+def close_fun(res):
+    del res
+
+
 def main():
     db_path = f'{SYSTEM_DIR}/mydb.umbra'
     #db_path = '/data/umbra/mydb.umbra'
@@ -28,7 +32,7 @@ def main():
         con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5433)
         cur = con.cursor()
         cur.execute("""ROLLBACK;""");
-        run_benchmark('umbra', schema_fun, query_fun, cur)
+        run_benchmark('umbra', schema_fun, query_fun, close_fun, cur)
     except Exception as e:
         my_exception = e
     finally:

@@ -17,6 +17,10 @@ def query_fun(query, cur):
     return cur.fetchall()
 
 
+def close_fun(res):
+    del res
+
+
 def main():
     con = psycopg2.connect(database="mydb", host="localhost", user="ubuntu", password="secret", port=5432)
     cur = con.cursor()
@@ -24,7 +28,7 @@ def main():
     cur.execute("SET default_tablespace=mytablespace;")
     cur.execute("SET temp_tablespaces='mytablespace';")
 
-    run_benchmark('postgresql', schema_fun, query_fun, cur)
+    run_benchmark('postgresql', schema_fun, query_fun, close_fun, cur)
 
 
 if __name__ == '__main__':

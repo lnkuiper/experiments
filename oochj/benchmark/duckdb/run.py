@@ -15,6 +15,10 @@ def query_fun(query, con):
     return con.sql(query).fetchall()
 
 
+def close_fun(res):
+    del res
+
+
 def main():
     db_path = f'{SYSTEM_DIR}/mydb.duckdb'
     # db_path = '/data/mydb.duckdb'
@@ -23,7 +27,7 @@ def main():
     con.execute("SET preserve_insertion_order=false;")
     con.execute("SET allocator_background_threads=true;")
 
-    run_benchmark('duckdb', schema_fun, query_fun, con)
+    run_benchmark('duckdb', schema_fun, query_fun, close_fun, con)
 
 
 if __name__ == '__main__':
