@@ -112,5 +112,6 @@ def run_benchmark(name, schema_fun, query_fun, *args):
         for q, query in tqdm.tqdm(queries):
             offset_query = query.replace('%OFFSET%', f'{count - 1}')
             run_query(name, result_con, sf, q, True, offset_query, query_fun, *args)
-            run_query(name, result_con, sf, q, False, offset_query, query_fun, *args)
+            if q != '6':
+                run_query(name, result_con, sf, q, False, offset_query, query_fun, *args)
         print(f'Running {name} SF{sf} done.')
