@@ -13,11 +13,12 @@ def schema_fun(sf, con):
 
 
 def query_fun(query, con):
-    return con.execute_query(query)
+    return con.execute_list_query(query)
 
 
 def close_fun(res):
-    res.close()
+    # res.close()
+    del res
 
 
 def main():

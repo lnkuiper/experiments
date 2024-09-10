@@ -86,9 +86,9 @@ def run_query(name, result_con, sf, q, thin, query, query_fun, close_fun, *args)
                 t = -1
             except Exception as e:
                 t = -2
+            finally:
+                close_fun(res)
             error = t
-        if res:
-            close_fun(res)
         insert_result(result_con, name, sf, q, thin, t)
 
 
