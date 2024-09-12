@@ -25,8 +25,12 @@ def main():
     con = psycopg2.connect(database="mydb", host="localhost", user="ubuntu", password="secret", port=5432)
     cur = con.cursor()
 
-    cur.execute("SET default_tablespace=mytablespace;")
-    cur.execute("SET temp_tablespaces='mytablespace';")
+    #cur.execute("SET default_tablespace=mytablespace;")
+    #cur.execute("SET temp_tablespaces='mytablespace';")
+    cur.execute("ROLLBACK;")
+    cur.execute("DROP TABLESPACE temp_space;")
+    cur.execute("CREATE TABLESPACE temp_space LOCATION '/data/experiments/oochj/benchmark/postgresql/temp';")
+    cur.execute("SET temp_tablespaces TO 'temp_space';")
 
     run_benchmark('postgresql', schema_fun, query_fun, close_fun, cur)
 

@@ -85,6 +85,7 @@ def run_query(name, result_con, sf, q, thin, query, query_fun, close_fun, *args)
             except TimeoutError:
                 t = -1
             except Exception as e:
+                raise e
                 t = -2
             finally:
                 close_fun(res)

@@ -23,8 +23,8 @@ def main():
 
     #cur.execute("COMMIT;")
     #cur.execute("CREATE TABLESPACE mytablespace LOCATION '/data/postgresql';")
-    cur.execute("SET default_tablespace=mytablespace;")
-    cur.execute("SET temp_tablespaces='mytablespace';")
+    #cur.execute("SET default_tablespace=mytablespace;")
+    #cur.execute("SET temp_tablespaces='mytablespace';")
 
     for sf in SCALE_FACTORS:
         cur.execute("START TRANSACTION;")
