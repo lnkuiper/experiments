@@ -26,6 +26,7 @@ def main():
 
     con.execute("SET preserve_insertion_order=false;")
     con.execute("SET allocator_background_threads=true;")
+    #con.execute("SET disabled_optimizers TO 'compressed_materialization';")
 
     run_benchmark('duckdb', schema_fun, query_fun, close_fun, con)
 
