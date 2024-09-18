@@ -8,7 +8,7 @@ from util.util import *
 
 
 def schema_fun(sf, con):
-    return con.execute(f"USE sf{sf};").fetchall()
+    return None #con.execute(f"USE sf{sf};").fetchall()
 
 
 def query_fun(query, con):
