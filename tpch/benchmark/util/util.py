@@ -58,7 +58,7 @@ def insert_result(con, name, sf, q, t):
     con.execute(f"INSERT INTO {RESULTS_TABLE_NAME} VALUES ({sf}, {q}, {t});")
 
 
-@timeout(600)
+@timeout(1000)
 def timeout_fun(fun, query, *args):
     before = time.time()
     res = fun(query, *args)
