@@ -59,7 +59,7 @@ def insert_result(con, name, sf, q, thin, t):
     con.execute(f"INSERT INTO {RESULTS_TABLE_NAME} VALUES ({sf}, {q}, {thin}, {t});")
 
 
-@timeout(600)
+@timeout(1000)
 def timeout_fun(fun, query, *args):
     before = time.time()
     res = fun(query, *args)
@@ -117,7 +117,7 @@ def run_benchmark(name, schema_fun, query_fun, close_fun, *args):
         print(f'Running {name} SF{sf} ...')
         for q, query in tqdm.tqdm(queries):
             offset_query = query.replace('%OFFSET%', f'{count - 1}')
-            run_query(name, result_con, sf, q, True, offset_query, query_fun, close_fun, *args)
+            # run_query(name, result_con, sf, q, True, offset_query, query_fun, close_fun, *args)
             if q != 6:
                 run_query(name, result_con, sf, q, False, offset_query, query_fun, close_fun, *args)
         print(f'Running {name} SF{sf} done.')

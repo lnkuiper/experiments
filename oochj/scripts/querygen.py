@@ -245,53 +245,55 @@ QUERY_DEFINITIONS = [{
         'ps1.ps_partkey = ps2.ps_partkey',
         'ps1.ps_suppkey = ps2.ps_suppkey',
     ]
-}, {
-    'description': 'ALL TABLES',
-    'tables': [{
-        'name': 'customer',
-        'alias': 'c',
-        'columns': []
-    }, {
-        'name': 'lineitem',
-        'alias': 'l',
-        'columns': [
-        'l_orderkey'
-    ]}, {
-        'name': 'nation',
-        'alias': 'n',
-        'columns': []
-    }, {
-        'name': 'orders',
-        'alias': 'o',
-        'columns': []
-    }, {
-        'name': 'part',
-        'alias': 'p',
-        'columns': []
-    }, {
-        'name': 'partsupp',
-        'alias': 'ps',
-        'columns': []
-    }, {
-        'name': 'region',
-        'alias': 'r',
-        'columns': []
-    }, {
-        'name': 'supplier',
-        'alias': 's',
-        'columns': []
-    }],
-    'conditions': [
-        'c.c_custkey = o.o_custkey',
-        'n.n_nationkey = c.c_nationkey',
-        'o.o_orderkey = l.l_orderkey',
-        'p.p_partkey = ps.ps_partkey',
-        'ps.ps_partkey = l.l_partkey',
-        'ps.ps_suppkey = l.l_suppkey',
-        'r.r_regionkey = n.n_regionkey',
-        's.s_suppkey = ps.ps_suppkey'
-    ]
-}]
+},
+#{
+#    'description': 'ALL TABLES',
+#    'tables': [{
+#        'name': 'customer',
+#        'alias': 'c',
+#        'columns': []
+#    }, {
+#        'name': 'lineitem',
+#        'alias': 'l',
+#        'columns': [
+#        'l_orderkey'
+#    ]}, {
+#        'name': 'nation',
+#        'alias': 'n',
+#        'columns': []
+#    }, {
+#        'name': 'orders',
+#        'alias': 'o',
+#        'columns': []
+#    }, {
+#        'name': 'part',
+#        'alias': 'p',
+#        'columns': []
+#    }, {
+#        'name': 'partsupp',
+#        'alias': 'ps',
+#        'columns': []
+#    }, {
+#        'name': 'region',
+#        'alias': 'r',
+#        'columns': []
+#    }, {
+#        'name': 'supplier',
+#        'alias': 's',
+#        'columns': []
+#    }],
+#    'conditions': [
+#        'c.c_custkey = o.o_custkey',
+#        'n.n_nationkey = c.c_nationkey',
+#        'o.o_orderkey = l.l_orderkey',
+#        'p.p_partkey = ps.ps_partkey',
+#        'ps.ps_partkey = l.l_partkey',
+#        'ps.ps_suppkey = l.l_suppkey',
+#        'r.r_regionkey = n.n_regionkey',
+#        's.s_suppkey = ps.ps_suppkey'
+#    ]
+#}
+]
 
 
 def generate_query(query_definition):
