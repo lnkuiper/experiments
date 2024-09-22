@@ -28,7 +28,7 @@ def main():
     #cur.execute("SET default_tablespace=mytablespace;")
     #cur.execute("SET temp_tablespaces='mytablespace';")
     cur.execute("ROLLBACK;")
-    cur.execute("DROP TABLESPACE temp_space;")
+    cur.execute("DROP TABLESPACE IF EXISTS temp_space;")
     cur.execute("CREATE TABLESPACE temp_space LOCATION '/data/experiments/oochj/benchmark/postgresql/temp';")
     cur.execute("SET temp_tablespaces TO 'temp_space';")
 
