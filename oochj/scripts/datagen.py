@@ -10,91 +10,71 @@ sys.path.append(f'{SCRIPTS_DIR}/..')
 from benchmark.util.util import *
 
 
-TABLES = [
-    'customer',
-    'lineitem',
-    'nation',
-    'orders',
-    'part',
-    'partsupp',
-    'region',
-    'supplier',
-]
+def initialize_macros(con):
+    # Macro to generate a deterministic value between 0 and 1 from another value
+    con.sql("CREATE OR REPLACE MACRO deterministic_random(rand) AS hash(rand) / 18446744073709551615;")
+    # Macro for generalized inverse for generating skewed distributions (higher alpha = more skew)
+    # When alpha = 0 it's random uniform, when alpha = 1 it's Zipfian
+    con.sql("""CREATE OR REPLACE MACRO generalized_inverse(rand, alpha, xmin, xmax) AS
+        CASE alpha
+            WHEN 1 THEN 
+                ceil(xmin * exp(rand * ln(xmax / xmin)))
+            ELSE 
+                ceil(((xmin^(1 - alpha)) + rand * ((xmax^(1 - alpha)) - (xmin^(1 - alpha))))^(1 / (1 - alpha)))
+        END;""")
+    # Macro to generate random BIGINT column between -1B and +1B
+    con.sql("CREATE OR REPLACE MACRO random_to_bigint(rand) AS CAST(-1_000_000_000 + rand * 1_000_000_000 AS BIGINT);")
+    # Macro to generate some kind of tag column
+    con.sql("CREATE OR REPLACE MACRO tag(rand) AS 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[1 + floor(rand * 26 % 26)::BIGINT];")
+    # Macro to generate some kind of employee column
+    con.sql("CREATE OR REPLACE MACRO employee(rand) AS printf('EMPNO%010d', CAST(rand * 1_000_000_000 AS BIGINT));")
+    # Some macros to generate lorem ipsum
+    con.sql("CREATE OR REPLACE MACRO lorem_word(rand) AS ['voluptatem', 'quaerat', 'quiquia', 'non', 'dolore', 'dolorem', 'labore', 'consectetur', 'porro', 'sed', 'numquam', 'aliquam', 'sit', 'eius', ")'modi', 'est', 'amet', 'magnam', 'dolor', 'etincidunt', 'velit', 'neque', 'ipsum', 'adipisci', 'quisquam', 'ut', 'tempora'][1 + floor(rand * 27 % 27)::BIGINT];
+    con.sql("CREATE OR REPLACE MACRO lorem_sentence_util(s) AS upper(s[1]) || s[2:] || '.';")
+    con.sql("CREATE OR REPLACE MACRO lorem_sentence(rand, words) AS lorem_sentence_util(list_aggr([lorem_word(deterministic_random(rand + i)) for i in range(words)], 'string_agg', ' '));")
 
 
-def task(arg_dict):
-    temporary_db = f"temp{arg_dict.get('id')}.db"
-    if os.path.exists(temporary_db):
-        os.remove(temporary_db)
-    con = duckdb.connect(temporary_db)
-    con.execute("SET threads=1;")
-    con.execute("SET memory_limit='1gb';")
-    for step in range(arg_dict.get('step_start'), arg_dict.get('step_end')):
-        con.execute(f"CALL dbgen(sf={arg_dict.get('sf')}, children={arg_dict.get('total_steps')}, step={step});")
-    con.close()
+def config_to_string(build_or_probe, parameter, value)
+    assert(build_or_probe == 'build' or build_or_probe == 'probe')
 
-def generate_sf(sf):
-    cpu_count = multiprocessing.cpu_count()
-    total_steps = int((sf + cpu_count - 1) / cpu_count) * cpu_count
-    steps_per_cpu = int(total_steps / cpu_count)
+    default_config = get_config('default')
 
-    tasks = []
-    step = 0
-    for i in range(cpu_count):
-        tasks.append({
-            'id': i,
-            'sf': sf,
-            'total_steps': total_steps,
-            'step_start': step,
-            'step_end': step + steps_per_cpu,
-        })
-        step += steps_per_cpu
+    config_string = f"k{config['key_count']}_"
+    config_string += f"a{config['alpha']}_"
+    config_string += f"r{int(config['row_count'] / 1_000_000)M}"
+    return config_to_string
 
-    with multiprocessing.Pool(cpu_count) as p:
-        p.map(task, tasks)
 
-    temporary_db = 'temp.db'
-    if os.path.exists(temporary_db):
-        os.remove(temporary_db)
-    con = duckdb.connect('temp.db')
+def config_to_copy_statement(config):
+    return f"""COPY (
+    WITH cte AS (
+        SELECT
+            rand AS "0",
+            1 - "0" AS "1",
+            deterministic_random("0") AS "2",
+            deterministic_random("1") AS "3",
+            generalized_inverse(rand, {config['alpha']}, 1e-9, {config['key_count']}) / ({config['key_count']} + 1) AS "gi0",
+            1 - "gi0" AS "gi1",
+            deterministic_random("gi0") AS "gi2",
+            deterministic_random("gi1") AS "gi3",
+        FROM
+            random
+    )
+    SELECT
+        CAST(COLUMNS('^gi[0-9]') * {config['key_count']} AS BIGINT) AS "key_\0",
+        random_to_bigint(COLUMNS('^[0-9]')) AS "int_\0",
+        tag(COLUMNS('^[0-9]')) AS "tag_\0",
+        employee(COLUMNS('^[0-9]')) AS "emp_\0",
+        lorem_sentence(COLUMNS('^[0-9]'), 4) AS "com_\0",
+    FROM
+        cte
+) TO '{config_to_string(config)}.csv' (FORMAT CSV);
+"""
 
-    con.execute("SET preserve_insertion_order=false;")
-    # con.execute("SET allocator_background_threads=true;")
-    con.execute("CALL dbgen(sf=0);")
 
-    for i in range(cpu_count):
-        con.execute(f"ATTACH 'temp{i}.db' AS temp{i} (READ_ONLY);")
-        con.execute("START TRANSACTION;")
-        for table in TABLES:
-            con.execute(f"INSERT INTO {table} SELECT * FROM temp{i}.{table};")
-        con.execute("COMMIT;")
-        con.execute(f"DETACH temp{i};")
-        os.remove(f'temp{i}.db')
-
-    output = f'{DATA_DIR}/sf{sf}'
-    if os.path.exists(output):
-        shutil.rmtree(output)
-    con.execute(f"EXPORT DATABASE '{output}';")
-
-    con.close()
-    os.remove(temporary_db)
-
-    with open(f"{output}/load.sql", 'r') as f:
-        header_true = f.read().replace('header 1', 'header TRUE')
-    with open(f"{output}/load.sql", 'w') as f:
-        f.write(header_true)
 
 def main():
-    if not os.path.exists(DATA_DIR):
-        os.mkdir(DATA_DIR)
 
-    for sf in SCALE_FACTORS:
-        output = f'{DATA_DIR}/sf{sf}'
-        if os.path.exists(output):
-            continue
-        print(f'Generating SF{sf} ...')
-        generate_sf(sf)
-        print(f'Generating SF{sf} done.')
 
 
 if __name__ == '__main__':
