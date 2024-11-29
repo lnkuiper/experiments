@@ -120,6 +120,7 @@ def generate_data_from_table_config(table_config):
     filename = table_config_to_filename(table_config)
     if os.path.exists(filename):
         return
+    print(f'Generating {filename} ...')
     con = duckdb.connect()
     con.execute("SELECT setseed(0.42);")
     con.execute(f"CREATE TABLE random AS SELECT random() AS rand FROM range({table_config['row_count']});")
@@ -147,6 +148,7 @@ def generate_data_from_table_config(table_config):
     FROM
         cte
 ) TO '{filename}' (FORMAT CSV);""")
+    print(f'Generating {filename} done.')
 
 
 def parameter_requires_regen(parameter):
@@ -204,7 +206,7 @@ def run_config(name, functions, results_con, experiment, parameter, value, repet
     query.replace('%OFFSET%', f'{count - 1}')
 
     error = 1
-    for _ in range(repetitions):
+    for _ in tqdm.tqdm(range(repetitions)):
         t = 0
         res = None
         if error < 0:
@@ -228,11 +230,11 @@ def run_experiments(name, functions, *args):
     for experiment in EXPERIMENTS:
         experiment_config = get_config(experiment)
         for parameter in experiment_config:
-            print(f'Running {name} {experiment} {parameter} ...')
-            for value in tqdm.tqdm(experiment_config[parameter]):
+            for value in experiment_config[parameter]:
                 repetitions = get_repetition_count(result_con, experiment, parameter, value)
                 if repetitions == 0:
                     continue
+                print(f'Running {name} {experiment} {parameter} {value} ...')
 
                 build_table_config = get_build_table_config(parameter, value)
                 generate_data_from_table_config(build_table_config)
@@ -243,5 +245,6 @@ def run_experiments(name, functions, *args):
                 functions['load']('probe', PROBE_SCHEMA, table_config_to_filename(probe_table_config))
 
                 run_config(name, functions, results_con, experiment, parameter, value, repetitions, *args)
-            print(f'Running {name} {experiment} {parameter} done.')
+
+                print(f'Running {name} {experiment} {parameter} {value} done.')
 
