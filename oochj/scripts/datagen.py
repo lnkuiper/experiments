@@ -10,7 +10,7 @@ sys.path.append(f'{SCRIPTS_DIR}/..')
 from benchmark.util.util import *
 
 
-def initialize_macros(con):
+def initialize_datagen_macros(con):
     # Macro to generate a deterministic value between 0 and 1 from another value
     con.sql("CREATE OR REPLACE MACRO deterministic_random(rand) AS hash(rand) / 18446744073709551615;")
     # Macro for generalized inverse for generating skewed distributions (higher alpha = more skew)
@@ -34,15 +34,7 @@ def initialize_macros(con):
     con.sql("CREATE OR REPLACE MACRO lorem_sentence(rand, words) AS lorem_sentence_util(list_aggr([lorem_word(deterministic_random(rand + i)) for i in range(words)], 'string_agg', ' '));")
 
 
-def config_to_string(build_or_probe, parameter, value)
-    assert(build_or_probe == 'build' or build_or_probe == 'probe')
 
-    default_config = get_config('default')
-
-    config_string = f"k{config['key_count']}_"
-    config_string += f"a{config['alpha']}_"
-    config_string += f"r{int(config['row_count'] / 1_000_000)M}"
-    return config_to_string
 
 
 def config_to_copy_statement(config):

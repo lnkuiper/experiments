@@ -29,12 +29,12 @@ def get_results_con(name):
 
 
 def get_repetition_count(con, experiment, parameter, value):
-    repetitions = con.execute(f"SELECT count(*) FROM results WHERE experiment = {experiment} AND parameter = {parameter} AND value = {value};").fetchall()[0][0]
+    repetitions = con.execute(f"SELECT count(*) FROM results WHERE experiment = '{experiment}' AND parameter = '{parameter}' AND value = '{value}';").fetchall()[0][0]
     return REPETITIONS - repetitions
 
 
 def insert_result(con, experiment, parameter, value, t):
-    con.execute(f"INSERT INTO {RESULTS_TABLE_NAME} VALUES ({experiment}, {parameter}, {value}, {t});")
+    con.execute(f"INSERT INTO results VALUES ('{experiment}', '{parameter}', '{value}', {t});")
 
 
 ################################################################################################################################
@@ -43,17 +43,17 @@ def insert_result(con, experiment, parameter, value, t):
 CONFIG_DIR = f'{BASE_DIR}/configs'
 
 def get_config(config_name):
-    duckdb.execute(f"FROM '{CONFIG_DIR}/{config_name}.json'").fetchall()[0][0]
+    return duckdb.execute(f"SELECT cfg FROM '{CONFIG_DIR}/{config_name}.json' AS cfg").fetchall()[0][0]
 
 
 def supplied_or_default(default_config, supplied_parameter, supplied_value, parameter):
     if parameter == supplied_parameter:
         return supplied_value
     else:
-        return default_config['parameter']
+        return default_config[parameter]
 
 
-def get_build_table_config(parameter, value)
+def get_build_table_config(parameter, value):
     default_config = get_config('default')
 
     row_count_build = supplied_or_default(default_config, parameter, value, 'row_count_build')
@@ -65,7 +65,7 @@ def get_build_table_config(parameter, value)
     }
 
 
-def get_probe_table_config(parameter, value)
+def get_probe_table_config(parameter, value):
     default_config = get_config('default')
 
     row_count_build = supplied_or_default(default_config, parameter, value, 'row_count_build')
@@ -82,8 +82,30 @@ def get_probe_table_config(parameter, value)
 ################################################################################################################################
 DATA_DIR = f'{BASE_DIR}/data'
 
-BUILD_SCHEMA = ''
-PROBE_SCHEMA = ''
+TABLE_SCHEMA = """CREATE OR REPLACE TABLE "%TABLE_NAME%" (
+    key_gi0 BIGINT,
+    key_gi1 BIGINT,
+    key_gi2 BIGINT,
+    key_gi3 BIGINT,
+    int_0 BIGINT,
+    int_1 BIGINT,
+    int_2 BIGINT,
+    int_3 BIGINT,
+    tag_0 VARCHAR,
+    tag_1 VARCHAR,
+    tag_2 VARCHAR,
+    tag_3 VARCHAR,
+    emp_0 VARCHAR,
+    emp_1 VARCHAR,
+    emp_2 VARCHAR,
+    emp_3 VARCHAR,
+    com_0 VARCHAR,
+    com_1 VARCHAR,
+    com_2 VARCHAR,
+    com_3 VARCHAR
+);
+"""
+
 
 def initialize_datagen_macros(con):
     # Macro to generate a deterministic value between 0 and 1 from another value
@@ -104,15 +126,15 @@ def initialize_datagen_macros(con):
     # Macro to generate some kind of employee column
     con.sql("CREATE OR REPLACE MACRO employee(rand) AS printf('EMPNO%010d', CAST(rand * 1_000_000_000 AS BIGINT));")
     # Some macros to generate lorem ipsum
-    con.sql("CREATE OR REPLACE MACRO lorem_word(rand) AS ['voluptatem', 'quaerat', 'quiquia', 'non', 'dolore', 'dolorem', 'labore', 'consectetur', 'porro', 'sed', 'numquam', 'aliquam', 'sit', 'eius', ")'modi', 'est', 'amet', 'magnam', 'dolor', 'etincidunt', 'velit', 'neque', 'ipsum', 'adipisci', 'quisquam', 'ut', 'tempora'][1 + floor(rand * 27 % 27)::BIGINT];
+    con.sql("CREATE OR REPLACE MACRO lorem_word(rand) AS ['voluptatem', 'quaerat', 'quiquia', 'non', 'dolore', 'dolorem', 'labore', 'consectetur', 'porro', 'sed', 'numquam', 'aliquam', 'sit', 'eius', 'modi', 'est', 'amet', 'magnam', 'dolor', 'etincidunt', 'velit', 'neque', 'ipsum', 'adipisci', 'quisquam', 'ut', 'tempora'][1 + floor(rand * 27 % 27)::BIGINT];")
     con.sql("CREATE OR REPLACE MACRO lorem_sentence_util(s) AS upper(s[1]) || s[2:] || '.';")
     con.sql("CREATE OR REPLACE MACRO lorem_sentence(rand, words) AS lorem_sentence_util(list_aggr([lorem_word(deterministic_random(rand + i)) for i in range(words)], 'string_agg', ' '));")
 
 
 def table_config_to_filename(table_config):
-    config_string = f"k{config['key_count']}_"
-    config_string += f"a{config['alpha']}_"
-    config_string += f"r{int(config['row_count'] / 1_000_000)M}"
+    config_string = f"k{int(table_config['key_count'] / 1_000_000)}M_"
+    config_string += f"a{table_config['alpha']}_"
+    config_string += f"r{int(table_config['row_count'] / 1_000_000)}M"
     return f'{DATA_DIR}/{config_string}.csv'
 
 
@@ -120,8 +142,9 @@ def generate_data_from_table_config(table_config):
     filename = table_config_to_filename(table_config)
     if os.path.exists(filename):
         return
-    print(f'Generating {filename} ...')
+    print(f"Generating {filename.split("/")[-1]} ...", flush=True)
     con = duckdb.connect()
+    initialize_datagen_macros(con)
     con.execute("SELECT setseed(0.42);")
     con.execute(f"CREATE TABLE random AS SELECT random() AS rand FROM range({table_config['row_count']});")
     con.execute("SET preserve_insertion_order=false;")
@@ -140,15 +163,15 @@ def generate_data_from_table_config(table_config):
             random
     )
     SELECT
-        CAST(COLUMNS('^gi[0-9]') * {table_config['key_count']} AS BIGINT) AS "key_\0",
-        random_to_bigint(COLUMNS('^[0-9]')) AS "int_\0",
-        tag(COLUMNS('^[0-9]')) AS "tag_\0",
-        employee(COLUMNS('^[0-9]')) AS "emp_\0",
-        lorem_sentence(COLUMNS('^[0-9]'), 4) AS "com_\0",
+        CAST(COLUMNS('^gi[0-9]') * {table_config['key_count']} AS BIGINT) AS "key_\\0",
+        random_to_bigint(COLUMNS('^[0-9]')) AS "int_\\0",
+        tag(COLUMNS('^[0-9]')) AS "tag_\\0",
+        employee(COLUMNS('^[0-9]')) AS "emp_\\0",
+        lorem_sentence(COLUMNS('^[0-9]'), 4) AS "com_\\0",
     FROM
         cte
 ) TO '{filename}' (FORMAT CSV);""")
-    print(f'Generating {filename} done.')
+    print(f"Generating {filename.split("/")[-1]} done.", flush=True)
 
 
 def parameter_requires_regen(parameter):
@@ -167,19 +190,20 @@ def parameter_requires_regen(parameter):
 ################################################################################################################################
 # COUNTS
 ################################################################################################################################
-def get_count(name, experiment, parameter, value, query, query_fun, *args):
+def get_count(name, functions, experiment, parameter, value, query, *args):
     if not os.path.exists(RESULTS_DIR):
         os.mkdir(RESULTS_DIR)
     con = duckdb.connect(f'{RESULTS_DIR}/counts.duckdb')
     con.execute(f"CREATE TABLE IF NOT EXISTS counts (experiment VARCHAR, parameter VARCHAR, value VARCHAR, c UBIGINT);")
 
-    res = con.execute(f"SELECT c FROM counts WHERE experiment = {experiment} AND parameter = {parameter} AND value = {value};").fetchall()
+    res = con.execute(f"SELECT c FROM counts WHERE experiment = '{experiment}' AND parameter = '{parameter}' AND value = '{value}';").fetchall()
     if res:
         return res[0][0]
 
     assert(name == 'duckdb')
-    c = query_fun(f"SELECT count(*) FROM ({query});", *args)[0][0]
-    con.execute(f"INSERT INTO counts VALUES ({experiment}, {parameter}, {value}, {c});")
+    query = query.replace('%OFFSET%', '0')
+    c = functions['query'](f"SELECT count(*) FROM ({query});", *args)[0][0]
+    con.execute(f"INSERT INTO counts VALUES ('{experiment}', '{parameter}', '{value}', {c});")
 
     return c
 
@@ -200,11 +224,38 @@ def timeout_fun(fun, query, *args):
     return t, res
 
 
+def get_query(experiment, parameter, value):
+    default_config = get_config('default')
+    if experiment == 'join':
+        default_config['parameter'] = value
+        return f"""SELECT 
+    {',\n    '.join(['b.int_' + str(i) for i in range(default_config['payload_columns_build'])])},
+    {',\n    '.join(['b.tag_' + str(i) for i in range(default_config['payload_columns_build'])])},
+    {',\n    '.join(['b.emp_' + str(i) for i in range(default_config['payload_columns_build'])])},
+    {',\n    '.join(['b.com_' + str(i) for i in range(default_config['payload_columns_build'])])},
+    {',\n    '.join(['p.int_' + str(i) for i in range(default_config['payload_columns_build'])])},
+    {',\n    '.join(['p.tag_' + str(i) for i in range(default_config['payload_columns_build'])])},
+    {',\n    '.join(['p.emp_' + str(i) for i in range(default_config['payload_columns_build'])])},
+    {',\n    '.join(['p.com_' + str(i) for i in range(default_config['payload_columns_build'])])}
+FROM
+    build b,
+    probe p
+WHERE
+    {'\n AND '.join(['b.key_gi' + str(i) + ' = p.key_gi' + str(i) for i in range(default_config['key_columns'])])}
+OFFSET
+    %OFFSET%
+        """
+    else:
+        # TODO
+        assert(False)
+
+
 def run_config(name, functions, results_con, experiment, parameter, value, repetitions, *args):
     query = get_query(experiment, parameter, value)
-    count = get_count(name, experiment, parameter, value, query, query_fun, *args)
-    query.replace('%OFFSET%', f'{count - 1}')
+    count = get_count(name, functions, experiment, parameter, value, query, *args)
+    query = query.replace('%OFFSET%', f'{count - 1}')
 
+    print("Querying ...", flush=True)
     error = 1
     for _ in tqdm.tqdm(range(repetitions)):
         t = 0
@@ -213,16 +264,26 @@ def run_config(name, functions, results_con, experiment, parameter, value, repet
             t = error
         else:
             try:
-                t, res = timeout_fun(query_fun, functions['query'], *args)
+                t, res = timeout_fun(functions['query'], query, *args)
             except TimeoutError:
                 t = -1
             except Exception as e:
                 raise e
                 t = -2
             finally:
-                functions['close'](res)
+                functions['close'](res, *args)
             error = t
         insert_result(results_con, experiment, parameter, value, t)
+    print("Querying done.", flush=True)
+
+
+def wrap_load(functions, table_alias, table_schema, filename, *args):
+    filename_short = filename.split('/')[-1].replace('.csv', '')
+    if not functions['already_loaded'](filename_short, *args):
+        print(f"Loading {filename_short} ...", flush=True)
+        functions['load'](table_schema, filename, filename_short, *args)
+        print(f"Loading {filename_short} done.", flush=True)
+    functions['create_view'](table_alias, filename_short, *args)
 
 
 def run_experiments(name, functions, *args):
@@ -230,21 +291,20 @@ def run_experiments(name, functions, *args):
     for experiment in EXPERIMENTS:
         experiment_config = get_config(experiment)
         for parameter in experiment_config:
-            for value in experiment_config[parameter]:
-                repetitions = get_repetition_count(result_con, experiment, parameter, value)
+            for value in experiment_config[parameter][:1]: # TODO
+                repetitions = get_repetition_count(results_con, experiment, parameter, value)
                 if repetitions == 0:
                     continue
-                print(f'Running {name} {experiment} {parameter} {value} ...')
+                print(f'Running {name} {experiment} {parameter} {value} ...', flush=True)
 
                 build_table_config = get_build_table_config(parameter, value)
                 generate_data_from_table_config(build_table_config)
-                functions['load']('build', BUILD_SCHEMA, table_config_to_filename(build_table_config))
+                wrap_load(functions, 'build', TABLE_SCHEMA, table_config_to_filename(build_table_config), *args)
 
                 probe_table_config = get_probe_table_config(parameter, value)
                 generate_data_from_table_config(probe_table_config)
-                functions['load']('probe', PROBE_SCHEMA, table_config_to_filename(probe_table_config))
+                wrap_load(functions, 'probe', TABLE_SCHEMA, table_config_to_filename(probe_table_config), *args)
 
                 run_config(name, functions, results_con, experiment, parameter, value, repetitions, *args)
 
-                print(f'Running {name} {experiment} {parameter} {value} done.')
-
+                print(f'Running {name} {experiment} {parameter} {value} done.', flush=True)
