@@ -27,7 +27,8 @@ def load_fun(row_count, con):
     table_name = row_count_to_table_name(row_count)
     con.execute("START TRANSACTION;")
     con.execute(TABLE_SCHEMA.replace('%TABLE_NAME%', table_name))
-    con.execute(f"INSERT INTO {table_name} SELECT * FROM r1000M LIMIT {row_count};")
+    for file in row_count_to_file_list(row_count):
+        con.execute(f"COPY {table_name} FROM '{file}';")
     con.execute("COMMIT;")
 
 

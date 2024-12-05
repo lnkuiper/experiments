@@ -66,12 +66,12 @@ def generate_split(split):
         keys += [{'key_count': key_count, 'alpha': alpha} for key_count in key_counts]
 
     # Generate column definitions
-    key_columns = [f"""generalized_inverse(rand, {key['alpha']}, 1e-42, {key['key_count']}) AS "{col_name(key['key_count'], key['alpha'])}""" for key in keys]
+    key_columns = [f"""generalized_inverse(rand, {key['alpha']}, 1e-42, {key['key_count']}) AS "{col_name(key['key_count'], key['alpha'])}\"""" for key in keys]
     key_columns = sorted(list(set(key_columns)))
     # We need to "duplicate" these columns otherwise we risk joining the EXACT same columns - messes up statistical properties
     key_columns += [
-        f"""generalized_inverse(deterministic_random(rand), 0.0, 1e-42, 200_000_000) AS "{col_name(200_000_000, 0.0)}_1\"""",
-        f"""generalized_inverse(deterministic_random(rand), 0.5, 1e-42, 200_000_000) AS "{col_name(200_000_000, 0.5)}_1\"""",
+        f'generalized_inverse(deterministic_random(rand), 0.0, 1e-42, 200_000_000) AS "{col_name(200_000_000, 0.0)}_1"',
+        f'generalized_inverse(deterministic_random(rand), 0.5, 1e-42, 200_000_000) AS "{col_name(200_000_000, 0.5)}_1"',
     ]
 
     # Generate the data

@@ -77,6 +77,8 @@ TABLE_SCHEMA = """CREATE OR REPLACE TABLE "%TABLE_NAME%" (
     "key_c200M_a0.75" BIGINT,
     "key_c100M_a1.0" BIGINT,
     "key_c200M_a1.0" BIGINT,
+    "key_c200M_a0.0_1" BIGINT,
+    "key_c200M_a0.5_1" BIGINT,
     "tag_0" VARCHAR,
     "tag_1" VARCHAR,
     "tag_2" VARCHAR,
@@ -95,6 +97,11 @@ TABLE_SCHEMA = """CREATE OR REPLACE TABLE "%TABLE_NAME%" (
 
 def row_count_to_table_name(row_count):
     return f"r{int(row_count / 1_000_000)}M"
+
+
+def row_count_to_file_list(row_count):
+    file_count = int(row_count / 10_000_000)
+    return [f'{DATA_DIR}/split{i + 1}.csv' for i in range(file_count)]
 
 
 def col_name(key_count, alpha):
@@ -116,8 +123,6 @@ def get_count(name, functions, experiment, parameter, value, query, *args):
 
     assert(name == 'duckdb')
     query = query.replace('%OFFSET%', '0')
-    print(query)
-    assert(False)
     c = functions['query'](f"SELECT count(*) FROM ({query});", *args)[0][0]
     con.execute(f"INSERT INTO counts VALUES ('{experiment}', '{parameter}', '{value}', {c});")
 
@@ -157,7 +162,7 @@ def get_query(experiment, parameter, value):
     if parameter == 'probe_payload_columns':
         probe_payload_columns = value
 
-    key_count = default_config['build']['row_count']
+    key_count = build_row_count
     if parameter == 'key_count':
         key_count = value
 
@@ -179,12 +184,15 @@ def get_query(experiment, parameter, value):
     if experiment == 'join':
         default_config['parameter'] = value
         return f"""SELECT 
-    {',\n    '.join(['b.tag_' + str(i) for i in range(build_payload_columns)])},
-    {',\n    '.join(['b.emp_' + str(i) for i in range(build_payload_columns)])},
-    {',\n    '.join(['b.com_' + str(i) for i in range(build_payload_columns)])},
-    {',\n    '.join(['p.tag_' + str(i) for i in range(probe_payload_columns)])},
-    {',\n    '.join(['p.emp_' + str(i) for i in range(probe_payload_columns)])},
-    {',\n    '.join(['p.com_' + str(i) for i in range(probe_payload_columns)])}
+    p."{probe_col_name}",
+    {',\n    '.join([c for c in [
+        ',\n    '.join(['b.tag_' + str(i) for i in range(build_payload_columns)]),
+        ',\n    '.join(['b.emp_' + str(i) for i in range(build_payload_columns)]),
+        ',\n    '.join(['b.com_' + str(i) for i in range(build_payload_columns)]),
+        ',\n    '.join(['p.tag_' + str(i) for i in range(probe_payload_columns)]),
+        ',\n    '.join(['p.emp_' + str(i) for i in range(probe_payload_columns)]),
+        ',\n    '.join(['p.com_' + str(i) for i in range(probe_payload_columns)])
+    ] if c])}
 FROM
     {build_table_name} b,
     {probe_table_name} p
@@ -225,27 +233,31 @@ def run_config(name, functions, results_con, experiment, parameter, value, repet
     print("Querying done.")
 
 
-def wrap_load(functions, row_count, *args):
+def wrap_load(name, functions, row_count, *args):
     table_name = row_count_to_table_name(row_count)
     if not functions['already_loaded'](row_count, *args):
-        print(f"Loading {table_name} ...")
+        print(f"Loading {name} {table_name} ...")
         functions['load'](row_count, *args)
-        print(f"Loading {table_name} done.")
+        print(f"Loading {name} {table_name} done.")
 
 
 def run_experiments(name, functions, *args):
+    default_config = get_config('default')
+    wrap_load(name, functions, default_config['build']['row_count'], *args)
+    wrap_load(name, functions, default_config['probe']['row_count'], *args)
+
     results_con = get_results_con(name)
     for experiment in EXPERIMENTS:
         experiment_config = get_config(experiment)
         for parameter in experiment_config:
-            for value in experiment_config[parameter][:1]: # TODO also run pipeline experiments
+            for value in experiment_config[parameter]
                 repetitions = get_repetition_count(results_con, experiment, parameter, value)
                 if repetitions == 0:
                     continue
                 print(f'Running {name} {experiment} {parameter} {value} ...')
 
                 if parameter == 'build_row_count' or parameter == 'probe_row_count':
-                    wrap_load(functions, value, *args)
+                    wrap_load(name, functions, value, *args)
                 run_config(name, functions, results_con, experiment, parameter, value, repetitions, *args)
 
                 print(f'Running {name} {experiment} {parameter} {value} done.')
