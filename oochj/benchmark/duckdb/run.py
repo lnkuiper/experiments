@@ -15,22 +15,20 @@ def close_fun(res, con):
     del res
 
 
-def already_loaded_fun(table_name, con):
+def already_loaded_fun(row_count, con):
+    table_name = row_count_to_table_name(row_count)
     try:
-        return con.execute(f"SELECT count(*) FROM {table_name}").fetchall()[0][0] != 0
+        return con.execute(f"SELECT count(*) FROM {table_name}").fetchall()[0][0] == row_count
     except:
         return False
 
-def load_fun(table_schema, filename, table_name, con):
-    table_schema = table_schema.replace('%TABLE_NAME%', table_name)
+
+def load_fun(row_count, con):
+    table_name = row_count_to_table_name(row_count)
     con.execute("START TRANSACTION;")
-    con.execute(f"{table_schema}")
-    con.execute(f"""COPY "{table_name}" FROM '{filename}';""")
+    con.execute(TABLE.replace('%TABLE_NAME%', table_name))
+    con.execute(f"INSERT INTO {table_name} SELECT * FROM r1000M LIMIT {row_count};")
     con.execute("COMMIT;")
-
-
-def create_view_fun(table_alias, table_name, con):
-    con.execute(f"""CREATE OR REPLACE VIEW {table_alias} AS SELECT * FROM "{table_name}";""")
 
 
 DUCKDB_FUNCTIONS = {
@@ -38,7 +36,6 @@ DUCKDB_FUNCTIONS = {
     'close': close_fun,
     'already_loaded': already_loaded_fun,
     'load': load_fun,
-    'create_view': create_view_fun,
 }
 
 
@@ -48,7 +45,7 @@ def main():
 
     con.execute("SET preserve_insertion_order=false;")
     con.execute("SET memory_limit='23.2GiB'")
-    # con.execute("SET allocator_background_threads=true;")
+    con.execute("SET allocator_background_threads=true;")
 
     run_experiments('duckdb', DUCKDB_FUNCTIONS, con)
 
