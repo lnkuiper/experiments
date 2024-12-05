@@ -94,11 +94,11 @@ TABLE_SCHEMA = """CREATE OR REPLACE TABLE "%TABLE_NAME%" (
 
 
 def row_count_to_table_name(row_count):
-    return f"{int(row_count / 1_000_000)}M"
+    return f"r{int(row_count / 1_000_000)}M"
 
 
 def col_name(key_count, alpha):
-    return f'"key_c{key_count / 1_000_000}M_a{alpha}"'
+    return f'key_c{int(key_count / 1_000_000)}M_a{alpha}'
 
 
 ################################################################################################################################
@@ -116,6 +116,8 @@ def get_count(name, functions, experiment, parameter, value, query, *args):
 
     assert(name == 'duckdb')
     query = query.replace('%OFFSET%', '0')
+    print(query)
+    assert(False)
     c = functions['query'](f"SELECT count(*) FROM ({query});", *args)[0][0]
     con.execute(f"INSERT INTO counts VALUES ('{experiment}', '{parameter}', '{value}', {c});")
 
@@ -171,6 +173,8 @@ def get_query(experiment, parameter, value):
 
     build_col_name = col_name(key_count, build_alpha)
     probe_col_name = col_name(key_count, probe_alpha)
+    if build_col_name == probe_col_name:
+        build_col_name += "_1"
 
     if experiment == 'join':
         default_config['parameter'] = value
@@ -185,7 +189,7 @@ FROM
     {build_table_name} b,
     {probe_table_name} p
 WHERE
-    b.{build_col_name} = p.{probe_col_name}
+    b."{build_col_name}" = p."{probe_col_name}"
 OFFSET
     %OFFSET%
         """

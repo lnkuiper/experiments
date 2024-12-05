@@ -26,7 +26,7 @@ def already_loaded_fun(row_count, con):
 def load_fun(row_count, con):
     table_name = row_count_to_table_name(row_count)
     con.execute("START TRANSACTION;")
-    con.execute(TABLE.replace('%TABLE_NAME%', table_name))
+    con.execute(TABLE_SCHEMA.replace('%TABLE_NAME%', table_name))
     con.execute(f"INSERT INTO {table_name} SELECT * FROM r1000M LIMIT {row_count};")
     con.execute("COMMIT;")
 
