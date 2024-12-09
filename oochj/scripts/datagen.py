@@ -98,6 +98,8 @@ def generate_split(split):
 
 
 def main():
+    if not os.path.exists(DATA_DIR):
+        os.mkdir(DATA_DIR)
     print("Generating data ...")
     with multiprocessing.Pool(multiprocessing.cpu_count() * 2) as p:
         p.map(generate_split, range(1, SPLITS + 1))
