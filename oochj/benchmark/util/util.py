@@ -170,8 +170,10 @@ def get_query(experiment, parameter, value):
     probe_alpha = default_config['probe']['alpha']
     if parameter == 'build_alpha':
         build_alpha = value
+        probe_alpha = 0.0
     if parameter == 'probe_alpha':
         probe_alpha = value
+        build_alpha = 0.0
 
     build_table_name = row_count_to_table_name(build_row_count)
     probe_table_name = row_count_to_table_name(probe_row_count)
@@ -250,7 +252,7 @@ def run_experiments(name, functions, *args):
     for experiment in EXPERIMENTS:
         experiment_config = get_config(experiment)
         for parameter in experiment_config:
-            for value in experiment_config[parameter]
+            for value in experiment_config[parameter]:
                 repetitions = get_repetition_count(results_con, experiment, parameter, value)
                 if repetitions == 0:
                     continue
