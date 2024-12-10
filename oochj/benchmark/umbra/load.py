@@ -11,7 +11,6 @@ from util.util import *
 
 def main():
     db_path = f'{SYSTEM_DIR}/mydb.umbra'
-    #db_path = '/data/umbra/mydb.umbra'
     if os.path.exists(db_path):
         os.remove(db_path)
 
