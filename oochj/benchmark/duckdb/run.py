@@ -18,7 +18,7 @@ def close_fun(res, con):
 def already_loaded_fun(row_count, con):
     table_name = row_count_to_table_name(row_count)
     try:
-        return con.execute(f"SELECT count(*) FROM {table_name}").fetchall()[0][0] == row_count
+        return con.execute(f"SELECT count(*) FROM {table_name};").fetchall()[0][0] == row_count
     except:
         return False
 
@@ -32,11 +32,17 @@ def load_fun(row_count, con):
     con.execute("COMMIT;")
 
 
+def drop_fun(row_count, con):
+    table_name = row_count_to_table_name(row_count)
+    con.execute(f"DROP TABLE IF EXISTS {table_name};")
+
+
 DUCKDB_FUNCTIONS = {
     'query': query_fun,
     'close': close_fun,
     'already_loaded': already_loaded_fun,
     'load': load_fun,
+    'drop': drop_fun,
 }
 
 

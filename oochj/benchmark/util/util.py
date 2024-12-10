@@ -241,6 +241,9 @@ def wrap_load(name, functions, row_count, *args):
         print(f"Loading {name} {table_name} ...")
         functions['load'](row_count, *args)
         print(f"Loading {name} {table_name} done.")
+    if row_count == 200_000_000 or row_count == 500_000_000:
+        return None
+    return row_count
 
 
 def run_experiments(name, functions, *args):
@@ -258,8 +261,10 @@ def run_experiments(name, functions, *args):
                     continue
                 print(f'Running {name} {experiment} {parameter} {value} ...')
 
+                loaded_table_row_count = None
                 if parameter == 'build_row_count' or parameter == 'probe_row_count':
-                    wrap_load(name, functions, value, *args)
+                    loaded_table_row_count = wrap_load(name, functions, value, *args)
                 run_config(name, functions, results_con, experiment, parameter, value, repetitions, *args)
+                functions['drop'](row_count, *args)
 
                 print(f'Running {name} {experiment} {parameter} {value} done.')
