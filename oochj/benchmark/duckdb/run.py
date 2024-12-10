@@ -45,7 +45,6 @@ def main():
     con = duckdb.connect(db_path)
 
     con.execute("SET preserve_insertion_order=false;")
-    con.execute("SET memory_limit='23.2GiB'")
     con.execute("SET allocator_background_threads=true;")
 
     run_experiments('duckdb', DUCKDB_FUNCTIONS, con)
