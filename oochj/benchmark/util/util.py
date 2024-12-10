@@ -265,6 +265,7 @@ def run_experiments(name, functions, *args):
                 if parameter == 'build_row_count' or parameter == 'probe_row_count':
                     loaded_table_row_count = wrap_load(name, functions, value, *args)
                 run_config(name, functions, results_con, experiment, parameter, value, repetitions, *args)
-                functions['drop'](loaded_table_row_count, *args)
+                if loaded_table_row_count:
+                    functions['drop'](loaded_table_row_count, *args)
 
                 print(f'Running {name} {experiment} {parameter} {value} done.')
