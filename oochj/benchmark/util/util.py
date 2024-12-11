@@ -212,7 +212,6 @@ def run_config(name, functions, results_con, experiment, parameter, value, repet
     query = get_query(experiment, parameter, value)
     count = get_count(name, functions, experiment, parameter, value, query, *args)
     query = query.replace('%OFFSET%', f'{count - 1}')
-    return
 
     print("Querying ...")
     error = 1
