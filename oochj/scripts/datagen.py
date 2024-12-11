@@ -20,8 +20,10 @@ def initialize_datagen_macros(con):
     con.sql("CREATE OR REPLACE MACRO deterministic_random(rand) AS hash(rand) / 18446744073709551615;")
     # Macro for generalized inverse for generating skewed distributions (higher alpha = more skew)
     # When alpha = 0 it's random uniform, when alpha = 1 it's Zipfian
-    con.sql("""CREATE OR REPLACE MACRO generalized_inverse(rand, alpha, xmin, xmax) AS
+    con.sql("""CREATE OR REPLACE MACRO generalized_inverse(rand, rowid, alpha, xmin, xmax) AS
         CASE alpha
+            WHEN 0 THEN
+                rowid % xmax + 1
             WHEN 1 THEN 
                 ceil(xmin * exp(rand * ln(xmax / xmin)))::BIGINT
             ELSE 
@@ -43,12 +45,14 @@ def generate_split(split):
         return
 
     # Initialize
+    split_size = int(1_000_000_000 / SPLITS)
+    rowid_offset = (split - 1) * split_size
     con = duckdb.connect()
     con.execute("SET threads=1;")
     con.execute("PRAGMA disable_progress_bar;")
     initialize_datagen_macros(con)
-    con.execute(f"SELECT setseed({split / SPLITS});")
-    con.execute(f"CREATE TABLE random AS SELECT random() AS rand FROM range({1_000_000_000 / SPLITS}::BIGINT);")
+    con.execute(f"SELECT setseed({(split / SPLITS)**2});")
+    con.execute(f"CREATE TABLE random AS SELECT random() AS rand FROM range({split_size});")
     con.execute("SET preserve_insertion_order=false;")
 
     # Generate key columns
@@ -66,12 +70,12 @@ def generate_split(split):
         keys += [{'key_count': key_count, 'alpha': alpha} for key_count in key_counts]
 
     # Generate column definitions
-    key_columns = [f"""generalized_inverse(rand, {key['alpha']}, 1e-42, {key['key_count']}) AS "{col_name(key['key_count'], key['alpha'])}\"""" for key in keys]
+    key_columns = [f"""generalized_inverse(rand, {rowid_offset} + rowid, {key['alpha']}, 1e-42, {key['key_count']}) AS "{col_name(key['key_count'], key['alpha'])}\"""" for key in keys]
     key_columns = sorted(list(set(key_columns)))
     # We need to "duplicate" these columns otherwise we risk joining the EXACT same columns - messes up statistical properties
     key_columns += [
-        f'generalized_inverse(deterministic_random(rand), 0.0, 1e-42, 200_000_000) AS "{col_name(200_000_000, 0.0)}_1"',
-        f'generalized_inverse(deterministic_random(rand), 0.5, 1e-42, 200_000_000) AS "{col_name(200_000_000, 0.5)}_1"',
+        f'generalized_inverse(deterministic_random(rand), {rowid_offset} + rowid, 0.0, 1e-42, 200_000_000) AS "{col_name(200_000_000, 0.0)}_1"',
+        f'generalized_inverse(deterministic_random(rand), {rowid_offset} + rowid, 0.5, 1e-42, 200_000_000) AS "{col_name(200_000_000, 0.5)}_1"',
     ]
 
     # Generate the data

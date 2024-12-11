@@ -1,7 +1,7 @@
 {
 	"build": {
 		"row_count": 200000000,
-		"alpha": 0.05,
+		"alpha": 0.0,
 		"payload_columns": 1,
 	},
 	"probe": {

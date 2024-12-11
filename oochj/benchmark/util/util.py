@@ -53,15 +53,15 @@ def get_config(config_name):
 DATA_DIR = f'{BASE_DIR}/data'
 
 TABLE_SCHEMA = """CREATE OR REPLACE TABLE "%TABLE_NAME%" (
-    "key_c100M_a0.05" BIGINT,
-    "key_c120M_a0.05" BIGINT,
-    "key_c160M_a0.05" BIGINT,
-    "key_c200M_a0.05" BIGINT,
-    "key_c300M_a0.05" BIGINT,
-    "key_c40M_a0.05" BIGINT,
-    "key_c400M_a0.05" BIGINT,
-    "key_c500M_a0.05" BIGINT,
-    "key_c80M_a0.05" BIGINT,
+    "key_c100M_a0.0" BIGINT,
+    "key_c120M_a0.0" BIGINT,
+    "key_c160M_a0.0" BIGINT,
+    "key_c200M_a0.0" BIGINT,
+    "key_c300M_a0.0" BIGINT,
+    "key_c40M_a0.0" BIGINT,
+    "key_c400M_a0.0" BIGINT,
+    "key_c500M_a0.0" BIGINT,
+    "key_c80M_a0.0" BIGINT,
     "key_c100M_a0.25" BIGINT,
     "key_c200M_a0.25" BIGINT,
     "key_c100M_a0.5" BIGINT,
@@ -77,7 +77,7 @@ TABLE_SCHEMA = """CREATE OR REPLACE TABLE "%TABLE_NAME%" (
     "key_c200M_a0.75" BIGINT,
     "key_c100M_a1.0" BIGINT,
     "key_c200M_a1.0" BIGINT,
-    "key_c200M_a0.05_1" BIGINT,
+    "key_c200M_a0.0_1" BIGINT,
     "key_c200M_a0.5_1" BIGINT,
     "tag_0" VARCHAR,
     "tag_1" VARCHAR,
@@ -170,10 +170,10 @@ def get_query(experiment, parameter, value):
     probe_alpha = default_config['probe']['alpha']
     if parameter == 'build_alpha':
         build_alpha = value
-        probe_alpha = 0.05
+        probe_alpha = 0.0
     if parameter == 'probe_alpha':
         probe_alpha = value
-        build_alpha = 0.05
+        build_alpha = 0.0
 
     build_table_name = row_count_to_table_name(build_row_count)
     probe_table_name = row_count_to_table_name(probe_row_count)
@@ -212,6 +212,7 @@ def run_config(name, functions, results_con, experiment, parameter, value, repet
     query = get_query(experiment, parameter, value)
     count = get_count(name, functions, experiment, parameter, value, query, *args)
     query = query.replace('%OFFSET%', f'{count - 1}')
+    return
 
     print("Querying ...")
     error = 1
