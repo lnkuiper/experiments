@@ -9,7 +9,7 @@ from util.util import *
 
 
 def query_fun(query, con):
-    return con.execute_list_query(query)
+    return con.execute_query(query)
 
 
 def close_fun(res, con):
@@ -25,9 +25,12 @@ def already_loaded_fun(row_count, con):
         res = con.execute_query(f"SELECT count(*) FROM {table_name};")
         res.next_row()
         loaded = res.get_value(0) == row_count
+        if not loaded:
+            con.execute_query(f"DROP TABLE {table_name};").close()
     except:
         None
-    res.close()
+    if res:
+        res.close()
     return loaded
 
 
@@ -36,7 +39,7 @@ def load_fun(row_count, con):
     con.execute_query("START TRANSACTION;").close()
     con.execute_query(TABLE_SCHEMA.replace('%TABLE_NAME%', table_name)).close()
     for file in row_count_to_file_list(row_count):
-        con.execute_query(f"COPY {table_name} FROM '{file}' (FORMAT CSV);").close()
+        con.execute_query(f"COPY {table_name} FROM '{file}' (FORMAT CSV, HEADER TRUE);").close()
     con.execute_query("COMMIT;").close()
 
 

@@ -52,7 +52,7 @@ def get_config(config_name):
 ################################################################################################################################
 DATA_DIR = f'{BASE_DIR}/data'
 
-TABLE_SCHEMA = """CREATE OR REPLACE TABLE "%TABLE_NAME%" (
+TABLE_SCHEMA = """CREATE TABLE IF NOT EXISTS %TABLE_NAME% (
     "key_c100M_a0.0" BIGINT,
     "key_c120M_a0.0" BIGINT,
     "key_c160M_a0.0" BIGINT,
