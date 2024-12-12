@@ -226,10 +226,10 @@ def run_config(name, functions, results_con, experiment, parameter, value, repet
             except TimeoutError:
                 t = -1
             except Exception as e:
-                raise e
                 t = -2
             finally:
-                functions['close'](res, *args)
+                if res:
+                    functions['close'](res, *args)
             error = t
         insert_result(results_con, experiment, parameter, value, t)
     print("Querying done.")
