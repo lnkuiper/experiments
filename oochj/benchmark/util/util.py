@@ -215,6 +215,7 @@ def run_config(name, functions, results_con, experiment, parameter, value, repet
 
     print("Querying ...")
     error = 1
+    e = None
     for _ in tqdm.tqdm(range(repetitions)):
         t = 0
         res = None
@@ -223,11 +224,14 @@ def run_config(name, functions, results_con, experiment, parameter, value, repet
         else:
             try:
                 t, res = timeout_fun(functions['query'], query, *args)
-            except TimeoutError:
+            except TimeoutError as e:
                 t = -1
             except Exception as e:
                 t = -2
             finally:
+                if e:
+                    print(str(e))
+                    e = None
                 if res:
                     functions['close'](res, *args)
             error = t
