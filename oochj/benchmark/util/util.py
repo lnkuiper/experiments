@@ -147,43 +147,43 @@ def timeout_fun(fun, query, *args):
 
 def get_query(experiment, parameter, value):
     default_config = get_config('default')
-
-    build_row_count = default_config['build']['row_count']
-    probe_row_count = default_config['probe']['row_count']
-    if parameter == 'build_row_count':
-        build_row_count = value
-    if parameter == 'probe_row_count':
-        probe_row_count = value
-
-    build_payload_columns = default_config['build']['payload_columns']
-    probe_payload_columns = default_config['probe']['payload_columns']
-    if parameter == 'build_payload_columns':
-        build_payload_columns = value
-    if parameter == 'probe_payload_columns':
-        probe_payload_columns = value
-
-    key_count = build_row_count
-    if parameter == 'key_count':
-        key_count = value
-
-    build_alpha = default_config['build']['alpha']
-    probe_alpha = default_config['probe']['alpha']
-    if parameter == 'build_alpha':
-        build_alpha = value
-        probe_alpha = 0.0
-    if parameter == 'probe_alpha':
-        probe_alpha = value
-        build_alpha = 0.0
-
-    build_table_name = row_count_to_table_name(build_row_count)
-    probe_table_name = row_count_to_table_name(probe_row_count)
-
-    build_col_name = col_name(key_count, build_alpha)
-    probe_col_name = col_name(key_count, probe_alpha)
-    if build_col_name == probe_col_name:
-        build_col_name += "_1"
-
     if experiment == 'join':
+        build_config = default_config['build']
+        build_row_count = build_config['row_count']
+        probe_row_count = default_config['probe']['row_count']
+        if parameter == 'build_row_count':
+            build_row_count = value
+        if parameter == 'probe_row_count':
+            probe_row_count = value
+
+        build_payload_columns = build_config['payload_columns']
+        probe_payload_columns = default_config['probe']['payload_columns']
+        if parameter == 'build_payload_columns':
+            build_payload_columns = value
+        if parameter == 'probe_payload_columns':
+            probe_payload_columns = value
+
+        key_count = build_row_count
+        if parameter == 'key_count':
+            key_count = value
+
+        build_alpha = build_config['alpha']
+        probe_alpha = default_config['probe']['alpha']
+        if parameter == 'build_alpha':
+            build_alpha = value
+            probe_alpha = 0.0
+        if parameter == 'probe_alpha':
+            probe_alpha = value
+            build_alpha = 0.0
+
+        build_table_name = row_count_to_table_name(build_row_count)
+        probe_table_name = row_count_to_table_name(probe_row_count)
+
+        build_col_name = col_name(key_count, build_alpha)
+        probe_col_name = col_name(key_count, probe_alpha)
+        if build_col_name == probe_col_name:
+            build_col_name += "_1"
+
         default_config['parameter'] = value
         return f"""SELECT 
     p."{probe_col_name}",
@@ -203,8 +203,11 @@ WHERE
 OFFSET
     %OFFSET%
         """
-    else:
+    elif experiment == 'pipeline':
+
         # TODO
+        assert(False)
+    else:
         assert(False)
 
 
@@ -241,7 +244,7 @@ def wrap_load(name, functions, row_count, *args):
         print(f"Loading {name} {table_name} ...")
         functions['load'](row_count, *args)
         print(f"Loading {name} {table_name} done.")
-    if row_count == 200_000_000 or row_count == 500_000_000:
+    if row_count == 100_000_000 or row_count == 200_000_000 or row_count == 500_000_000:
         return None
     return row_count
 
@@ -250,6 +253,7 @@ def run_experiments(name, functions, *args):
     default_config = get_config('default')
     wrap_load(name, functions, default_config['build']['row_count'], *args)
     wrap_load(name, functions, default_config['probe']['row_count'], *args)
+    wrap_load(name, functions, default_config['pipeline_build']['row_count'], *args)
 
     results_con = get_results_con(name)
     for experiment in EXPERIMENTS:

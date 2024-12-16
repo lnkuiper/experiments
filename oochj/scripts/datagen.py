@@ -53,7 +53,6 @@ def generate_split(split):
     initialize_datagen_macros(con)
     con.execute(f"SELECT setseed({(split / SPLITS)**2});")
     con.execute(f"CREATE TABLE random AS SELECT random() AS rand FROM range({split_size});")
-    con.execute("SET preserve_insertion_order=false;")
 
     # Generate key columns
     alphas = list(np.linspace(0, 1, 5)) # 0.25 increments
