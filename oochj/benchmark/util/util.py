@@ -196,10 +196,11 @@ def get_query(experiment, parameter, value):
         ',\n    '.join(['p.com_' + str(i) for i in range(probe_payload_columns)])
     ] if c])}
 FROM
-    {build_table_name} b,
     {probe_table_name} p
-WHERE
-    b."{build_col_name}" = p."{probe_col_name}"
+JOIN
+    {build_table_name} b
+ON
+    (b."{build_col_name}" = p."{probe_col_name}")
 OFFSET
     %OFFSET%
         """

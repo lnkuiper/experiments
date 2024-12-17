@@ -52,6 +52,7 @@ def main():
 
     con.execute("SET preserve_insertion_order=false;")
     con.execute("SET allocator_background_threads=true;")
+    con.execute("SET disabled_optimizers TO 'build_side_probe_side';")
 
     run_experiments('duckdb', DUCKDB_FUNCTIONS, con)
 
