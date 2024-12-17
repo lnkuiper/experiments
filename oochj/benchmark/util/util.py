@@ -260,7 +260,6 @@ def run_experiments(name, functions, *args):
     default_config = get_config('default')
     wrap_load(name, functions, default_config['build']['row_count'], *args)
     wrap_load(name, functions, default_config['probe']['row_count'], *args)
-    wrap_load(name, functions, default_config['pipeline_build']['row_count'], *args)
 
     results_con = get_results_con(name)
     for experiment in EXPERIMENTS:
