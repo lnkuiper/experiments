@@ -29,7 +29,7 @@ def already_loaded_fun(row_count, cur):
 def load_fun(row_count, cur):
     table_name = row_count_to_table_name(row_count)
     con.execute("START TRANSACTION;")
-    con.execute(TABLE_SCHEMA.replace('%TABLE_NAME%', table_name))
+    con.execute(TABLE_SCHEMA.replace('%TABLE_NAME%', table_name).replace(';', 'WITH (storage=columnar);'))
     for file in row_count_to_file_list(row_count):
         con.execute(f"COPY {table_name} FROM '{file}';")
     con.execute("COMMIT;")
