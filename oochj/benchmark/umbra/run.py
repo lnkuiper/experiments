@@ -31,7 +31,7 @@ def load_fun(row_count, cur):
     cur.execute("START TRANSACTION;")
     cur.execute(TABLE_SCHEMA.replace('%TABLE_NAME%', table_name).replace(';', 'WITH (storage=columnar);'))
     for file in row_count_to_file_list(row_count):
-        cur.execute(f"COPY {table_name} FROM '{file}';")
+        cur.execute(f"""COPY {table_name} FROM '{file}' (FORMAT CSV, QUOTE '"', DELIMITER ',', HEADER TRUE);""")
     cur.execute("COMMIT;")
 
 
