@@ -96,7 +96,7 @@ def generate_split(split):
         lorem_sentence(COLUMNS('^[0-9]'), 4) AS "com_\\0",
     FROM
         cte
-) TO '{filename}';"""
+) TO '{filename}' (FORCE_QUOTE ['com_0', 'com_1', 'com_2', 'com_3']);"""
     con.execute(q)
 
 
