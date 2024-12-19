@@ -147,17 +147,19 @@ def timeout_fun(fun, query, *args):
 
 def get_query(experiment, parameter, value):
     default_config = get_config('default')
+
+    build_config = default_config['build']
+    probe_row_count = default_config['probe']['row_count']
+    build_payload_columns = build_config['payload_columns']
+    probe_payload_columns = default_config['probe']['payload_columns']
+
     if experiment == 'join':
-        build_config = default_config['build']
         build_row_count = build_config['row_count']
-        probe_row_count = default_config['probe']['row_count']
         if parameter == 'build_row_count':
             build_row_count = value
         if parameter == 'probe_row_count':
             probe_row_count = value
 
-        build_payload_columns = build_config['payload_columns']
-        probe_payload_columns = default_config['probe']['payload_columns']
         if parameter == 'build_payload_columns':
             build_payload_columns = value
         if parameter == 'probe_payload_columns':
@@ -186,14 +188,13 @@ def get_query(experiment, parameter, value):
 
         default_config['parameter'] = value
         return f"""SELECT 
-    p."{probe_col_name}",
     {',\n    '.join([c for c in [
         ',\n    '.join(['b.tag_' + str(i) for i in range(build_payload_columns)]),
         ',\n    '.join(['b.emp_' + str(i) for i in range(build_payload_columns)]),
         ',\n    '.join(['b.com_' + str(i) for i in range(build_payload_columns)]),
         ',\n    '.join(['p.tag_' + str(i) for i in range(probe_payload_columns)]),
         ',\n    '.join(['p.emp_' + str(i) for i in range(probe_payload_columns)]),
-        ',\n    '.join(['p.com_' + str(i) for i in range(probe_payload_columns)])
+        ',\n    '.join(['p.com_' + str(i) for i in range(probe_payload_columns)]),
     ] if c])}
 FROM
     {probe_table_name} p
@@ -205,7 +206,33 @@ OFFSET
     %OFFSET%
         """
     elif experiment == 'pipeline':
+        build_tables = [row_count_to_table_name(brc) for brc in value]
+        key_column = col_name(probe_row_count, 0.0)
 
+        columns = []
+        columns += ['p.tag_' + str(i) for i in range(probe_payload_columns)]
+        columns += ['p.emp_' + str(i) for i in range(probe_payload_columns)]
+        columns += ['p.com_' + str(i) for i in range(probe_payload_columns)]
+
+        build_aliases = []
+        conditions = []
+        for i, build_table in enumerate(build_tables):
+            build_alias = f'b{i + 1}'
+            build_aliases.append(build_alias)
+            conditions.append(f'ON\n        p."{key_column}" = {build_alias}."{key_column}"')
+
+            columns += [f'{build_alias}.tag_' + str(i) for i in range(build_payload_columns)]
+            columns += [f'{build_alias}.emp_' + str(i) for i in range(build_payload_columns)]
+            columns += [f'{build_alias}.com_' + str(i) for i in range(build_payload_columns)]
+
+        return f"""SELECT
+    {',\n    '.join(columns)}
+FROM {row_count_to_table_name(probe_row_count)} p
+LEFT JOIN
+{'\nLEFT JOIN\n'.join(['        ' + bt + ' AS ' + ba + '\n' + c for bt, ba, c in zip(build_tables, build_aliases, conditions)])}
+OFFSET
+    %OFFSET%
+        """
         # TODO
         assert(False)
     else:
@@ -258,11 +285,15 @@ def wrap_load(name, functions, row_count, *args):
 
 def run_experiments(name, functions, *args):
     default_config = get_config('default')
-    wrap_load(name, functions, default_config['build']['row_count'], *args)
-    #wrap_load(name, functions, default_config['probe']['row_count'], *args)
 
     results_con = get_results_con(name)
     for experiment in EXPERIMENTS:
+        wrap_load(name, functions, default_config['probe']['row_count'], *args)
+        if experiment == 'join':
+            wrap_load(name, functions, default_config['build']['row_count'], *args)
+        elif name != 'duckdb':
+            continue
+
         experiment_config = get_config(experiment)
         for parameter in experiment_config:
             for value in experiment_config[parameter]:
@@ -271,11 +302,15 @@ def run_experiments(name, functions, *args):
                     continue
                 print(f'Running {name} {experiment} {parameter} {value} ...')
 
-                loaded_table_row_count = None
-                if parameter == 'build_row_count' or parameter == 'probe_row_count':
-                    loaded_table_row_count = wrap_load(name, functions, value, *args)
+                loaded_table_row_counts = []
+                if parameter == 'scenario':
+                    for row_count in value:
+                        loaded_table_row_counts.append(wrap_load(name, functions, row_count, *args))
+                elif parameter == 'build_row_count' or parameter == 'probe_row_count':
+                    loaded_table_row_counts.append(wrap_load(name, functions, value, *args))
                 run_config(name, functions, results_con, experiment, parameter, value, repetitions, *args)
-                if loaded_table_row_count:
-                    functions['drop'](loaded_table_row_count, *args)
+                for row_count in loaded_table_row_counts:
+                    if row_count:
+                        functions['drop'](row_count, *args)
 
                 print(f'Running {name} {experiment} {parameter} {value} done.')
