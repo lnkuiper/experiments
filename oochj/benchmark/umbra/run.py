@@ -28,16 +28,16 @@ def already_loaded_fun(row_count, cur):
 
 def load_fun(row_count, cur):
     table_name = row_count_to_table_name(row_count)
-    con.execute("START TRANSACTION;")
-    con.execute(TABLE_SCHEMA.replace('%TABLE_NAME%', table_name).replace(';', 'WITH (storage=columnar);'))
+    cur.execute("START TRANSACTION;")
+    cur.execute(TABLE_SCHEMA.replace('%TABLE_NAME%', table_name).replace(';', 'WITH (storage=columnar);'))
     for file in row_count_to_file_list(row_count):
-        con.execute(f"COPY {table_name} FROM '{file}';")
-    con.execute("COMMIT;")
+        cur.execute(f"COPY {table_name} FROM '{file}';")
+    cur.execute("COMMIT;")
 
 
 def drop_fun(row_count, cur):
     table_name = row_count_to_table_name(row_count)
-    con.execute(f"DROP TABLE IF EXISTS {table_name};")
+    cur.execute(f"DROP TABLE IF EXISTS {table_name};")
 
 
 UMBRA_FUNCTIONS = {
@@ -60,7 +60,7 @@ def main():
     con = psycopg2.connect(host="localhost", user="postgres", password="mysecretpassword", port=5433)
     cur = con.cursor()
     cur.execute("""ROLLBACK;""")
-    run_experiments('umbra', UMBRA_FUNCTIONS, con)
+    run_experiments('umbra', UMBRA_FUNCTIONS, cur)
 
 
 if __name__ == '__main__':
