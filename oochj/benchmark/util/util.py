@@ -189,12 +189,12 @@ def get_query(experiment, parameter, value):
         default_config['parameter'] = value
         return f"""SELECT 
     {',\n    '.join([c for c in [
-        ',\n    '.join(['b.tag_' + str(i) for i in range(build_payload_columns)]),
-        ',\n    '.join(['b.emp_' + str(i) for i in range(build_payload_columns)]),
-        ',\n    '.join(['b.com_' + str(i) for i in range(build_payload_columns)]),
-        ',\n    '.join(['p.tag_' + str(i) for i in range(probe_payload_columns)]),
-        ',\n    '.join(['p.emp_' + str(i) for i in range(probe_payload_columns)]),
-        ',\n    '.join(['p.com_' + str(i) for i in range(probe_payload_columns)]),
+        ',\n    '.join(['any_value(b.tag_' + str(i) + ')' for i in range(build_payload_columns)]),
+        ',\n    '.join(['any_value(b.emp_' + str(i) + ')' for i in range(build_payload_columns)]),
+        ',\n    '.join(['any_value(b.com_' + str(i) + ')' for i in range(build_payload_columns)]),
+        ',\n    '.join(['any_value(p.tag_' + str(i) + ')' for i in range(probe_payload_columns)]),
+        ',\n    '.join(['any_value(p.emp_' + str(i) + ')' for i in range(probe_payload_columns)]),
+        ',\n    '.join(['any_value(p.com_' + str(i) + ')' for i in range(probe_payload_columns)]),
     ] if c])}
 FROM
     {probe_table_name} p
@@ -202,9 +202,9 @@ JOIN
     {build_table_name} b
 ON
     (b."{build_col_name}" = p."{probe_col_name}")
-OFFSET
-    %OFFSET%
         """
+#OFFSET
+#    %OFFSET%
     elif experiment == 'pipeline':
         build_tables = [row_count_to_table_name(brc) for brc in value]
         key_column = col_name(probe_row_count, 0.0)

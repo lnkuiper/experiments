@@ -2,6 +2,7 @@ import os
 import sys
 import psycopg2
 import subprocess
+import signal
 
 
 SYSTEM_DIR = os.path.dirname(__file__)
@@ -14,15 +15,17 @@ def query_fun(query, cur):
     return cur.fetchall()
 
 
-def close_fun(res):
+def close_fun(res, cur):
     del res
 
 
 def already_loaded_fun(row_count, cur):
     table_name = row_count_to_table_name(row_count)
     try:
-        return cur.execute(f"SELECT count(*) FROM {table_name};").fetchall()[0][0] == row_count
-    except:
+        cur.execute(f"SELECT count(*) FROM {table_name};")
+        res = cur.fetchall()
+        return res[0][0] == row_count
+    except Exception as e:
         return False
 
 
@@ -61,6 +64,8 @@ def main():
     cur = con.cursor()
     cur.execute("""ROLLBACK;""")
     run_experiments('umbra', UMBRA_FUNCTIONS, cur)
+
+    os.killpg(os.getpgid(server.pid), signal.SIGTERM)
 
 
 if __name__ == '__main__':
