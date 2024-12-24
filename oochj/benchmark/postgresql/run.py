@@ -1,6 +1,7 @@
 import os
 import sys
 import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 
 SYSTEM_DIR = os.path.dirname(__file__)
@@ -13,7 +14,7 @@ def query_fun(query, cur):
     return cur.fetchall()
 
 
-def close_fun(res):
+def close_fun(res, cur):
     del res
 
 
@@ -27,11 +28,11 @@ def already_loaded_fun(row_count, cur):
 
 def load_fun(row_count, cur):
     table_name = row_count_to_table_name(row_count)
-    con.execute("START TRANSACTION;")
-    con.execute(TABLE_SCHEMA.replace('%TABLE_NAME%', table_name))
+    cur.execute("START TRANSACTION;")
+    cur.execute(TABLE_SCHEMA.replace('%TABLE_NAME%', table_name))
     for file in row_count_to_file_list(row_count):
-        con.execute(f"COPY {table_name} FROM '{file}';")
-    con.execute("COMMIT;")
+        cur.execute(f"""COPY {table_name} FROM '{file}' (FORMAT CSV, QUOTE '"', DELIMITER ',', HEADER TRUE);""")
+    cur.execute("COMMIT;")
 
 
 def drop_fun(row_count, cur):
@@ -49,6 +50,14 @@ POSTGRESQL_FUNCTIONS = {
 
 
 def main():
+    con = psycopg2.connect(database="postgres", host="localhost", user="ubuntu", password="secret", port=5432)
+    con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    cur = con.cursor()
+    cur.execute("DROP DATABASE IF EXISTS mydb;")
+    cur.execute("CREATE DATABASE mydb;")
+    cur.close()
+    con.close()
+
     con = psycopg2.connect(database="mydb", host="localhost", user="ubuntu", password="secret", port=5432)
     cur = con.cursor()
 
@@ -57,7 +66,7 @@ def main():
     cur.execute("CREATE TABLESPACE temp_space LOCATION '/data/experiments/oochj/benchmark/postgresql/temp';")
     cur.execute("SET temp_tablespaces TO 'temp_space';")
 
-    run_experiments('postgresql', POSTGRESQL_FUNCTIONS, con)
+    run_experiments('postgresql', POSTGRESQL_FUNCTIONS, cur)
 
 
 if __name__ == '__main__':
