@@ -37,7 +37,7 @@ def load_fun(row_count, cur):
 
 def drop_fun(row_count, cur):
     table_name = row_count_to_table_name(row_count)
-    con.execute(f"DROP TABLE IF EXISTS {table_name};")
+    cur.execute(f"DROP TABLE IF EXISTS {table_name};")
 
 
 POSTGRESQL_FUNCTIONS = {
