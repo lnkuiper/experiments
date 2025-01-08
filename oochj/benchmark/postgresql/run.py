@@ -50,13 +50,14 @@ POSTGRESQL_FUNCTIONS = {
 
 
 def main():
-    con = psycopg2.connect(database="postgres", host="localhost", user="ubuntu", password="secret", port=5432)
-    con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cur = con.cursor()
-    cur.execute("DROP DATABASE IF EXISTS mydb;")
-    cur.execute("CREATE DATABASE mydb;")
-    cur.close()
-    con.close()
+    if True:
+        con = psycopg2.connect(database="postgres", host="localhost", user="ubuntu", password="secret", port=5432)
+        con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        cur = con.cursor()
+        cur.execute("DROP DATABASE IF EXISTS mydb;")
+        cur.execute("CREATE DATABASE mydb;")
+        cur.close()
+        con.close()
 
     con = psycopg2.connect(database="mydb", host="localhost", user="ubuntu", password="secret", port=5432)
     cur = con.cursor()
