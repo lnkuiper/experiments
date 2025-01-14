@@ -121,7 +121,7 @@ def get_count(name, functions, experiment, parameter, value, query, *args):
     if res:
         return res[0][0]
 
-    assert(name == 'duckdb')
+    #assert(name == 'duckdb')
     query = query.replace('%OFFSET%', '0')
     c = functions['query'](f"SELECT count(*) FROM ({query});", *args)[0][0]
     con.execute(f"INSERT INTO counts VALUES ('{experiment}', '{parameter}', '{value}', {c});")
@@ -291,7 +291,7 @@ def run_experiments(name, functions, *args):
         wrap_load(name, functions, default_config['probe']['row_count'], *args)
         if experiment == 'join':
             wrap_load(name, functions, default_config['build']['row_count'], *args)
-        elif name != 'duckdb':
+        elif name not in ['weightedcost', 'unweightedcost', 'equality', 'equity']:
             continue
 
         experiment_config = get_config(experiment)
