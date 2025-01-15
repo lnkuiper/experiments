@@ -289,9 +289,12 @@ def run_experiments(name, functions, *args):
     results_con = get_results_con(name)
     for experiment in EXPERIMENTS:
         wrap_load(name, functions, default_config['probe']['row_count'], *args)
+        policy_experiment = name in ['weightedcost', 'unweightedcost', 'equality', 'equity']
         if experiment == 'join':
+            if policy_experiment:
+                continue
             wrap_load(name, functions, default_config['build']['row_count'], *args)
-        elif name not in ['weightedcost', 'unweightedcost', 'equality', 'equity']:
+        elif not policy_experiment:
             continue
 
         experiment_config = get_config(experiment)
@@ -304,7 +307,7 @@ def run_experiments(name, functions, *args):
 
                 loaded_table_row_counts = []
                 if parameter == 'scenario':
-                    for row_count in value:
+                    for row_count in set(value):
                         loaded_table_row_counts.append(wrap_load(name, functions, row_count, *args))
                 elif parameter == 'build_row_count' or parameter == 'probe_row_count':
                     loaded_table_row_counts.append(wrap_load(name, functions, value, *args))
