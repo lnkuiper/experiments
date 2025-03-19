@@ -99,4 +99,4 @@ rm results/*
 ```
 
 ## Plotting
-Open the `notesbooks/results.ipynb` using `jupyter-lab` and step through the cells.
+Open the `notebooks/results.ipynb` using `jupyter-lab` and step through the cells.
