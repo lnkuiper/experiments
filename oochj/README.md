@@ -46,6 +46,8 @@ Enable one of the policies in `src/storage/temporary_memory_manager.cpp`, and co
 ```sh
 GEN=ninja BUILD_PYTHON=1 make
 ```
+Note that DuckDB must be compiled from source once for every policy (and run experiments using each compiled version).
+
 You may want to uninstall the DuckDB python package before building it from scratch with the following:
 ```sh
 cd tools/pythonpkg
