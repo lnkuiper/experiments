@@ -7,6 +7,9 @@ Requirements are Python 3 with `pip` and the following packages:
  * `pandas`
  * `matplotlib`
  * `seaborn`
+ * `tableauhyperapi`
+ * `psycopg2`
+ * `psycopg2-binary`
 
 We also need these packages from `apt`:
 ```
@@ -17,8 +20,6 @@ You can install them using:
 ```sh
 ./script/requirements.sh
 ```
-
-NOTE: HyPer and Umbra are proprietary software; therefore, this README will only explain how to run DuckDB and PostgreSQL.
 
 ## Data Generation
 Run the following
@@ -51,6 +52,9 @@ cd tools/pythonpkg
 ./clean.sh
 ```
 
+## HyPer
+HyPer is installed above through pip (`tableauhyperapi`).
+
 ### PostgreSQL
 To install PostgreSQL, run the following:
 ```sh
@@ -60,16 +64,33 @@ cd benchmark/postgresql
 ```
 Copy configuration file `postgresql.conf` to the initialized database directory.
 
+## Umbra
+To install Umbra, run the following under `benchmark/umbra`:
+```sh
+wget https://db.in.tum.de/~neumann/umbra.tar.xz
+tar -xf umbra.tar.xz
+```
+
 ## Running the Benchmark
-To run DuckDB, run the following
+To run DuckDB, run the following:
 ```sh
 python3 benchmark/duckdb/run.py
 ```
 For each policy, rename the created `duckdb.duckdb` file under `results` to the name of the policy, e.g., `equity.duckdb`.
 
+To run HyPer, run the following:
+```sh
+python3 benchmark/hyper/run.py
+```
+
 To run PostgreSQL, make sure that the server is running using the `start.sh` script in `benchmark/postgresql`, then run the following:
 ```sh
 python3 benchmark/postgresql/run.py
+```
+
+To run Umbra, run the following:
+```sh
+python3 benchmark/hyper/run.py
 ```
 
 You may want to delete old results first by doing:

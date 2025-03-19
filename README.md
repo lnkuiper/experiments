@@ -14,7 +14,7 @@ Paper: [Robust External Hash Aggregation in the Solid State Age (ICDE 2024)](htt
 Experiments: [link](oocha)
 
 ## Hash Join
-Paper: Saving Private Hash Join (to be presented at VLDB 2025)
+Paper: Saving Private Hash Join (under review)
 
 Experiments:
  * Hash join and multi-operator memory control experiments [link](oochj)
