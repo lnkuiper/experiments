@@ -2,7 +2,7 @@
 Laurens's experiments.
 
 ## Saving Private Hash Join
-Paper: Saving Private Hash Join (under review)
+Paper still under review
 
 Experiments:
  * Section 8 & 9 (hash join and pipelined external joins) [link](oochj)

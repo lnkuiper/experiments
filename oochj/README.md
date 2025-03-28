@@ -1,4 +1,4 @@
-# Hash Join and Multi-Operator Memory Control
+# Saving Private Hash Join Sections 8 & 9 (Hash Join and Pipelined External Joins)
 Requirements are Python 3 with `pip` and the following packages:
  * `duckdb`
  * `tqdm`
@@ -78,27 +78,42 @@ To run DuckDB, run the following:
 ```sh
 python3 benchmark/duckdb/run.py
 ```
+You will find the results in `results/duckdb/duckdb`.
 For each policy, rename the created `duckdb.duckdb` file under `results` to the name of the policy, e.g., `equity.duckdb`.
 
 To run HyPer, run the following:
 ```sh
 python3 benchmark/hyper/run.py
 ```
+You will find the results in `results/hyper.duckdb`.
+
+NOTE: a 1000-second timeout is imposed, but long-running queries cannot be interrupted in HyPer.
+Therefore, running this benchmark with HyPer requires a significant amount of hand-holding.
+After a query times out, all subsequent queries will throw an error, causing `results/hyper.duckdb` to be filled with error codes.
+To address this, stop the process, delete the erroneous error codes in from `results/hyper.duckdb` using the `duckdb` CLI or with the `duckdb` Python package, and restart the process again (it will continue where it left off).
 
 To run PostgreSQL, make sure that the server is running using the `start.sh` script in `benchmark/postgresql`, then run the following:
 ```sh
 python3 benchmark/postgresql/run.py
 ```
+You will find the results in `results/postgresql.duckdb`.
 
 To run Umbra, run the following:
 ```sh
 python3 benchmark/hyper/run.py
 ```
+You will find the results in `results/umbra.duckdb`.
 
+NOTE: Umbra does not graciously handle out-of-memory cases, and may get killed by the OS.
+Therefore, running this benchmark with Umbra requires a significant amount of hand-holding.
+Error codes are written correctly to `results/umbra.duckdb`, but you will have to restart the process after the OS kills it.
+
+### Cached results
 You may want to delete old results first by doing:
 ```sh
 rm results/*
 ```
+As the benchmark runner will use the results directory to check which benchmarks have already been run.
 
-## Plotting
-Open the `notebooks/results.ipynb` using `jupyter-lab` and step through the cells.
+## Plotting (Figures 3 & 4)
+Open the `notebooks/results.ipynb` using `jupyter-lab` and step through the cells to generate `figures/join.eps` (Figure 3) and `figures/pipeline.eps` (Figure 4).

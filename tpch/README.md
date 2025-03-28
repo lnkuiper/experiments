@@ -1,4 +1,4 @@
-# TPC-H
+# Saving Private Hash Join Section 10 (TPC-H)
 Requirements are Python 3 with `pip` and the following packages:
  * `duckdb`
  * `tqdm`
@@ -29,17 +29,23 @@ To run DuckDB, run the following:
 ```sh
 python3 benchmark/duckdb/run.py
 ```
-This will write results to `results/duckdb.duckdb`.
+You will find the results in `results/duckdb.duckdb`.
 
 To run HyPer, run the following:
 ```sh
 python3 benchmark/hyper/run.py
 ```
+You will find the results in `results/hyper.duckdb`.
+
+NOTE: a 1000-second timeout is imposed, but long-running queries cannot be interrupted in HyPer.
+Therefore, running this benchmark with HyPer requires a significant amount of hand-holding.
+After a query times out, all subsequent queries will throw an error, causing `results/hyper.duckdb` to be filled with error codes.
+To address this, stop the process, delete the erroneous error codes in from `results/hyper.duckdb` using the `duckdb` CLI or with the `duckdb` Python package, and restart the process again (it will continue where it left off).
 
 You may want to delete old results first by doing:
 ```sh
 rm results/*
 ```
 
-## Plotting
-Open the `notebooks/results.ipynb` using `jupyter-lab` and step through the cells.
+## Plotting (Figure 5)
+Open the `notebooks/results.ipynb` using `jupyter-lab` and step through the cells to generate `figures/bar.eps` (Figure 5).
