@@ -25,13 +25,17 @@ This will create a directory containing CSV files, and a `schema.sql` and `load.
 These should be used to load the data into a HyPer database `benchmark/hyper/mydb.hyper`.
 
 ## Running the Benchmark
-To run DuckDB, run the following:
+How to run.
+
+### DuckDB
+Run the following:
 ```sh
 python3 benchmark/duckdb/run.py
 ```
 You will find the results in `results/duckdb.duckdb`.
 
-To run HyPer, run the following:
+### HyPer
+Run the following:
 ```sh
 python3 benchmark/hyper/run.py
 ```

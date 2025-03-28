@@ -28,7 +28,7 @@ python3 scripts/datagen.py
 ```
 
 ## Installation
-Both DuckDB and PostgreSQL can be installed.
+DuckDB, HyPer, PostgreSQL and Umbra can be installed.
 
 ### DuckDB
 To evaluate the different multi-operator memory control policies, DuckDB must be compiled from source.
@@ -47,6 +47,7 @@ Enable one of the policies in `src/storage/temporary_memory_manager.cpp`, and co
 GEN=ninja BUILD_PYTHON=1 make
 ```
 Note that DuckDB must be compiled from source once for every policy (and run experiments using each compiled version).
+The default policy (without applying the diff) is the weighted cost policy.
 
 You may want to uninstall the DuckDB python package before building it from scratch with the following:
 ```sh
@@ -74,14 +75,18 @@ tar -xf umbra.tar.xz
 ```
 
 ## Running the Benchmark
-To run DuckDB, run the following:
+DuckDB, HyPer, PostgreSQL and Umbra can be run.
+
+### DuckDB
+Run the following:
 ```sh
 python3 benchmark/duckdb/run.py
 ```
 You will find the results in `results/duckdb/duckdb`.
 For each policy, rename the created `duckdb.duckdb` file under `results` to the name of the policy, e.g., `equity.duckdb`.
 
-To run HyPer, run the following:
+### HyPer
+Run the following:
 ```sh
 python3 benchmark/hyper/run.py
 ```
@@ -92,13 +97,15 @@ Therefore, running this benchmark with HyPer requires a significant amount of ha
 After a query times out, all subsequent queries will throw an error, causing `results/hyper.duckdb` to be filled with error codes.
 To address this, stop the process, delete the erroneous error codes in from `results/hyper.duckdb` using the `duckdb` CLI or with the `duckdb` Python package, and restart the process again (it will continue where it left off).
 
-To run PostgreSQL, make sure that the server is running using the `start.sh` script in `benchmark/postgresql`, then run the following:
+### PostgreSQL
+Make sure that the server is running using the `start.sh` script in `benchmark/postgresql`, then run the following:
 ```sh
 python3 benchmark/postgresql/run.py
 ```
 You will find the results in `results/postgresql.duckdb`.
 
-To run Umbra, run the following:
+### Umbra
+Run the following:
 ```sh
 python3 benchmark/hyper/run.py
 ```
