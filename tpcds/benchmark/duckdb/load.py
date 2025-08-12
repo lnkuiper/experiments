@@ -1,0 +1,26 @@
+import os
+import sys
+
+
+SYSTEM_DIR = os.path.dirname(__file__)
+sys.path.append(f'{SYSTEM_DIR}/..')
+from util.util import *
+
+
+def main():
+    db_path = '~/'
+    con = duckdb.connect()
+    con.execute("SET preserve_insertion_order=false;")
+    con.execute("SET allocator_background_threads=true;")
+    for sf in SCALE_FACTORS:
+        con.execute(f"USE sf{sf};")
+        print(f'Loading duckdb SF{sf} ...', flush=True)
+        con.execute("START TRANSACTION;")
+        con.execute(get_schema(sf))
+        con.execute(get_load(sf))
+        con.execute("COMMIT;")
+        print(f'Loading duckdb SF{sf} done.', flush=True)
+
+
+if __name__ == '__main__':
+    main()
