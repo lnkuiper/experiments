@@ -1,0 +1,40 @@
+import os
+import sys
+import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
+
+SYSTEM_DIR = os.path.dirname(__file__)
+sys.path.append(f'{SYSTEM_DIR}/..')
+from util.util import *
+
+
+def main():
+    con = psycopg2.connect(database="postgres", host="localhost", user="ubuntu", password="secret", port=5432)
+    con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    cur = con.cursor()
+    cur.execute("DROP DATABASE IF EXISTS mydb;")
+    cur.execute("CREATE DATABASE mydb;")
+    cur.close()
+    con.close()
+
+    con = psycopg2.connect(database="mydb", host="localhost", user="ubuntu", password="secret", port=5432)
+    cur = con.cursor()
+
+    for sf in SCALE_FACTORS:
+        print(f'Loading PostgreSQL SF{sf} ...')
+        cur.execute('ROLLBACK;')
+        cur.execute('START TRANSACTION;')
+        for q in get_schema(sf).split(';'):
+            if not q.strip():
+                continue;
+            cur.execute(f"{q};")
+        for q in get_load(sf).split(';'):
+            if not q.strip():
+                continue
+            cur.execute(f"{q};")
+        cur.execute('COMMIT;')
+
+
+if __name__ == '__main__':
+    main()
